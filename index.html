@@ -2322,6 +2322,12 @@ function renderHome(){
         <div class="vs-block"><div class="vs-line"></div><div class="vs-text">VS</div><div class="vs-line"></div></div>
         <div class="team-side"><div class="flag-wrap">${flagImg(m.a)}</div><div class="tname-big">${m.a}</div></div>
       </div>
+      <div style="display:flex;justify-content:center;margin:8px 0 2px">
+        <div style="background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.3);border-radius:20px;padding:5px 14px;display:flex;align-items:center;gap:6px">
+          <span style="font-size:.7rem;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:.05em">🤖 PRONÓSTICO IA</span>
+          <span style="font-family:'Barlow Condensed';font-weight:800;font-size:1.2rem;color:var(--gold)">${m.h.slice(0,3).toUpperCase()} ${aiPr[0]}–${aiPr[1]} ${m.a.slice(0,3).toUpperCase()}</span>
+        </div>
+      </div>
       <div class="match-footer-row" style="margin-top:8px">
         ${st?'':m.venue?`<div class="match-tag">\U0001f3df\ufe0f ${m.venue}</div>`:''}
         <div class="match-tag">\U0001f4c5 ${m.d.replace('/',' Jun ').replace('/',' Jul ')}</div>
