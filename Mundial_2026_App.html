@@ -418,6 +418,31 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .jp-pred{font-family:'Barlow Condensed';font-weight:700;font-size:.85rem;color:rgba(255,255,255,.6)}
 .jp-no-pred{font-size:.75rem;color:var(--mut);font-style:italic}
 
+/* ── Admin Panel ── */
+#admin-modal{position:fixed;inset:0;z-index:99996;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center}
+#admin-modal.open{display:flex}
+#admin-panel{width:100%;max-width:420px;background:var(--card);border-radius:20px 20px 0 0;padding:20px;max-height:85vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.admin-title{font-family:'Barlow Condensed';font-weight:800;font-size:1.15rem;color:var(--gold);display:flex;align-items:center;gap:8px}
+.admin-member-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.admin-member-row:last-child{border-bottom:0}
+.admin-name{font-size:.88rem;font-weight:700;color:#fff}
+.admin-pts{font-family:'Barlow Condensed';font-weight:800;font-size:1.1rem;color:var(--gold);min-width:36px;text-align:right}
+.admin-adj{display:flex;align-items:center;gap:4px}
+.adj-btn{width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:.12s}
+.adj-btn:active{background:rgba(255,255,255,.22)}
+.adj-btn.plus{border-color:rgba(52,211,153,.4);color:var(--grn)}
+.adj-btn.minus{border-color:rgba(248,113,113,.4);color:#f87171}
+.adj-val{font-family:'Barlow Condensed';font-weight:700;font-size:.95rem;color:rgba(255,255,255,.7);min-width:28px;text-align:center}
+.adj-val.positive{color:var(--grn)}
+.adj-val.negative{color:#f87171}
+.del-btn{width:28px;height:28px;border-radius:8px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
+.del-btn:active{background:rgba(248,113,113,.3)}
+.admin-add-row{display:flex;gap:8px;margin-top:4px}
+.admin-add-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.9rem;padding:8px 12px;border-radius:10px;outline:none}
+.admin-add-btn{background:rgba(52,211,153,.15);color:var(--grn);border:1.5px solid rgba(52,211,153,.35);font-family:'Barlow Condensed';font-weight:800;font-size:.9rem;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.admin-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:1px 6px;font-size:.68rem;color:var(--gold);font-weight:800;font-family:'Barlow Condensed';letter-spacing:.04em}
+.settings-btn.admin{background:rgba(250,204,21,.12);color:var(--gold);border:1.5px solid rgba(250,204,21,.3)}
+
 /* ── PIN Modal ── */
 #pin-modal{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0a150a 0%,#1a2e1a 100%);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px}
 #pin-modal.open{display:flex}
@@ -554,6 +579,23 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
   </div>
   <div id="welcome-error" style="color:#f87171;font-size:.82rem;display:none;text-align:center;max-width:300px"></div>
   <div id="welcome-loading" style="color:var(--mut);font-size:.82rem;display:none">Conectando...</div>
+</div>
+<div id="admin-modal" onclick="if(event.target===this)closeAdmin()">
+  <div id="admin-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="admin-title">👑 Panel Administrador</div>
+      <button class="settings-btn close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div id="admin-members-list"></div>
+    <div>
+      <div style="font-size:.75rem;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pre-registrar jugador</div>
+      <div class="admin-add-row">
+        <input class="admin-add-inp" id="admin-add-name" placeholder="Nombre del jugador" maxlength="20">
+        <button class="admin-add-btn" onclick="adminAddUser()">➕ Añadir</button>
+      </div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:6px">El jugador podrá unirse con el código de sala y crear su PIN.</div>
+    </div>
+  </div>
 </div>
 <div id="pin-modal">
   <div class="pin-card">
@@ -1025,6 +1067,112 @@ function leaveRoom(){
 }
 
 
+
+/* ── Admin system ── */
+function isAdmin(){return window._ISADMIN===true;}
+
+function openAdmin(){
+  closeSettings();
+  _renderAdminPanel();
+  document.getElementById('admin-modal').classList.add('open');
+}
+function closeAdmin(){document.getElementById('admin-modal').classList.remove('open');}
+
+function _renderAdminPanel(){
+  const players=getPlayers();
+  const adjustments=window._ADJUSTMENTS||{};
+  // Calculate base points per player from jornadaData
+  const pts=_calcBasePts();
+  const el=document.getElementById('admin-members-list');
+  if(!el)return;
+  if(!players.length){el.innerHTML='<div style="color:var(--mut);font-size:.85rem;text-align:center;padding:12px">No hay jugadores en la sala aún.</div>';return;}
+  el.innerHTML=players.map(p=>{
+    const adj=adjustments[p.name]||0;
+    const total=(pts[p.name]||0)+adj;
+    const adjClass=adj>0?'positive':adj<0?'negative':'';
+    const adjStr=adj>0?'+'+adj:String(adj);
+    const meTag=p.isMe?'<span class="admin-badge">tú</span>':'';
+    return `<div class="admin-member-row">
+      <div><div class="admin-name">${p.name} ${meTag}</div></div>
+      <div class="admin-pts">${total} pts</div>
+      <div class="admin-adj">
+        <button class="adj-btn minus" onclick="adminAdjust('${p.name}',-1)">−</button>
+        <span class="adj-val ${adjClass}">${adjStr}</span>
+        <button class="adj-btn plus" onclick="adminAdjust('${p.name}',+1)">+</button>
+      </div>
+      <button class="del-btn" onclick="adminDeleteUser('${p.name}')" title="Eliminar jugador">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+function _calcBasePts(){
+  const pts={};
+  const PLAYERS=getPlayers();
+  PLAYERS.forEach(p=>{pts[p.name]=0;});
+  RTVE.forEach(rtve=>{
+    const fx=FX.find(f=>f[4]===rtve.h&&f[5]===rtve.a);
+    const jid=fx?fx[0]:'';
+    const realEntry=fx?R.scores[jid]:null;
+    if(!realEntry||realEntry[0]===''||realEntry[1]==='')return;
+    const rh=+realEntry[0],ra=+realEntry[1],rSign=rh>ra?1:rh<ra?-1:0;
+    const k=_porraKey({h:rtve.h,a:rtve.a,d:rtve.d});
+    const preds=window._PS?.[k]||{};
+    PLAYERS.forEach(p=>{
+      const sv=preds[p.name];if(!sv)return;
+      const ph=+sv.loc,pa=+sv.vis,pSign=ph>pa?1:ph<pa?-1:0;
+      if(ph===rh&&pa===ra)pts[p.name]+=3;
+      else if(pSign===rSign)pts[p.name]+=1;
+    });
+  });
+  return pts;
+}
+
+async function adminAdjust(playerName,delta){
+  if(!isAdmin())return;
+  window._ADJUSTMENTS=window._ADJUSTMENTS||{};
+  window._ADJUSTMENTS[playerName]=(window._ADJUSTMENTS[playerName]||0)+delta;
+  // Save to Supabase
+  const newAdj=window._ADJUSTMENTS[playerName];
+  await _supa.from('room_members')
+    .update({point_adjustment:newAdj})
+    .eq('room_code',window._MYROOM.code)
+    .eq('player_name',playerName);
+  _renderAdminPanel();
+  renderActive();
+}
+
+async function adminDeleteUser(playerName){
+  if(!isAdmin())return;
+  if(playerName===window._MYROOM.playerName){showToast('No puedes eliminarte a ti mismo','err');return;}
+  if(!confirm(`¿Eliminar a ${playerName} de la sala?`))return;
+  await _supa.from('room_members').delete()
+    .eq('room_code',window._MYROOM.code).eq('player_name',playerName);
+  await _supa.from('predictions').delete()
+    .eq('room_code',window._MYROOM.code).eq('player_name',playerName);
+  window._ROOM_MEMBERS=(window._ROOM_MEMBERS||[]).filter(n=>n!==playerName);
+  if(window._ADJUSTMENTS)delete window._ADJUSTMENTS[playerName];
+  _renderAdminPanel();
+  renderActive();
+  showToast(`${playerName} eliminado de la sala`);
+}
+
+async function adminAddUser(){
+  if(!isAdmin())return;
+  const inp=document.getElementById('admin-add-name');
+  const name=inp?.value?.trim();
+  if(!name){showToast('Escribe un nombre','err');return;}
+  if((window._ROOM_MEMBERS||[]).includes(name)){showToast(`${name} ya está en la sala`,'err');return;}
+  // Pre-register with no PIN (they set it when joining)
+  const{error}=await _supa.from('room_members').upsert(
+    {room_code:window._MYROOM.code,player_name:name,point_adjustment:0},
+    {onConflict:'room_code,player_name'});
+  if(error){showToast('Error al añadir: '+error.message,'err');return;}
+  window._ROOM_MEMBERS=[...(window._ROOM_MEMBERS||[]),name];
+  if(inp)inp.value='';
+  _renderAdminPanel();
+  renderActive();
+  showToast(`✅ ${name} pre-registrado. Puede unirse con el código ${window._MYROOM.code}`);
+}
 /* ── PIN system ── */
 let _PIN={digits:[],mode:'setup',firstPin:'',cb:null,storedPin:null};
 
@@ -1104,14 +1252,30 @@ function onPinOk(){
   }
 }
 /* ── Init ── */
-function initRoom(){
+async function initRoom(){
   try{
     const saved=localStorage.getItem('_room');
     if(saved){
       const{code,playerName,pin}=JSON.parse(saved);
-      if(code&&playerName&&pin){
-        // Verify PIN before entering
-        _showPin('verify',playerName,pin,(p)=>enterRoom(code,playerName,p));
+      if(code&&playerName){
+        if(pin){
+          // PIN saved locally — verify directly
+          _showPin('verify',playerName,pin,(p)=>enterRoom(code,playerName,p));
+        }else{
+          // Old session without PIN — check Supabase
+          const{data}=await _supa.from('room_members').select('pin')
+            .eq('room_code',code).eq('player_name',playerName).maybeSingle();
+          if(data?.pin){
+            // Has PIN in Supabase — verify and save locally
+            _showPin('verify',playerName,data.pin,(p)=>{
+              try{localStorage.setItem('_room',JSON.stringify({code,playerName,pin:p}));}catch(e){}
+              enterRoom(code,playerName,p);
+            });
+          }else{
+            // No PIN anywhere — create one
+            _showPin('setup',playerName,null,(p)=>enterRoom(code,playerName,p));
+          }
+        }
         return;
       }
     }
