@@ -710,6 +710,7 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
       <button class="settings-btn close" onclick="closeSettings()">✕ Cerrar</button>
     </div>
     <div class="settings-info" id="settings-info"></div>
+    <button id="btn-push" class="settings-btn secondary" onclick="subscribePush()">🔔 Activar notificaciones</button>
     <button class="settings-btn secondary" onclick="copyRoomCode()">📋 Copiar código de sala</button>
     <button id="btn-open-admin" class="settings-btn admin" onclick="openAdmin()" style="display:none">👑 Panel Administrador</button>
     <button class="settings-btn danger" onclick="leaveRoom()">🚪 Cerrar sesión / Cambiar usuario</button>
@@ -2462,8 +2463,60 @@ function renderLineupsPanel(data,h,a,url){
 
 function closeLineups(){document.getElementById('lineup-modal').classList.remove('open');}
 
+
+/* ── Push notifications ── */
+const VAPID_PUBLIC='BFcHPFD6MFVkaRQBDAIdG01Ey3p6gYFT3ViZKQnLmV56tntdaugE8EwYNzBSOC_AjOq_VEcVeMEOWEyFMpwpnUc';
+
+function urlBase64ToUint8Array(b64){
+  const pad=b64+'='.repeat((4-b64.length%4)%4);
+  const raw=atob(pad.replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+async function subscribePush(){
+  if(!('Notification' in window)||!('serviceWorker' in navigator)){
+    showToast('Tu navegador no soporta notificaciones','err');return;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){showToast('Notificaciones denegadas','err');return;}
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)
+      });
+    }
+    const j=sub.toJSON();
+    const{error}=await _supa.from('push_subscriptions').upsert({
+      endpoint:j.endpoint,
+      p256dh:j.keys.p256dh,
+      auth:j.keys.auth,
+      player_name:window._MYROOM?.playerName||'',
+      room_code:window._MYROOM?.code||''
+    },{onConflict:'endpoint'});
+    if(error)throw new Error(error.message);
+    showToast('✅ Notificaciones activadas');
+    const btn=document.getElementById('btn-push');
+    if(btn){btn.textContent='🔔 Notificaciones activas';btn.disabled=true;}
+  }catch(e){showToast('Error: '+e.message,'err');}
+}
+
+async function checkPushStatus(){
+  if(!('serviceWorker' in navigator))return;
+  const reg=await navigator.serviceWorker.ready.catch(()=>null);
+  if(!reg)return;
+  const sub=await reg.pushManager.getSubscription().catch(()=>null);
+  const btn=document.getElementById('btn-push');
+  if(btn&&sub&&Notification.permission==='granted'){
+    btn.textContent='🔔 Notificaciones activas';btn.disabled=true;
+  }
+}
+
 // Init room (load from localStorage or show welcome screen)
 initRoom();
+setTimeout(checkPushStatus,1500);
 // Restaurar resultados guardados desde la última sesión
 try{
   const saved=localStorage.getItem('wc26_results');
