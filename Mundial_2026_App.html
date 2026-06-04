@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mundial Porra">
-<link rel="apple-touch-icon" href="trofeo.png">
+<link rel="apple-touch-icon" href="imagenapp.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;700;800&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -418,6 +418,47 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .jp-pred{font-family:'Barlow Condensed';font-weight:700;font-size:.85rem;color:rgba(255,255,255,.6)}
 .jp-no-pred{font-size:.75rem;color:var(--mut);font-style:italic}
 
+/* ── PIN Modal ── */
+#pin-modal{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0a150a 0%,#1a2e1a 100%);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px}
+#pin-modal.open{display:flex}
+.pin-card{width:100%;max-width:320px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.pin-title{font-family:'Barlow Condensed';font-weight:800;font-size:1.5rem;color:#fff;text-align:center;letter-spacing:.04em}
+.pin-subtitle{font-size:.8rem;color:rgba(255,255,255,.45);text-align:center;margin-top:-12px}
+.pin-dots{display:flex;gap:14px;justify-content:center}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:transparent;transition:.15s}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);transform:scale(1.1)}
+.pin-dot.error{background:#f87171;border-color:#f87171}
+.pin-dot.success{background:var(--grn);border-color:var(--grn)}
+.pin-error{color:#f87171;font-size:.8rem;text-align:center;min-height:1.2em;font-weight:600}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.pin-btn{height:60px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-family:'Barlow Condensed';font-weight:700;font-size:1.6rem;cursor:pointer;transition:.12s;-webkit-tap-highlight-color:transparent}
+.pin-btn:active{background:rgba(255,255,255,.22);transform:scale(.94)}
+.pin-btn.special{background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);font-size:1.2rem}
+.pin-btn.confirm{background:var(--gold);color:#1a1206;border-color:var(--gold)}
+.pin-btn.confirm:active{background:#e8b400}
+.pin-player-name{font-family:'Barlow Condensed';font-weight:800;font-size:1.1rem;color:var(--gold);text-align:center}
+
+/* ── Settings modal ── */
+#settings-modal{position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center}
+#settings-modal.open{display:flex}
+#settings-panel{width:100%;max-width:420px;background:var(--card);border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:14px}
+.settings-title{font-family:'Barlow Condensed';font-weight:800;font-size:1.2rem;color:#fff;letter-spacing:.04em}
+.settings-info{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.settings-info-row{display:flex;justify-content:space-between;align-items:center;font-size:.82rem}
+.settings-info-row .lbl{color:var(--mut)}
+.settings-info-row .val{font-weight:700;color:#fff}
+.settings-info-row .code-val{font-family:'Barlow Condensed';font-weight:800;font-size:1.1rem;color:var(--gold);letter-spacing:.15em;cursor:pointer}
+.settings-btn{width:100%;padding:12px;border-radius:10px;font-family:'Barlow Condensed';font-weight:800;font-size:1rem;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;transition:.15s}
+.settings-btn.danger{background:rgba(248,113,113,.15);color:#f87171;border:1.5px solid rgba(248,113,113,.3)}
+.settings-btn.danger:hover{background:rgba(248,113,113,.25)}
+.settings-btn.secondary{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15)}
+.settings-btn.close{background:transparent;color:var(--mut);border:0;font-size:.85rem;margin-top:-6px}
+.online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;margin-right:4px;flex-shrink:0}
+.offline-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);margin-right:4px;flex-shrink:0}
+.gear-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);font-size:.9rem;transition:.15s;flex-shrink:0}
+.gear-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+.online-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:2px 7px;font-size:.68rem;color:var(--grn);font-weight:700;font-family:'Barlow Condensed'}
+
 /* Toast notification */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,30,.97);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Barlow Condensed';font-weight:700;font-size:.95rem;letter-spacing:.06em;padding:10px 22px;border-radius:30px;z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -513,6 +554,45 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
   </div>
   <div id="welcome-error" style="color:#f87171;font-size:.82rem;display:none;text-align:center;max-width:300px"></div>
   <div id="welcome-loading" style="color:var(--mut);font-size:.82rem;display:none">Conectando...</div>
+</div>
+<div id="pin-modal">
+  <div class="pin-card">
+    <div class="pin-player-name" id="pin-player-label"></div>
+    <div class="pin-title" id="pin-title">Crea tu PIN</div>
+    <div class="pin-subtitle" id="pin-subtitle">4 dígitos para proteger tu cuenta</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="onPinDigit(1)">1</button>
+      <button class="pin-btn" onclick="onPinDigit(2)">2</button>
+      <button class="pin-btn" onclick="onPinDigit(3)">3</button>
+      <button class="pin-btn" onclick="onPinDigit(4)">4</button>
+      <button class="pin-btn" onclick="onPinDigit(5)">5</button>
+      <button class="pin-btn" onclick="onPinDigit(6)">6</button>
+      <button class="pin-btn" onclick="onPinDigit(7)">7</button>
+      <button class="pin-btn" onclick="onPinDigit(8)">8</button>
+      <button class="pin-btn" onclick="onPinDigit(9)">9</button>
+      <button class="pin-btn special" onclick="onPinBack()">⌫</button>
+      <button class="pin-btn" onclick="onPinDigit(0)">0</button>
+      <button class="pin-btn special confirm" id="pin-ok" onclick="onPinOk()">✓</button>
+    </div>
+  </div>
+</div>
+<div id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div id="settings-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="settings-title">⚙️ Ajustes de sala</div>
+      <button class="settings-btn close" onclick="closeSettings()">✕ Cerrar</button>
+    </div>
+    <div class="settings-info" id="settings-info"></div>
+    <button class="settings-btn secondary" onclick="copyRoomCode()">📋 Copiar código de sala</button>
+    <button class="settings-btn danger" onclick="leaveRoom()">🚪 Cerrar sesión / Cambiar usuario</button>
+  </div>
 </div>
 <div id="toast"></div>
 <section id="sv-home" class="sv on">
@@ -758,8 +838,17 @@ function playerInitials(name){
 function getPlayers(){
   const my=window._MYROOM?.playerName;
   const names=new Set(my?[my]:[]);
+  // All registered members of the room
+  (window._ROOM_MEMBERS||[]).forEach(n=>names.add(n));
+  // Also anyone who has predictions
   for(const mp of Object.values(window._PS||{}))for(const n of Object.keys(mp))names.add(n);
-  return[...names].sort().map(n=>({name:n,color:playerColor(n),initials:playerInitials(n),isMe:n===my}));
+  return[...names].sort().map(n=>({
+    name:n,
+    color:playerColor(n),
+    initials:playerInitials(n),
+    isMe:n===my,
+    online:(window._ONLINE||new Set()).has(n)
+  }));
 }
 
 /* ── Room code ── */
@@ -784,48 +873,78 @@ async function createRoom(){
   for(let i=0;i<10;i++){
     const code=generateRoomCode();
     const{error}=await _supa.from('rooms').insert({code});
-    if(!error){enterRoom(code,name);return;}
+    if(!error){
+      showWelcomeState('idle');
+      _showPin('setup',name,null,(pin)=>enterRoom(code,name,pin));
+      return;
+    }
     if(error.code!=='23505'){showWelcomeState('error','Error al crear sala. Inténtalo de nuevo.');return;}
   }
-  showWelcomeState('error','No se pudo generar un código único. Inténtalo de nuevo.');
+  showWelcomeState('error','No se pudo generar un código único.');
 }
 async function joinRoom(){
   const name=document.getElementById('welcome-name')?.value?.trim();
   const code=document.getElementById('welcome-code')?.value?.trim().toUpperCase();
   if(!name||!code)return;
   showWelcomeState('loading');
-  const{data,error}=await _supa.from('rooms').select('code').eq('code',code).maybeSingle();
-  if(error||!data){showWelcomeState('error',`Sala "${code}" no encontrada. Comprueba el código.`);return;}
-  enterRoom(code,name);
+  const{data:room,error}=await _supa.from('rooms').select('code').eq('code',code).maybeSingle();
+  if(error||!room){showWelcomeState('error',`Sala "${code}" no encontrada.`);return;}
+  // Check if player already exists in this room
+  const{data:member}=await _supa.from('room_members').select('pin').eq('room_code',code).eq('player_name',name).maybeSingle();
+  showWelcomeState('idle');
+  if(member?.pin){
+    // Existing player — verify PIN
+    _showPin('verify',name,member.pin,(pin)=>enterRoom(code,name,pin));
+  }else{
+    // New player in this room — create PIN
+    _showPin('setup',name,null,(pin)=>enterRoom(code,name,pin));
+  }
 }
 function showWelcomeState(state,msg){
   const loading=document.getElementById('welcome-loading');
   const errEl=document.getElementById('welcome-error');
   if(loading)loading.style.display=state==='loading'?'block':'none';
   if(errEl){errEl.style.display=state==='error'?'block':'none';if(msg)errEl.textContent=msg;}
+  // Re-enable buttons on idle/error
+  if(state!=='loading'){
+    const bc=document.getElementById('btn-create');const bj=document.getElementById('btn-join');
+    if(bc)bc.disabled=false;if(bj)bj.disabled=false;updateWelcomeBtns();
+  }
 }
 
 /* ── Enter room ── */
-async function enterRoom(code,playerName){
+async function enterRoom(code,playerName,pin){
   window._MYROOM={code,playerName};
-  try{localStorage.setItem('_room',JSON.stringify({code,playerName}));}catch(e){}
+  window._ROOM_MEMBERS=window._ROOM_MEMBERS||[];
+  window._ONLINE=new Set();
+  try{localStorage.setItem('_room',JSON.stringify({code,playerName,pin:pin||''}));}catch(e){}
   document.getElementById('welcome')?.remove();
   showRoomBadge(code,playerName);
-  await loadRoomPredictions(code);
+  // Register/update member with PIN in Supabase
+  await _supa.from('room_members').upsert({room_code:code,player_name:playerName,pin:pin||null},{onConflict:'room_code,player_name'});
+  await loadRoomData(code);
   subscribeToRoom(code);
+  startPresence(code,playerName);
   renderActive();
 }
 
-/* ── Load + Subscribe ── */
-async function loadRoomPredictions(roomCode){
-  const{data}=await _supa.from('predictions').select('*').eq('room_code',roomCode);
-  if(!data)return;
-  window._PS=window._PS||{};
-  data.forEach(r=>{
-    if(!window._PS[r.match_key])window._PS[r.match_key]={};
-    window._PS[r.match_key][r.player_name]={loc:r.loc,vis:r.vis,score:r.score,player:r.goleador,pos:r.pos};
-  });
+/* ── Load room data ── */
+async function loadRoomData(roomCode){
+  // Load predictions
+  const{data:preds}=await _supa.from('predictions').select('*').eq('room_code',roomCode);
+  if(preds){
+    window._PS=window._PS||{};
+    preds.forEach(r=>{
+      if(!window._PS[r.match_key])window._PS[r.match_key]={};
+      window._PS[r.match_key][r.player_name]={loc:r.loc,vis:r.vis,score:r.score,player:r.goleador,pos:r.pos};
+    });
+  }
+  // Load members
+  const{data:members}=await _supa.from('room_members').select('player_name').eq('room_code',roomCode);
+  if(members)window._ROOM_MEMBERS=[...new Set(members.map(m=>m.player_name))];
 }
+
+/* ── Realtime subscriptions ── */
 function subscribeToRoom(roomCode){
   _supa.channel('preds:'+roomCode)
     .on('postgres_changes',{event:'*',schema:'public',table:'predictions',filter:'room_code=eq.'+roomCode},
@@ -837,25 +956,165 @@ function subscribeToRoom(roomCode){
         if(r.player_name!==window._MYROOM?.playerName)renderActive();
       })
     .subscribe();
+
+  _supa.channel('members:'+roomCode)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'room_members',filter:'room_code=eq.'+roomCode},
+      payload=>{
+        const name=payload.new?.player_name;
+        if(name&&!(window._ROOM_MEMBERS||[]).includes(name)){
+          window._ROOM_MEMBERS=[...(window._ROOM_MEMBERS||[]),name];
+          renderActive();
+        }
+      })
+    .subscribe();
 }
 
-/* ── Room badge in topbar ── */
+/* ── Presence (online status) ── */
+function startPresence(roomCode,playerName){
+  const ch=_supa.channel('presence:'+roomCode,{config:{presence:{key:playerName}}});
+  ch.on('presence',{event:'sync'},()=>{
+    const state=ch.presenceState();
+    window._ONLINE=new Set(Object.values(state).flat().map(p=>p.name).filter(Boolean));
+    renderActive();
+  })
+  .subscribe(async status=>{
+    if(status==='SUBSCRIBED')await ch.track({name:playerName});
+  });
+}
+
+/* ── Room badge ── */
 function showRoomBadge(code,playerName){
   const topbar=document.querySelector('.topbar');if(!topbar)return;
   const old=document.getElementById('room-badge');if(old)old.remove();
-  const b=document.createElement('div');
-  b.id='room-badge';b.className='room-badge';
-  b.title='Código de sala — pulsa para copiar y compartir';
-  b.innerHTML=`<span style="font-size:.8rem">🎮</span><span class="rc">${code}</span><span class="rn">${playerName}</span>`;
-  b.onclick=()=>navigator.clipboard?.writeText(code).then(()=>showToast('Código copiado: '+code));
-  topbar.appendChild(b);
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;align-items:center;gap:8px;margin-left:auto';
+  wrap.innerHTML=`<div id="room-badge" class="room-badge" title="Código de sala" onclick="copyRoomCode()">
+    <span style="font-size:.8rem">🎮</span><span class="rc">${code}</span><span class="rn">${playerName}</span>
+  </div>
+  <div class="gear-btn" onclick="openSettings()" title="Ajustes">⚙️</div>`;
+  topbar.appendChild(wrap);
 }
 
+/* ── Settings modal ── */
+function openSettings(){
+  const{code,playerName}=window._MYROOM||{};
+  const members=window._ROOM_MEMBERS||[];
+  const online=window._ONLINE||new Set();
+  const onlineCount=[...online].length;
+  const info=document.getElementById('settings-info');
+  if(info)info.innerHTML=`
+    <div class="settings-info-row"><span class="lbl">Sala</span><span class="code-val" onclick="copyRoomCode()">${code}</span></div>
+    <div class="settings-info-row"><span class="lbl">Tu nombre</span><span class="val">${playerName}</span></div>
+    <div class="settings-info-row"><span class="lbl">Miembros</span><span class="val">${members.length} jugadores · <span style="color:var(--grn)">${onlineCount} online</span></span></div>
+  `;
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function copyRoomCode(){
+  const code=window._MYROOM?.code;
+  if(!code)return;
+  navigator.clipboard?.writeText(code).then(()=>showToast('Código copiado: '+code));
+  closeSettings();
+}
+function leaveRoom(){
+  if(!confirm('¿Salir de la sala? Podrás volver a unirte con el mismo código.'))return;
+  try{localStorage.removeItem('_room');}catch(e){}
+  window._MYROOM=null;window._PS={};window._ROOM_MEMBERS=[];window._ONLINE=new Set();
+  closeSettings();
+  location.reload();
+}
+
+
+/* ── PIN system ── */
+let _PIN={digits:[],mode:'setup',firstPin:'',cb:null,storedPin:null};
+
+function _showPin(mode,playerName,storedPin,onSuccess){
+  _PIN={digits:[],mode,firstPin:'',cb:onSuccess,storedPin:storedPin||null};
+  _updatePinDots();
+  document.getElementById('pin-error').textContent='';
+  document.getElementById('pin-player-label').textContent=playerName||'';
+  if(mode==='setup'){
+    document.getElementById('pin-title').textContent='Crea tu PIN';
+    document.getElementById('pin-subtitle').textContent='4 dígitos para proteger tu cuenta';
+  }else{
+    document.getElementById('pin-title').textContent='Introduce tu PIN';
+    document.getElementById('pin-subtitle').textContent='Accede a tu cuenta';
+  }
+  document.getElementById('pin-modal').classList.add('open');
+}
+function _hidePin(){document.getElementById('pin-modal').classList.remove('open');}
+
+function _updatePinDots(state){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(!d)continue;
+    d.className='pin-dot'+(i<_PIN.digits.length?' filled':'')+(state==='error'?' error':'')+(state==='success'?' success':'');
+  }
+}
+
+function onPinDigit(n){
+  if(_PIN.digits.length>=4)return;
+  _PIN.digits.push(n);
+  _updatePinDots();
+  document.getElementById('pin-error').textContent='';
+  if(_PIN.digits.length===4)setTimeout(onPinOk,120);
+}
+function onPinBack(){
+  _PIN.digits.pop();
+  _updatePinDots();
+  document.getElementById('pin-error').textContent='';
+}
+function onPinOk(){
+  if(_PIN.digits.length<4)return;
+  const entered=_PIN.digits.join('');
+  if(_PIN.mode==='setup'){
+    if(!_PIN.firstPin){
+      // First entry — ask to confirm
+      _PIN.firstPin=entered;
+      _PIN.digits=[];
+      _updatePinDots();
+      document.getElementById('pin-title').textContent='Confirma tu PIN';
+      document.getElementById('pin-subtitle').textContent='Repite los 4 dígitos';
+    }else{
+      // Confirmation
+      if(entered===_PIN.firstPin){
+        _updatePinDots('success');
+        setTimeout(()=>{_hidePin();_PIN.cb&&_PIN.cb(entered);},400);
+      }else{
+        _updatePinDots('error');
+        document.getElementById('pin-error').textContent='Los PINs no coinciden. Inténtalo de nuevo.';
+        setTimeout(()=>{
+          _PIN.digits=[];_PIN.firstPin='';
+          document.getElementById('pin-title').textContent='Crea tu PIN';
+          document.getElementById('pin-subtitle').textContent='4 dígitos para proteger tu cuenta';
+          _updatePinDots();
+        },800);
+      }
+    }
+  }else{
+    // Verify mode
+    if(entered===String(_PIN.storedPin)){
+      _updatePinDots('success');
+      setTimeout(()=>{_hidePin();_PIN.cb&&_PIN.cb(entered);},400);
+    }else{
+      _updatePinDots('error');
+      document.getElementById('pin-error').textContent='PIN incorrecto. Inténtalo de nuevo.';
+      setTimeout(()=>{_PIN.digits=[];_updatePinDots();},700);
+    }
+  }
+}
 /* ── Init ── */
 function initRoom(){
   try{
     const saved=localStorage.getItem('_room');
-    if(saved){const{code,playerName}=JSON.parse(saved);if(code&&playerName){enterRoom(code,playerName);return;}}
+    if(saved){
+      const{code,playerName,pin}=JSON.parse(saved);
+      if(code&&playerName&&pin){
+        // Verify PIN before entering
+        _showPin('verify',playerName,pin,(p)=>enterRoom(code,playerName,p));
+        return;
+      }
+    }
   }catch(e){}
   const w=document.getElementById('welcome');if(w)w.style.display='flex';
 }
@@ -1396,7 +1655,10 @@ function renderPorraSection(m){
     return `<div class="pred-row" style="flex-direction:column;align-items:stretch;padding:0">
       <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px;padding:8px 12px">
         <div class="friend">
-          <div class="pred-avatar" style="background:${color}">${initials}</div>
+          <div style="position:relative;flex-shrink:0">
+            <div class="pred-avatar" style="background:${color}">${initials}</div>
+            ${online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:1.5px solid var(--card)"></span>':''}
+          </div>
           <div><div class="fname">${name}${isMe?' <span style="font-size:9px;color:var(--gold)">tú</span>':''}</div>${sv?`<div class="fgol">${sv.player}</div>`:''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:5px">${scoreCell}</div>
@@ -1564,7 +1826,10 @@ function renderPorraFull(){
       const meTag=p.isMe?` <span style="font-size:8px;color:var(--gold)">tú</span>`:'';
       h+=`<div class="porra-player-row">
         <div class="porra-rank ${i<3?'top':''}">${medal[i]||i+1}</div>
-        <div class="friend"><div class="pred-avatar" style="background:${p.color};width:28px;height:28px;font-size:10px">${p.initials}</div><div class="fname">${p.name}${meTag}</div></div>
+        <div class="friend">
+          <div style="position:relative;flex-shrink:0"><div class="pred-avatar" style="background:${p.color};width:28px;height:28px;font-size:10px">${p.initials}</div>${p.online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;border:1.5px solid var(--card)"></span>':''}</div>
+          <div class="fname">${p.name}${meTag}</div>
+        </div>
         <div class="porra-count">${p.exact}</div>
         <div class="porra-count">${p.sign}</div>
         <div class="porra-pts">${p.pts}</div>
