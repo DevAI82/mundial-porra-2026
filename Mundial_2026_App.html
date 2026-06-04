@@ -1642,6 +1642,7 @@ function renderPorraSection(m){
       ?`<button class="pred-edit-btn" onclick="togglePredForm()">✏️</button>`
       :(closed?`<span style="font-size:9px;color:var(--mut)">🔒</span>`:'');
     const posInit=sv?.pos||getPlayerPos([m.h,m.a],sv?.player||'')||'DEL';
+    const online=(window._ONLINE||new Set()).has(name);
     const form=(isMe&&!closed)?`<div class="pred-form" id="pf-me">
       <div class="pred-inputs">
         <input class="pred-inp" type="number" min="0" max="20" id="pi-l-me" value="${sv?.loc??'0'}" placeholder="0">
@@ -1736,6 +1737,7 @@ function renderProximos(){
         ?`<button class="pred-edit-btn" style="font-size:8.5px;padding:1px 6px" onclick="toggleProxForm('${jid}')">✏️</button>`
         :(closed?`<span style="font-size:9px;color:var(--mut)">🔒</span>`:'');
       const posInit=sv?.pos||getPlayerPos([m.h,m.a],sv?.player||'')||'DEL';
+      const online=(window._ONLINE||new Set()).has(name);
       const form=(isMe&&!closed)?`<div class="prox-form" id="pxf-me-${jid}">
         <div class="pred-inputs" style="gap:4px">
           <input class="pred-inp" style="width:32px;font-size:15px" type="number" min="0" max="20" id="pxl-me-${jid}" value="${sv?.loc??'0'}" placeholder="0">
