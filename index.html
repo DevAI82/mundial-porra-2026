@@ -417,6 +417,18 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .jp-pts.miss{color:var(--mut)}
 .jp-pred{font-family:'Barlow Condensed';font-weight:700;font-size:.85rem;color:rgba(255,255,255,.6)}
 .jp-no-pred{font-size:.75rem;color:var(--mut);font-style:italic}
+#lineup-modal{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:none;align-items:flex-end;justify-content:center;padding-bottom:0}
+#lineup-modal.open{display:flex}
+#lineup-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:18px 16px 30px}
+.lineup-title{font-family:'Barlow Condensed';font-weight:800;font-size:1.2rem;text-align:center;margin-bottom:12px}
+.lineup-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lineup-team-name{font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;color:var(--gold);margin-bottom:6px;text-align:center}
+.lineup-formation{font-size:.7rem;color:var(--mut);text-align:center;margin-bottom:8px}
+.lineup-player{font-size:.8rem;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;gap:5px;align-items:center}
+.lineup-num{font-family:'Barlow Condensed';font-weight:700;font-size:.9rem;color:var(--mut);min-width:18px}
+.lineup-sub{opacity:.55;font-style:italic}
+.lineup-sof-btn{display:block;text-align:center;margin-top:12px;padding:8px;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.3);border-radius:10px;color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:none}
+.btn-lineups{background:rgba(96,165,250,.15);border:1.5px solid rgba(96,165,250,.35);color:var(--accent);border-radius:10px;padding:7px 14px;font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;margin-top:8px;width:100%}
 .jp-adj{font-size:.7rem;color:#f87171;font-weight:700;display:flex;align-items:center;gap:3px;margin-top:2px}
 .jp-adj-tag{font-size:.6rem;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:1px 5px;border-radius:4px;font-weight:700}
 .jp-admin-ctrl{display:flex;align-items:center;gap:3px;margin-top:3px}
@@ -574,6 +586,10 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <div class="mesh">
   <div class="bg-img"></div>
   <div class="bg-overlay"></div>
+</div>
+
+<div id="lineup-modal" onclick="if(event.target===this)closeLineups()">
+  <div id="lineup-panel"></div>
 </div>
 
 <div id="rules-modal" onclick="if(event.target===this)closeRules()">
@@ -2311,6 +2327,7 @@ function renderHome(){
         ${m.ch?`<div class="match-tag">${m.ch}</div>`:''}
       </div>
       <div id="match-timer" class="match-timer"></div>
+      ${SOFA[getSofaKey(m.h,m.a)]?`<button class="btn-lineups" onclick="openLineups('${m.h}','${m.a}')">📋 Ver alineación probable</button>`:''}
     </div>
   </div>`;
   startMatchTimer(m);
@@ -2367,6 +2384,83 @@ async function fetchRealResults(){
     if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar resultados reales';}
   }
 }
+
+
+/* ── Sofascore lineups ── */
+const SOFA={
+  'México|Sudáfrica':       {id:15186710,cid:'LUbsGVb',slug:'mexico-south-africa'},
+  'Canadá|Bosnia-Herzegovina':{id:15186836,cid:'EObscVb',slug:'canada-bosnia-and-herzegovina'},
+  'Brasil|Marruecos':       {id:15186850,cid:'YUbsDVb',slug:'morocco-brazil'},
+  'Alemania|Curazao':       {id:15186899,cid:'lUbsCqx',slug:'curacao-germany'},
+  'España|Cabo Verde':      {id:15186783,cid:'YTbsdVb',slug:'cabo-verde-spain'},
+  'Francia|Senegal':        {id:15186501,cid:'GObsOUb',slug:'senegal-france'},
+  'Inglaterra|Croacia':     {id:15186504,cid:'nUbspUb',slug:'croatia-england'},
+  'Suiza|Bosnia-Herzegovina':{id:15186806,cid:'EObsZTb',slug:'switzerland-bosnia-and-herzegovina'},
+  'Países Bajos|Suecia':    {id:15186957,cid:'NTbsfUb',slug:'netherlands-sweden'},
+  'España|Arabia Saudita':  {id:15186840,cid:'YTbsJWb',slug:'saudi-arabia-spain'},
+  'Argentina|Austria':      {id:15186502,cid:'tUbsuWb',slug:'argentina-austria'},
+  'Inglaterra|Ghana':       {id:15186672,cid:'nUbsoVb',slug:'ghana-england'},
+  'Escocia|Brasil':         {id:15186861,cid:'VTbsYUb',slug:'brazil-scotland'},
+  'Ecuador|Alemania':       {id:15186907,cid:'lUbshVb',slug:'ecuador-germany'},
+  'Uruguay|España':         {id:15186841,cid:'YTbsAUb',slug:'uruguay-spain'},
+  'Colombia|Portugal':      {id:15186696,cid:'eUbsvWb',slug:'colombia-portugal'},
+};
+
+function getSofaKey(h,a){return h+'|'+a;}
+
+async function openLineups(h,a){
+  const key=getSofaKey(h,a);
+  const sofa=SOFA[key];
+  if(!sofa)return;
+  const panel=document.getElementById('lineup-panel');
+  if(!panel)return;
+  const sofaUrl=`https://www.sofascore.com/football/match/${sofa.slug}/${sofa.cid}#id:${sofa.id},tab:lineups`;
+  panel.innerHTML=`<div class="lineup-title">⏳ Cargando alineaciones...</div>`;
+  document.getElementById('lineup-modal').classList.add('open');
+  try{
+    const resp=await fetch(`https://api.sofascore.com/api/v1/event/${sofa.id}/lineups`,{
+      headers:{'User-Agent':'Mozilla/5.0','Referer':'https://www.sofascore.com/'}
+    });
+    if(!resp.ok)throw new Error('CORS');
+    const data=await resp.json();
+    panel.innerHTML=renderLineupsPanel(data,h,a,sofaUrl);
+  }catch(e){
+    // Fallback: link directo a Sofascore
+    panel.innerHTML=`
+      <div class="lineup-title">📋 Alineaciones — ${h} vs ${a}</div>
+      <div style="text-align:center;color:var(--mut);font-size:.85rem;padding:16px 0">Las alineaciones se publican 1 hora antes del partido.</div>
+      <a class="lineup-sof-btn" href="${sofaUrl}" target="_blank">🔗 Ver en Sofascore</a>
+      <button onclick="closeLineups()" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.06);border:none;border-radius:10px;color:var(--mut);cursor:pointer;font-family:inherit;font-size:.85rem">Cerrar</button>`;
+  }
+}
+
+function renderLineupsPanel(data,h,a,url){
+  function renderSide(side,name){
+    const pl=side.players||[];
+    const starters=pl.filter(p=>!p.substitute);
+    const subs=pl.filter(p=>p.substitute);
+    const formation=side.formation||'';
+    return`<div>
+      <div class="lineup-team-name">${name}</div>
+      <div class="lineup-formation">${formation}</div>
+      ${starters.map(p=>`<div class="lineup-player"><span class="lineup-num">${p.jerseyNumber||''}</span><span>${p.player?.name||''}</span></div>`).join('')}
+      ${subs.length?`<div style="font-size:.7rem;color:var(--mut);padding:6px 6px 2px;font-weight:700">Suplentes</div>`:''}
+      ${subs.map(p=>`<div class="lineup-player lineup-sub"><span class="lineup-num">${p.jerseyNumber||''}</span><span>${p.player?.name||''}</span></div>`).join('')}
+    </div>`;
+  }
+  const home=data.home||{};
+  const away=data.away||{};
+  return`
+    <div class="lineup-title">📋 ${h} vs ${a}</div>
+    <div class="lineup-teams">
+      ${renderSide(home,h)}
+      ${renderSide(away,a)}
+    </div>
+    <a class="lineup-sof-btn" href="${url}" target="_blank">🔗 Ver en Sofascore</a>
+    <button onclick="closeLineups()" style="margin-top:8px;width:100%;padding:10px;background:rgba(255,255,255,.06);border:none;border-radius:10px;color:var(--mut);cursor:pointer;font-family:inherit;font-size:.85rem">Cerrar</button>`;
+}
+
+function closeLineups(){document.getElementById('lineup-modal').classList.remove('open');}
 
 // Init room (load from localStorage or show welcome screen)
 initRoom();
