@@ -417,6 +417,11 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .jp-pts.miss{color:var(--mut)}
 .jp-pred{font-family:'Barlow Condensed';font-weight:700;font-size:.85rem;color:rgba(255,255,255,.6)}
 .jp-no-pred{font-size:.75rem;color:var(--mut);font-style:italic}
+.jp-adj{font-size:.7rem;color:#f87171;font-weight:700;display:flex;align-items:center;gap:3px;margin-top:2px}
+.jp-adj-tag{font-size:.6rem;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:1px 5px;border-radius:4px;font-weight:700}
+.jp-admin-ctrl{display:flex;align-items:center;gap:3px;margin-top:3px}
+.jp-adj-btn{width:20px;height:20px;border-radius:5px;border:1px solid rgba(248,113,113,.35);background:rgba(248,113,113,.1);color:#f87171;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.jp-header{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;padding:5px 14px 4px;font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.06)}
 
 /* ── Admin Panel ── */
 #admin-modal{position:fixed;inset:0;z-index:99996;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center}
@@ -574,8 +579,8 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <div id="rules-modal" onclick="if(event.target===this)closeRules()">
   <div id="rules-panel">
     <h3>📋 Reglas de la Porra</h3>
-    <div class="rule-row"><div class="rule-pts">3 pts</div><div class="rule-desc">Resultado exacto — marcador correcto</div></div>
-    <div class="rule-row"><div class="rule-pts">1 pt</div><div class="rule-desc">Aciertas el ganador o que hay empate</div></div>
+    <div class="rule-row"><div class="rule-pts" style="color:var(--gold)">4 pts</div><div class="rule-desc"><b>Resultado exacto</b> — 3 pts por el marcador + 1 pt por el signo<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Ej: pronosticas 2-0 y el resultado es 2-0 → 4 pts</span></div></div>
+    <div class="rule-row"><div class="rule-pts">1 pt</div><div class="rule-desc"><b>Signo correcto</b> — aciertas quién gana (o empate) pero no el marcador<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Ej: pronosticas 2-0 y el resultado es 1-0 → 1 pt</span></div></div>
     <div class="rule-row"><div class="rule-pts">⚡</div><div class="rule-desc"><b style="color:var(--grn)">Bonus goleador</b> — elige 1 jugador por partido</div></div>
     <div class="pos-grid-rules">
       <div class="pos-item-r"><div class="pos-icon-r">⚡</div><div class="pos-name-r">Delantero</div><div class="pos-pts-r">+1</div></div>
@@ -1025,6 +1030,7 @@ async function enterRoom(code,playerName,pin){
   await loadRoomData(code);
   await loadAdminStatus(code,playerName);
   await loadMemberAdjustments(code);
+  await loadMatchAdjustments(code);
   subscribeToRoom(code);
   startPresence(code,playerName);
   renderActive();
@@ -1183,8 +1189,8 @@ function _calcBasePts(){
     PLAYERS.forEach(p=>{
       const sv=preds[p.name];if(!sv)return;
       const ph=+sv.loc,pa=+sv.vis,pSign=ph>pa?1:ph<pa?-1:0;
+      if(pSign===rSign)pts[p.name]+=1;
       if(ph===rh&&pa===ra)pts[p.name]+=3;
-      else if(pSign===rSign)pts[p.name]+=1;
     });
   });
   return pts;
@@ -1250,6 +1256,31 @@ async function loadMemberAdjustments(roomCode){
   if(data)data.forEach(r=>{window._ADJUSTMENTS[r.player_name]={adj:r.point_adjustment||0,note:r.adjustment_note||''};});
 }
 
+async function loadMatchAdjustments(roomCode){
+  const{data}=await _supa.from('match_adjustments').select('match_id,player_name,adjustment').eq('room_code',roomCode);
+  window._MATCH_ADJ={};
+  if(data)data.forEach(r=>{
+    if(!window._MATCH_ADJ[r.match_id])window._MATCH_ADJ[r.match_id]={};
+    window._MATCH_ADJ[r.match_id][r.player_name]=r.adjustment;
+  });
+}
+
+async function matchAdjust(matchId,playerName,delta){
+  if(!isAdmin())return;
+  window._MATCH_ADJ=window._MATCH_ADJ||{};
+  if(!window._MATCH_ADJ[matchId])window._MATCH_ADJ[matchId]={};
+  const current=window._MATCH_ADJ[matchId][playerName]||0;
+  const newVal=current+delta;
+  window._MATCH_ADJ[matchId][playerName]=newVal;
+  const{error}=await _supa.from('match_adjustments').upsert(
+    {room_code:window._MYROOM.code,player_name:playerName,match_id:matchId,adjustment:newVal},
+    {onConflict:'room_code,player_name,match_id'}
+  );
+  if(error){showToast('Error al guardar: '+error.message,'err');return;}
+  renderActive();
+  showToast(newVal===0?'Ajuste eliminado':`Ajuste guardado: ${newVal>0?'+':''}${newVal} pts para ${playerName}`);
+}
+
 function openAdmin(){
   closeSettings();
   renderAdminPanel();
@@ -1299,9 +1330,13 @@ function calcPlayerPts(playerName){
     const sv=(window._PS?.[k]||{})[playerName];
     if(!sv)return;
     const ph=+sv.loc,pa=+sv.vis,pSign=ph>pa?1:ph<pa?-1:0;
+    if(pSign===rSign)pts+=1;
     if(ph===rh&&pa===ra)pts+=3;
-    else if(pSign===rSign)pts+=1;
+    // Sumar ajuste manual del admin para este partido
+    pts+=(window._MATCH_ADJ||{})[jid]?.[playerName]||0;
   });
+  // Sumar ajuste global del admin
+  pts+=((window._ADJUSTMENTS||{})[playerName]?.adj)||0;
   return pts;
 }
 
@@ -1532,8 +1567,8 @@ function calcPorraPoints(){
       const ph=+sv.loc,pa=+sv.vis;
       const pSign=ph>pa?1:ph<pa?-1:0;
       let pts=0,type='miss';
-      if(ph===rh&&pa===ra){pts=3;type='exact';}
-      else if(pSign===rSign){pts=1;type='sign';}
+      if(pSign===rSign){pts=1;type='sign';}
+      if(ph===rh&&pa===ra){pts+=3;type='exact';}
       totals[p.id].pts+=pts;
       if(type==='exact')totals[p.id].exact++;
       if(type==='sign')totals[p.id].sign++;
@@ -1576,7 +1611,7 @@ function renderPorraTab(){
     }
   });
   h+=`</div></div>`;
-  h+=`<div style="padding:6px 14px 2px;font-size:10px;color:var(--mut)">⚽ 3pts resultado exacto · 1pt signo correcto · Bonus goleador pendiente confirmación manual</div>`;
+  h+=`<div style="padding:6px 14px 2px;font-size:10px;color:var(--mut)">⚽ 4 pts resultado exacto (3+1) · 1 pt solo signo correcto · Bonus goleador pendiente confirmación manual</div>`;
   return h;
 }
 
@@ -2139,8 +2174,8 @@ function renderPorraFull(){
         const ph=+sv.loc,pa=+sv.vis;
         const pSign=ph>pa?1:ph<pa?-1:0;
         let pts=0,type='miss';
-        if(ph===rh&&pa===ra){pts=3;type='exact';}
-        else if(pSign===rSign){pts=1;type='sign';}
+        if(pSign===rSign){pts=1;type='sign';}
+        if(ph===rh&&pa===ra){pts+=3;type='exact';}
         totals[p.name].pts+=pts;
         if(type==='exact')totals[p.name].exact++;
         else if(type==='sign')totals[p.name].sign++;
@@ -2193,10 +2228,21 @@ function renderPorraFull(){
         else if(pts===0){ptsLabel='0';ptsClass='miss';}
         else{ptsLabel='+'+pts;ptsClass=type;}
         const meTag=p.isMe?` <span style="font-size:8px;color:var(--gold)">tú</span>`:'';
-        return`<div class="jp-row">
-          <div class="friend"><div class="pred-avatar" style="background:${p.color};width:22px;height:22px;font-size:9px">${p.initials}</div><div class="fname" style="font-size:11px">${p.name}${meTag}</div></div>
-          ${predCell}
-          <div class="jp-pts ${ptsClass}">${ptsLabel}</div>
+        // Ajuste manual del admin para este partido
+        const madj=(window._MATCH_ADJ||{})[j.jid]?.[p.name]||0;
+        const finalPts=j.pending?null:pts+madj;
+        const adjHtml=madj!==0?`<div class="jp-adj"><span>${madj>0?'+'+madj:madj} pts</span><span class="jp-adj-tag">Rectificación del Administrador</span></div>`:''
+        const adminCtrl=isAdmin()&&!j.pending?`<div class="jp-admin-ctrl">
+          <button class="jp-adj-btn" onclick="matchAdjust('${j.jid}','${p.name}',-1)">−</button>
+          <button class="jp-adj-btn" onclick="matchAdjust('${j.jid}','${p.name}',1)">+</button>
+        </div>`:'';
+        return`<div class="jp-row" style="display:block;padding:8px 14px">
+          <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px">
+            <div class="friend"><div class="pred-avatar" style="background:${p.color};width:22px;height:22px;font-size:9px">${p.initials}</div><div class="fname" style="font-size:11px">${p.name}${meTag}</div></div>
+            ${predCell}
+            <div class="jp-pts ${ptsClass}" style="${madj!==0?'text-decoration:line-through;opacity:.45':''};min-width:28px">${ptsLabel}</div>
+          </div>
+          ${adjHtml}${adminCtrl}
         </div>`;
       }).join('');
       return`<div class="jornada-block">
@@ -2204,7 +2250,7 @@ function renderPorraFull(){
           <div class="jornada-match">${j.jid}${j.jid?' · ':''}${j.h} vs ${j.a}</div>
           ${resultLabel}
         </div>
-        <div class="jornada-body">${rowsHtml}</div>
+        <div class="jornada-body"><div class="jp-header"><span>Jugador</span><span>Pronóstico</span><span></span><span>Pts</span></div>${rowsHtml}</div>
       </div>`;
     }).join('');
   }
