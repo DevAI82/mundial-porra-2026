@@ -417,6 +417,26 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .jp-pts.miss{color:var(--mut)}
 .jp-pred{font-family:'Barlow Condensed';font-weight:700;font-size:.85rem;color:rgba(255,255,255,.6)}
 .jp-no-pred{font-size:.75rem;color:var(--mut);font-style:italic}
+#player-picker-modal{position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.88);display:none;align-items:flex-end;justify-content:center}
+#player-picker-modal.open{display:flex}
+#player-picker-panel{background:#14532d;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:24px}
+.pp-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 6px;background:#0f1f0f}
+.pp-title{font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:#fff;flex:1}
+.pp-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pp-pitch{position:relative;background:linear-gradient(180deg,#14532d 0%,#166534 12.5%,#14532d 12.5%,#14532d 25%,#166534 25%,#166534 37.5%,#14532d 37.5%,#14532d 50%,#166534 50%,#166534 62.5%,#14532d 62.5%,#14532d 75%,#166534 75%,#166534 87.5%,#14532d 87.5%);display:flex;flex-direction:row;width:100%;min-height:420px}
+.pp-team-col{display:flex;flex-direction:column;padding:2px;flex:1;min-width:0}
+.pp-divider{width:3px;background:rgba(255,255,255,.25);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pp-divider::before{content:'';position:absolute;width:36px;height:36px;border:2px solid rgba(255,255,255,.3);border-radius:50%;background:rgba(0,0,0,.1)}
+.pp-team-hdr{text-align:center;padding:5px 2px;font-family:'Barlow Condensed';font-weight:800;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
+.pp-row{flex:1;border-bottom:1px dashed rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 3px;gap:3px;min-height:70px}
+.pp-row:last-child{border-bottom:none}
+.pp-row-lbl{font-size:.5rem;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.pp-chips{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.pchip{background:rgba(0,0,0,.25);border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:3px 8px;font-size:.68rem;font-weight:700;color:#fff;cursor:pointer;transition:.1s;white-space:nowrap;text-align:center;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+.pchip:active{transform:scale(.93)}
+.pchip.sel{background:var(--gold)!important;color:#000;border-color:var(--gold);font-weight:800}
+.pp-none{font-size:.58rem;color:rgba(255,255,255,.2);font-style:italic}
+.pp-sel-btn{display:block;margin:6px 10px 0;padding:11px;background:var(--gold);color:#000;font-family:'Barlow Condensed';font-weight:800;font-size:1rem;border:none;border-radius:12px;cursor:pointer;text-align:center;width:calc(100% - 20px)}
 #lineup-modal{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:none;align-items:flex-end;justify-content:center;padding-bottom:0}
 #lineup-modal.open{display:flex}
 #lineup-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:18px 16px 30px}
@@ -588,6 +608,17 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
   <div class="bg-overlay"></div>
 </div>
 
+<div id="player-picker-modal" onclick="if(event.target===this)closePlayerPicker()">
+  <div id="player-picker-panel">
+    <div class="pp-header">
+      <div class="pp-title" id="pp-title">⚽ Elige goleador</div>
+      <button class="pp-close" onclick="closePlayerPicker()">✕</button>
+    </div>
+    <div id="pp-body"></div>
+    <button class="pp-sel-btn" onclick="confirmPlayerPick()">✅ Confirmar selección</button>
+  </div>
+</div>
+
 <div id="lineup-modal" onclick="if(event.target===this)closeLineups()">
   <div id="lineup-panel"></div>
 </div>
@@ -642,23 +673,7 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
     </div>
   </div>
 </div>
-<div id="admin-modal" onclick="if(event.target===this)closeAdmin()">
-  <div id="admin-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="admin-title">👑 Panel Administrador</div>
-      <button class="settings-btn close" onclick="closeAdmin()">✕</button>
-    </div>
-    <div id="admin-members-list"></div>
-    <div>
-      <div style="font-size:.75rem;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pre-registrar jugador</div>
-      <div class="admin-add-row">
-        <input class="admin-add-inp" id="admin-add-name" placeholder="Nombre del jugador" maxlength="20">
-        <button class="admin-add-btn" onclick="adminAddUser()">➕ Añadir</button>
-      </div>
-      <div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:6px">El jugador podrá unirse con el código de sala y crear su PIN.</div>
-    </div>
-  </div>
-</div>
+
 <div id="admin-modal" onclick="if(event.target===this)closeAdmin()">
   <div id="admin-panel">
     <div class="admin-header">
@@ -1994,7 +2009,7 @@ async function savePred(){
     const visEl=document.getElementById('pi-v-me');
     if(!locEl||!visEl){showToast('Error: formulario no encontrado','err');return;}
     const loc=locEl.value===''?'0':locEl.value,vis=visEl.value===''?'0':visEl.value;
-    const player=(document.getElementById('pi-p-me')||{}).value||'—';
+    const player=(document.getElementById('pi-p-me')||{}).value||'';
     const pos=(document.getElementById('pi-s-me')||{}).value||'DEL';
     window._PS=window._PS||{};
     if(!window._PS[k])window._PS[k]={};
@@ -2023,8 +2038,14 @@ function renderPorraSection(m){
     const color=playerColor(name);
     const initials=playerInitials(name);
     const scoreCell=sv
-      ?`<div class="pred-score">${sv.score}</div><div class="pred-player">${sv.pos}</div>`
+      ?`<div class="pred-score">${sv.score}</div>`
       :`<span style="font-size:10px;color:var(--mut)">Sin pronóstico</span>`;
+    const playerLine=sv
+      ?`<div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+          <span style="font-size:.82rem;font-weight:700;color:var(--gold)">${sv.player||'—'}</span>
+          <span style="font-family:'Barlow Condensed';font-weight:800;font-size:.7rem;background:rgba(250,204,21,.18);color:var(--gold);padding:1px 5px;border-radius:5px">${sv.pos}</span>
+        </div>`
+      :'';
     const editBtn=isMe&&!closed
       ?`<button class="pred-edit-btn" onclick="togglePredForm()">✏️</button>`
       :(closed?`<span style="font-size:9px;color:var(--mut)">🔒</span>`:'');
@@ -2036,8 +2057,12 @@ function renderPorraSection(m){
         <span class="pred-sep">–</span>
         <input class="pred-inp" type="number" min="0" max="20" id="pi-v-me" value="${sv?.vis??'0'}" placeholder="0">
       </div>
-      <select class="pred-player-sel" id="pi-p-me" onchange="onPlayerChange(this,'pi-s-me','${m.h}','${m.a}')">${buildPlayerOpts(m.h,m.a,sv?.player||'')}</select>
+      <input type="hidden" id="pi-p-me" value="${sv?.player||''}">
       <input type="hidden" id="pi-s-me" value="${posInit}">
+      <button type="button" class="pred-player-sel" style="text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="openPlayerPicker('${m.h}','${m.a}',document.getElementById('pi-p-me').value,'pi-p-me','pi-s-me')">
+        <span style="flex:1" id="pi-p-label">${sv?.player||'⚽ Elige goleador...'}</span>
+        <span style="font-size:.7rem;color:var(--mut)">▼</span>
+      </button>
       <button class="pred-save-btn" onclick="savePred()">💾 Guardar pronóstico</button>
     </div>`:'';
     return `<div class="pred-row" style="flex-direction:column;align-items:stretch;padding:0">
@@ -2045,15 +2070,17 @@ function renderPorraSection(m){
         <div class="friend">
           <div style="position:relative;flex-shrink:0">
             <div class="pred-avatar" style="background:${color}">${initials}</div>
-            ${online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:1.5px solid var(--card)"></span>':''}
+            ${online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#34d399;border:1.5px solid var(--card)"></span>':''}
           </div>
-          <div><div class="fname">${name}${isMe?' <span style="font-size:9px;color:var(--gold)">tú</span>':''}</div>${sv?`<div class="fgol">${sv.player}</div>`:''}</div>
+          <div><div class="fname">${name}${isMe?' <span style="font-size:9px;color:var(--gold)">tú</span>':''}</div>${playerLine}</div>
         </div>
         <div style="display:flex;align-items:center;gap:5px">${scoreCell}</div>
         ${editBtn}
       </div>${form}</div>`;
   }).join('');
-  return `<div class="gc"><div class="gc-head" style="justify-content:space-between">👥 Pronósticos — ${m.h} vs ${m.a}${badge}</div>${rows}</div>`;
+  const onlineCount=(window._ONLINE||new Set()).size;
+  const onlineBadge=onlineCount>0?`<span style="font-size:.72rem;color:#34d399;font-weight:700">● ${onlineCount} en línea</span>`:'';
+  return `<div class="gc"><div class="gc-head" style="justify-content:space-between">👥 Pronósticos — ${m.h} vs ${m.a}${badge}<span style="display:flex;align-items:center;gap:8px">${onlineBadge}</span></div>${rows}</div>`;
 }
 
 
@@ -2329,8 +2356,8 @@ function renderHome(){
         </div>
       </div>
       <div class="match-footer-row" style="margin-top:8px">
-        ${st?'':m.venue?`<div class="match-tag">\U0001f3df\ufe0f ${m.venue}</div>`:''}
-        <div class="match-tag">\U0001f4c5 ${m.d.replace('/',' Jun ').replace('/',' Jul ')}</div>
+        ${st?'':m.venue?`<div class="match-tag">🏟️ ${m.venue}</div>`:''}
+        <div class="match-tag">📅 ${m.d.replace('/',' Jun ').replace('/',' Jul ')}</div>
         ${m.ch?`<div class="match-tag">${m.ch}</div>`:''}
       </div>
       <div id="match-timer" class="match-timer"></div>
@@ -2425,18 +2452,20 @@ async function openLineups(h,a){
   panel.innerHTML=`<div class="lineup-title">⏳ Cargando alineaciones...</div>`;
   document.getElementById('lineup-modal').classList.add('open');
   try{
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(),8000);
     const resp=await fetch(`https://api.sofascore.com/api/v1/event/${sofa.id}/lineups`,{
-      headers:{'User-Agent':'Mozilla/5.0','Referer':'https://www.sofascore.com/'}
+      signal:ctrl.signal,mode:'cors'
     });
-    if(!resp.ok)throw new Error('CORS');
+    if(!resp.ok)throw new Error('no-data');
     const data=await resp.json();
+    if(!data.home&&!data.away)throw new Error('empty');
     panel.innerHTML=renderLineupsPanel(data,h,a,sofaUrl);
   }catch(e){
-    // Fallback: link directo a Sofascore
     panel.innerHTML=`
-      <div class="lineup-title">📋 Alineaciones — ${h} vs ${a}</div>
-      <div style="text-align:center;color:var(--mut);font-size:.85rem;padding:16px 0">Las alineaciones se publican 1 hora antes del partido.</div>
-      <a class="lineup-sof-btn" href="${sofaUrl}" target="_blank">🔗 Ver en Sofascore</a>
+      <div class="lineup-title">📋 ${h} vs ${a}</div>
+      <div style="text-align:center;color:var(--mut);font-size:.85rem;padding:12px 0">Las alineaciones se publican aproximadamente 1 hora antes del partido.</div>
+      <a class="lineup-sof-btn" href="${sofaUrl}" target="_blank">🔗 Ver alineación en Sofascore</a>
       <button onclick="closeLineups()" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.06);border:none;border-radius:10px;color:var(--mut);cursor:pointer;font-family:inherit;font-size:.85rem">Cerrar</button>`;
   }
 }
@@ -2518,6 +2547,95 @@ async function checkPushStatus(){
   if(btn&&sub&&Notification.permission==='granted'){
     btn.textContent='🔔 Notificaciones activas';btn.disabled=true;
   }
+}
+
+
+function renderMembersPanel(){
+  const all=getPlayers();
+  if(!all.length||!window._MYROOM)return'';
+  const online=all.filter(p=>p.online);
+  const offline=all.filter(p=>!p.online);
+  const row=p=>`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+    <div style="position:relative;flex-shrink:0">
+      <div class="pred-avatar" style="background:${p.color};width:26px;height:26px;font-size:9px">${p.initials}</div>
+      <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${p.online?'#34d399':'rgba(255,255,255,.2)'};border:1.5px solid var(--card)"></span>
+    </div>
+    <span style="font-size:.82rem;flex:1">${p.name}${p.isMe?' <span style="font-size:.65rem;color:var(--gold)">tú</span>':''}</span>
+    <span style="font-size:.7rem;color:${p.online?'#34d399':'rgba(255,255,255,.3)'};">${p.online?'● en línea':'○ desconectado'}</span>
+  </div>`;
+  return`<div class="gc" style="margin-top:8px">
+    <div class="gc-head" style="justify-content:space-between">
+      👥 Miembros de la sala
+      <span style="font-size:.75rem;font-weight:600;color:#34d399">${online.length} en línea</span>
+    </div>
+    <div style="padding:4px 14px 6px">
+      ${all.map(row).join('')}
+    </div>
+  </div>`;
+}
+
+
+/* ── Player Picker ── */
+let _PP={home:'',away:'',selected:'',inputId:'',posId:''};
+
+function openPlayerPicker(home,away,current,inputId,posId){
+  _PP={home,away,selected:current||'',inputId,posId};
+  document.getElementById('pp-title').textContent=`⚽ Elige goleador — ${home} vs ${away}`;
+  _renderPP();
+  document.getElementById('player-picker-modal').classList.add('open');
+}
+function closePlayerPicker(){
+  document.getElementById('player-picker-modal').classList.remove('open');
+}
+function selectChip(name){
+  _PP.selected=name;
+  _renderPP();
+}
+function confirmPlayerPick(){
+  const inp=document.getElementById(_PP.inputId);
+  const pos=document.getElementById(_PP.posId);
+  if(inp){inp.value=_PP.selected;}
+  if(pos&&_PP.selected){pos.value=getPlayerPos([_PP.home,_PP.away],_PP.selected);}
+  // Update button label
+  const btnLabel=document.getElementById('pi-p-label');
+  if(btnLabel)btnLabel.textContent=_PP.selected||'⚽ Elige goleador...';
+  closePlayerPicker();
+  showToast(_PP.selected?`✅ ${_PP.selected} seleccionado`:'Sin goleador seleccionado');
+}
+function _renderPP(){
+  const zones=[
+    {key:'FWD',lbl:'DEL'},
+    {key:'MID',lbl:'MED'},
+    {key:'DEF',lbl:'DEF'},
+    {key:'GK', lbl:'POR'},
+  ];
+  function col(sq,color,name){
+    const rows=zones.map(z=>{
+      const pl=sq[z.key]||[];
+      const chips=pl.map(n=>{
+        const sel=n===_PP.selected;
+        const last=n.split(' ').slice(-1)[0];
+        return`<button class="pchip${sel?' sel':''}" style="${sel?'':'border-color:'+color+'55;'}" onclick="selectChip('${n.replace(/'/g,"\'")}') " title="${n}">${last}</button>`;
+      }).join('');
+      return`<div class="pp-row">
+        <div class="pp-row-lbl">${z.lbl}</div>
+        <div class="pp-chips">${chips||'<span class="pp-none">—</span>'}</div>
+      </div>`;
+    }).join('');
+    return`<div class="pp-team-col">
+      <div class="pp-team-hdr" style="color:${color}">${name}</div>
+      ${rows}
+    </div>`;
+  }
+  const hSq=SQUADS[_PP.home]||{};
+  const aSq=SQUADS[_PP.away]||{};
+  const html=`<div class="pp-pitch">
+    ${col(hSq,'#60a5fa',_PP.home)}
+    <div class="pp-divider"></div>
+    ${col(aSq,'#f87171',_PP.away)}
+  </div>`;
+  const body=document.getElementById('pp-body');
+  if(body)body.innerHTML=html;
 }
 
 // Init room (load from localStorage or show welcome screen)
