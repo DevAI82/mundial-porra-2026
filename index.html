@@ -423,15 +423,14 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .pp-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 6px;background:#0f1f0f}
 .pp-title{font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:#fff;flex:1}
 .pp-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.pp-pitch{position:relative;background:linear-gradient(180deg,#14532d 0%,#166534 12.5%,#14532d 12.5%,#14532d 25%,#166534 25%,#166534 37.5%,#14532d 37.5%,#14532d 50%,#166534 50%,#166534 62.5%,#14532d 62.5%,#14532d 75%,#166534 75%,#166534 87.5%,#14532d 87.5%);display:flex;flex-direction:row;width:100%;min-height:420px}
-.pp-team-col{display:flex;flex-direction:column;padding:2px;flex:1;min-width:0}
-.pp-divider{width:3px;background:rgba(255,255,255,.25);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.pp-divider::before{content:'';position:absolute;width:36px;height:36px;border:2px solid rgba(255,255,255,.3);border-radius:50%;background:rgba(0,0,0,.1)}
-.pp-team-hdr{text-align:center;padding:5px 2px;font-family:'Barlow Condensed';font-weight:800;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
-.pp-row{flex:1;border-bottom:1px dashed rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 3px;gap:3px;min-height:70px}
-.pp-row:last-child{border-bottom:none}
-.pp-row-lbl{font-size:.5rem;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
-.pp-chips{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.pp-pitch{background:linear-gradient(90deg,#14532d 0%,#166534 12.5%,#14532d 12.5%,#14532d 25%,#166534 25%,#166534 37.5%,#14532d 37.5%,#14532d 50%,#166534 50%,#166534 62.5%,#14532d 62.5%,#14532d 75%,#166534 75%,#166534 87.5%,#14532d 87.5%);display:flex;flex-direction:row;overflow-x:auto;min-height:360px;position:relative}
+.pp-team-labels{display:flex;padding:0 4px 2px}
+.pp-team-label{flex:1;text-align:center;font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;padding:6px 0 2px;letter-spacing:.03em}
+.pp-zone-col{flex:1;min-width:58px;max-width:90px;border-right:1px dashed rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;padding:5px 2px;gap:3px}
+.pp-zone-col:last-child{border-right:none}
+.pp-zone-col.center-l{border-right:3px solid rgba(255,255,255,.35)}
+.pp-zone-lbl{font-size:.5rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;white-space:nowrap}
+.pp-chips-v{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%}
 .pchip{background:rgba(0,0,0,.25);border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:3px 8px;font-size:.68rem;font-weight:700;color:#fff;cursor:pointer;transition:.1s;white-space:nowrap;text-align:center;max-width:90px;overflow:hidden;text-overflow:ellipsis}
 .pchip:active{transform:scale(.93)}
 .pchip.sel{background:var(--gold)!important;color:#000;border-color:var(--gold);font-weight:800}
@@ -2603,37 +2602,36 @@ function confirmPlayerPick(){
   showToast(_PP.selected?`✅ ${_PP.selected} seleccionado`:'Sin goleador seleccionado');
 }
 function _renderPP(){
-  const zones=[
-    {key:'FWD',lbl:'DEL'},
-    {key:'MID',lbl:'MED'},
-    {key:'DEF',lbl:'DEF'},
-    {key:'GK', lbl:'POR'},
-  ];
-  function col(sq,color,name){
-    const rows=zones.map(z=>{
-      const pl=sq[z.key]||[];
-      const chips=pl.map(n=>{
-        const sel=n===_PP.selected;
-        const last=n.split(' ').slice(-1)[0];
-        return`<button class="pchip${sel?' sel':''}" style="${sel?'':'border-color:'+color+'55;'}" onclick="selectChip('${n.replace(/'/g,"\'")}') " title="${n}">${last}</button>`;
-      }).join('');
-      return`<div class="pp-row">
-        <div class="pp-row-lbl">${z.lbl}</div>
-        <div class="pp-chips">${chips||'<span class="pp-none">—</span>'}</div>
-      </div>`;
-    }).join('');
-    return`<div class="pp-team-col">
-      <div class="pp-team-hdr" style="color:${color}">${name}</div>
-      ${rows}
-    </div>`;
-  }
   const hSq=SQUADS[_PP.home]||{};
   const aSq=SQUADS[_PP.away]||{};
-  const html=`<div class="pp-pitch">
-    ${col(hSq,'#60a5fa',_PP.home)}
-    <div class="pp-divider"></div>
-    ${col(aSq,'#f87171',_PP.away)}
-  </div>`;
+  function zCol(players,lbl,color,isCenterL){
+    const chips=(players||[]).map(n=>{
+      const sel=n===_PP.selected;
+      const last=n.split(' ').slice(-1)[0];
+      return`<button class="pchip${sel?' sel':''}" onclick="selectChip('${n.replace(/'/g,"\'")}') " title="${n}">${last}</button>`;
+    }).join('');
+    return`<div class="pp-zone-col${isCenterL?' center-l':''}">
+      <div class="pp-zone-lbl" style="color:${color}">${lbl}</div>
+      <div class="pp-chips-v">${chips||'<span class="pp-none">—</span>'}</div>
+    </div>`;
+  }
+  // Home: POR→DEF→MED→DEL (attacks right)
+  // Away: DEL→MED→DEF→POR (attacks left, mirrored)
+  const html=`
+    <div class="pp-team-labels">
+      <span class="pp-team-label" style="color:#60a5fa">← ${_PP.home}</span>
+      <span class="pp-team-label" style="color:#f87171">${_PP.away} →</span>
+    </div>
+    <div class="pp-pitch">
+      ${zCol(hSq.GK, 'POR','#60a5fa',false)}
+      ${zCol(hSq.DEF,'DEF','#60a5fa',false)}
+      ${zCol(hSq.MID,'MED','#60a5fa',false)}
+      ${zCol(hSq.FWD,'DEL','#60a5fa',true)}
+      ${zCol(aSq.FWD,'DEL','#f87171',false)}
+      ${zCol(aSq.MID,'MED','#f87171',false)}
+      ${zCol(aSq.DEF,'DEF','#f87171',false)}
+      ${zCol(aSq.GK, 'POR','#f87171',false)}
+    </div>`;
   const body=document.getElementById('pp-body');
   if(body)body.innerHTML=html;
 }
