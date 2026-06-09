@@ -43,7 +43,7 @@ body{font-family:'Urbanist',system-ui,sans-serif;background:var(--bg);color:var(
 @keyframes fadeIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 .topbar{position:sticky;top:0;z-index:50;background:rgba(4,16,2,.88);
   backdrop-filter:blur(14px);border-bottom:1px solid var(--border);
-  padding:10px 14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  padding:8px 14px;display:flex;flex-direction:row;align-items:center;gap:6px}
 .mode-toggle{display:flex;background:rgba(255,255,255,.06);border:1px solid var(--border);
   border-radius:999px;padding:3px}
 .mode-toggle button{border:0;background:transparent;color:var(--mut);
@@ -370,6 +370,47 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .prox-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .prox-vs{font-size:9px;color:var(--mut);font-family:'Barlow Condensed';font-weight:700;flex-shrink:0}
 .prox-date{text-align:right;font-family:'Barlow Condensed';font-weight:800;font-size:12px;color:var(--gold);line-height:1.25;flex-shrink:0}
+.premios-modal{position:fixed;inset:0;z-index:10001;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);opacity:0;visibility:hidden;transition:.25s}
+.premios-modal.open{opacity:1;visibility:visible}
+.premios-panel{background:#0d200a;border:1px solid rgba(255,255,255,.15);border-radius:22px 22px 0 0;width:100%;max-width:500px;padding:22px 18px 32px;transform:translateY(100%);transition:transform .3s ease;max-height:90vh;overflow-y:auto}
+.premios-modal.open .premios-panel{transform:translateY(0)}
+.premios-title{font-family:'Barlow Condensed';font-weight:900;font-size:1.4rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:2px}
+.premios-subtitle{font-size:.78rem;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px}
+.podium-row{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:16px 0 20px}
+.podium-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.podium-block{border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;width:90px}
+.podium-1{background:linear-gradient(135deg,#f59e0b,#fcd34d);height:90px}
+.podium-2{background:linear-gradient(135deg,#9ca3af,#d1d5db);height:65px}
+.podium-3{background:linear-gradient(135deg,#b45309,#d97706);height:48px}
+.podium-medal{font-size:1.6rem}
+.podium-pct{font-family:'Barlow Condensed';font-weight:900;font-size:1.1rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.podium-prize{font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--gold)}
+.podium-label{font-size:.68rem;color:rgba(255,255,255,.5)}
+.premios-pool{background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);border-radius:12px;padding:14px 16px;margin:12px 0}
+.premios-pool-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.premios-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:8px 0}
+.premios-note{font-size:.72rem;color:rgba(255,255,255,.4);text-align:center;margin-top:14px;line-height:1.5}
+.fav-team-modal{position:fixed;inset:0;z-index:10001;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);opacity:0;visibility:hidden;transition:.25s}
+.fav-team-modal.open{opacity:1;visibility:visible}
+.fav-team-panel{background:#0d200a;border:1px solid rgba(255,255,255,.15);border-radius:22px 22px 0 0;width:100%;max-width:500px;padding:18px 16px 32px;transform:translateY(100%);transition:transform .3s ease;max-height:85vh;display:flex;flex-direction:column}
+.fav-team-modal.open .fav-team-panel{transform:translateY(0)}
+.fav-team-panel h3{font-family:'Barlow Condensed';font-weight:800;font-size:1.15rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:4px}
+.fav-team-panel p{font-size:.8rem;color:rgba(255,255,255,.6);text-align:center;margin:0 0 12px}
+.fav-team-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:2px}
+.fav-team-option{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .12s}
+.fav-team-option:hover,.fav-team-option.selected{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.25)}
+.fav-team-option:not(.selected){border:1px solid transparent}
+.fav-team-name{flex:1;font-size:.9rem;font-weight:600;color:#fff}
+.fav-card{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.fav-flag-big{width:40px;height:27px;border-radius:4px;object-fit:cover;border:1px solid rgba(255,255,255,.2);flex-shrink:0}
+.pdb-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:3px 12px 8px;background:rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.05)}
+.pdb-chip{font-family:'Barlow Condensed';font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.pdb-chip.zero{background:rgba(255,255,255,.06);color:rgba(255,255,255,.3)}
+.pdb-chip.prono{background:rgba(250,204,21,.18);color:var(--gold)}
+.pdb-chip.signo{background:rgba(52,211,153,.15);color:rgba(52,211,153,.9)}
+.pdb-chip.gol{background:rgba(96,165,250,.15);color:rgba(96,165,250,.9)}
+.pdb-chip.fav{background:rgba(250,204,21,.12);color:rgba(250,204,21,.8)}
+.pdb-total{font-family:'Barlow Condensed';font-size:11px;font-weight:900;color:var(--gold);margin-left:auto;padding-right:2px}
 .prox-btn-pred{background:var(--gold);color:#1a0800;font-family:'Barlow Condensed';font-weight:900;font-size:10px;letter-spacing:.08em;padding:5px 9px;border-radius:6px;border:none;cursor:pointer;white-space:nowrap;text-transform:uppercase;flex-shrink:0}
 .prox-flag{width:22px;height:15px;border-radius:3px;overflow:hidden;display:inline-flex;flex-shrink:0;border:1px solid rgba(255,255,255,.12)}
 .prox-flag img{width:100%;height:100%;object-fit:cover}
@@ -489,8 +530,10 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .adj-val.negative{color:#f87171}
 .del-btn{width:28px;height:28px;border-radius:8px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}
 .del-btn:active{background:rgba(248,113,113,.3)}
-.admin-add-row{display:flex;gap:8px;margin-top:4px}
-.admin-add-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.9rem;padding:8px 12px;border-radius:10px;outline:none}
+.admin-add-row{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.admin-add-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.9rem;padding:8px 12px;border-radius:10px;outline:none;resize:vertical;min-height:68px;font-family:inherit;line-height:1.4}
+.admin-share-btn{background:rgba(96,165,250,.12);color:#93c5fd;border:1.5px solid rgba(96,165,250,.3);font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;padding:8px 14px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.12s;width:100%;margin-top:4px}
+.admin-share-btn:active{background:rgba(96,165,250,.25)}
 .admin-add-btn{background:rgba(52,211,153,.15);color:var(--grn);border:1.5px solid rgba(52,211,153,.35);font-family:'Barlow Condensed';font-weight:800;font-size:.9rem;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
 .admin-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:1px 6px;font-size:.68rem;color:var(--gold);font-weight:800;font-family:'Barlow Condensed';letter-spacing:.04em}
 .settings-btn.admin{background:rgba(250,204,21,.12);color:var(--gold);border:1.5px solid rgba(250,204,21,.3)}
@@ -599,6 +642,22 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .room-badge .rn{font-size:.72rem;color:rgba(255,255,255,.6)}
 .welcome-code-inp{font-size:1.4rem!important;text-align:center;font-family:'Barlow Condensed'!important;font-weight:800!important;letter-spacing:.25em!important}
 
+/* ── Share-room modal ── */
+.share-modal{position:fixed;inset:0;z-index:10002;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:.25s;padding:20px}
+.share-modal.open{opacity:1;visibility:visible}
+.share-card{background:#0d1f0d;border:1.5px solid rgba(250,204,21,.3);border-radius:20px;width:100%;max-width:380px;padding:28px 22px 24px;text-align:center;box-shadow:0 0 40px rgba(250,204,21,.15)}
+.share-card-title{font-family:'Barlow Condensed';font-weight:900;font-size:1.35rem;color:#fff;letter-spacing:.06em;margin-bottom:4px}
+.share-card-sub{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:20px}
+.share-code-box{background:rgba(250,204,21,.1);border:2px solid rgba(250,204,21,.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;cursor:pointer;transition:.15s}
+.share-code-box:active{background:rgba(250,204,21,.2)}
+.share-code-label{font-size:.72rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.share-code-value{font-family:'Barlow Condensed';font-weight:900;font-size:2.8rem;color:var(--gold);letter-spacing:.25em;line-height:1}
+.share-btn-row{display:flex;gap:10px;margin-bottom:12px}
+.share-btn{flex:1;background:rgba(250,204,21,.15);color:var(--gold);border:1.5px solid rgba(250,204,21,.35);font-family:'Barlow Condensed';font-weight:800;font-size:1rem;padding:11px;border-radius:12px;cursor:pointer;transition:.12s}
+.share-btn:active{background:rgba(250,204,21,.3)}
+.share-btn.secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.15);font-size:.9rem}
+.share-note{font-size:.75rem;color:rgba(255,255,255,.4);line-height:1.5}
+
 </style>
 </head>
 <body>
@@ -666,7 +725,7 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
       <div class="pos-item-r"><div class="pos-icon-r">🛡️</div><div class="pos-name-r">Defensa</div><div class="pos-pts-r">+3</div></div>
       <div class="pos-item-r"><div class="pos-icon-r">🧤</div><div class="pos-name-r">Portero</div><div class="pos-pts-r">+5</div></div>
     </div>
-    <div class="rule-row"><div class="rule-pts" style="color:var(--red)">−2 pts</div><div class="rule-desc"><b style="color:var(--red)">Penalización gol en propia</b> — si tu jugador marca en propia puerta</div></div>
+    <div class="rule-row"><div class="rule-pts" style="color:var(--gold);font-size:1.4rem">⭐</div><div class="rule-desc"><b style="color:var(--gold)">Selección favorita</b> — sumas +2 pts si gana su partido, +1 pt si empata<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Avance de ronda: +1 pt extra · Campeón final: +3 pts extra</span></div></div>
     <div class="rule-row"><div class="rule-pts" style="color:var(--warn)">−1h</div><div class="rule-desc">Los pronósticos cierran <b>1 hora antes</b> del inicio del partido</div></div>
     <div style="font-size:9.5px;color:rgba(255,255,255,.35);margin-top:10px">⏰ Cierre al pitido inicial · 1 jugador por partido</div>
     <button class="rules-close" onclick="closeRules()">Cerrar</button>
@@ -676,7 +735,9 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <div class="app">
 
 <div class="topbar">
+  <div class="rules-btn" onclick="openPremios()" title="Premios">🏆</div>
   <div class="rules-btn" onclick="openRules()" title="Reglas de la porra">&#128203;</div>
+  <div style="flex:1"></div>
 </div>
 
 <div id="welcome">
@@ -713,11 +774,12 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
     </div>
     <div class="admin-body" id="admin-body"></div>
     <div class="admin-footer">
-      <div style="font-size:.75rem;color:var(--mut);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">➕ Pre-registrar jugador</div>
+      <div style="font-size:.75rem;color:var(--mut);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">➕ Pre-registrar jugadores</div>
       <div class="admin-add-row">
-        <input class="admin-add-inp" id="admin-add-name" type="text" placeholder="Nombre del jugador..." maxlength="20">
-        <button class="admin-add-submit" onclick="adminAddPlayer()">Añadir</button>
+        <textarea class="admin-add-inp" id="admin-add-name" placeholder="OLMEDA, JUGADOR 2, JUGADOR 3&#10;(separados por coma o cada uno en una línea)" maxlength="500"></textarea>
+        <button class="admin-add-submit" onclick="adminAddMultiple()">Añadir</button>
       </div>
+      <button class="admin-share-btn" onclick="shareRoomCode()">🔗 Compartir código de sala</button>
     </div>
   </div>
 </div>
@@ -774,6 +836,8 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAACbCAYAAAD4IGydAAAnZklEQVR42u29ebBc133f+Tl37769d78Nb8X6sIMgAO4kQFmURCuyx/Y8jC3LnpTjccXjZezYihN5Mo9wxVVWJlvJpTi2xok1diQHT5ZM25JIUTQeuBMESew73r529+t9ud13OfPHI2xXkqrUTA0euPSnqv/te873/s7vnN/vnvM70KFDhw4dOnTo0KFDhw4dOnTo0KFDhw4dOnTo0KFDhw4dOnTo0KFDhw4dOnTo0KFDhw7/HcT7vYFSSgHP/J12PiMBhBCy8/r+XwmJkPKkeurUuPbfe/FSnlTlyZPquvjvL7T3k6BMnFSEOO7Dcf9O86S8GHVWF7qEoqv56VnRkKUGhGhHFrNCHG//XZHhshTiRNBxBe9x8uRJ9fjxdTFPnTqlbYtf+0TQWPpYuZB7XDNTo5FwEFcVF4ek6wXmnG0nc4purmhGdMn3gslqy5vccf/xHIA8OaYyNhEIgfzICiulFDwjhDhBIKXU59/+ys9puvj5WDyzx6stUG26NWn0XAjb+lS9kjsrYwNnI4ldFzOZHRU5Pq6Uf/rw4QDliOc2H27UVr1ms/m7ux7/9bfXX9aYevz4hP+RE3Z8fFw5cWJ92N586z/8sNoq/5YiG/v7h/vxCHkyCDBMy0EJPBTDURUrCxiBUFfQjetSWGdV+9A3hBAlgOKN//yrjfLaL65lF//iWvKff+H4I6IpT46p4h6JK+6NpY4rQpwIpJTG+T/7R1/W3OLPpgd6UCzVV72y8BslxQt8VE1DM0wMy8IKRVF0GzWcgEga9AS+o5eEEX0+kKGv6NEDL0q52rt09k9eaJYXIwsF47PHjv/O6/dK3A0XVo6PK+LEieD27Qs9lbe/8rW0WPiYEvJ9zUI41bri1Fdx6gEoKqYh0QwNTdOkqutSM22MUFzq4aRUraQwowOqlhkgCOISEfmqEk39Q9iulc//i9fWVud2V5SRpw4+9flJefKkKo4f9z+0wo6PjyucOMGvlkrxq3/+y6c3hXP7DDtwlxcKenYxIJlwUfUK129HGRpoEYu00HQDXQNNE6iahmoYaKaNHk6gWV1Ss3sDLdKvGIP7RFA3TzdV/Sds+1C5eOlLzzrlpceq/rajo0f/lzN/d4LcCJQNs1QQe/ZcEb+laMGlb/3a143Gwr6KG3Wl9PVKOSASDfCdFo2Kx0h/FF16uO0WvtvAd6sEfhXpVZFuFbdZoFlaoFm6LdzylOpVp2nPvesq4eZRW/r/HnCSe395zIzHNN0//62ZmdN9Y2PHAzk+vmH93bB17MTJk8rx48f9V/70mfFo7fVPul7Fra56uuJqDA6rFFdztL06zbqCLhuETIfAayM1EHggIZAa+C6CNtLX14VvtbHxhJCu5i/KQMRHn67MP/fbvlsQgXBkPNzeVJ7/9n8Qm5WnZXBF4cSHyBXcWfpcm/z9I7nL3z5j+YueZaAKRYpmyaEd6ChKjla9ThC4+L6CFVIIRRXCYYlpIBUNpCIFKBCoSBSk1AnQMcIpkn2bMWL96LERqSa3icWLr6JoJdpVxwsrnhZ0Pf7Z3r0///WN8rcbYrFjl3dLKaV4+Q/+/hdtf5pwOiOCekm4vkoo7oNTwWs4CAVcP4VpFjFCHiE7SjQeIZyICMOyaNYqOPUcrUYT13EJpIGiWcjAo5ILiKsaQvpCNawglAjJ8vKMqofiiu+1ZFC88K/m5uaeZ3CoKKUUdzvXcNeFvWMhtz7Z/yOmO/ekUF0f6qrjt5CBz2rBwpIF1MBHUQS+kkRoMdBrpAc2kRjYjpbc0xJGommsvZOQU6dw6nW8hofv+wjDQ7ck9WIeIQwiXS6oimKHe2jFusmvVkWmy/TTYqFvbf4//rIY4plTp57RAO8DLewzly9LKaV25mv/8B/7zSVpp22alSrSc9EUj9l5ldF+A6GWEUIjpq4QuAny2S5Kru0/MLJHTfR/7lcgddkI85K2+HagSkVRhKTlK6htH1fUEEJQr+TwkUCbkGFhJvvY1r1NOC1Hq5feDIQ3/bNSyt8RQjhSIu5m2HtXhb0TCPzSZx8ddcvLDwWBJ4UqVFV46JqHpgUMpTw8P0r/oEej6lItVtH1Goa5j80jqlKZe4fFxepvjB4+4FCeQnquCDyXlWyIlcIA/X1rRLwCiqwgcUH3kF6SSqUhq44itM2jC7rZCrvuQsoWhf7Cpf94FHgeTip/m+z5gAk7OYkCBKvT7z6suGuYdiiQgafqqks4liBqh6i2AnLVEMP791CYvUDgupy9HCOZctBGyyLcPUx78cpIMLeCW16mXV4T01MRAn2YnlSVxdkI3V1VYi2XqKKwstRD1W2T3lYmlhiSmhJqqnb/iqE6VrDy16Fq7cZPA88zMfHBnbxyuSsSwKnmntZxCIVDUqWBHU+QGtgl9VBcDhk5pXiugtq1g9ZSk+fOtulLhtg2WKFRUzGaDXRDytvvXJJJO6/kV8GKbSfwKki1Tixps5SN4KeKYCrIZBofl1AshucDfvNlVQ8veF73DqkoQmnnjp1blrboE/W7OYndzQWzOH58wpdSqq16cV8gPQxLUyxDEO/fgb3tMWH0H1IyQ1sZGU7w3a9d4KXJCvs3m+wYqlFca9OuB+QX12hkV0Wj2FAWZwrk8waxmEet6lBvJ2lLn2o1RK0ZoZBvELRWMGydRsOT2RVHzEw3VzWj71mJclvoOqrMd/VWXumREsEzz9y15aZy9/zr3xhC3G/XMlJIwhbCjIZlbPhBgvDunK9vvapmdjKyd1juG23Ql2qj0MB1XfygTa1UxfAdaFUQXpUXX/LI103a1RqNZp3VnKDZgl07TZrtJCvZCLW1Il6zjaZaIt2fQVXLvwGhBYQ2p6MRMwJdU/NPCIFkz54PnrB/Q62mBYEXMS2JZfrY8TTEtrYUY+v/qBr7Ph7o/QU1nhDhZFqeejNP3FbQFJ1CRcFpB8hqjoUZD6cRcN++LjKxKNNXC4BF4BUQAlqBoLfPYjEboVqJ4jddiXSEF/hlTY9ee+n5vzJDtt12Sw7XXjzTVtbO/n72+h//hDh+3F//8vABEnZi4rgCUC288LDi+frirAiE4gfRVLcgsF4WxtBLwu5a8lztZbV/C3/1XDHoz0AqZVGrOtTq0JQpnv1+jQsX11Clx7b7hvAKa5QKLvmij9MOaLYcWr7J1K0Wo7ti+EKhJVWRm52nsnzDEjop6a39DPXrj5x79kXyM64w5LzRqkx9en2C/bL4wExe62vECf+qlNHiX37uD7Tyu0p3VzgIWgFCUQGqUiLglArW8ur1GsWqlD/+6U1cvbJAuWniScmFizm27OhhW1pgyBKFlkG0N0XjRo7lZYdwWGHQhitXq5hGF5sSCpbeotU0YXGV7U/sM4O0mQpH+aeLr/+5ee5iQ9arrrJ9tSzDOyIRgGO57g/Q5PXMuADoK9/sLiysZvKrOQRVIZCiVSlA4OwEqQvxpAdi2/e/+Rof/4FuIewQxbLHrTlJsaJRKJaZu7FAW4RQY3GCZp1sRWelIMlX2zRbKoU1SdNxWFyao6tLoVp3WJ4ukjBySDONRDPScX311J++xhsXatyYrcmWGxbxTTuXAOjaLT5Awq5/+3dUtWbEkjV8hVbTx3OFUs0vB8i1XTgXflu23vlpt1B8aG5+UXanpNKo+yhqhGJNkis00YwEy0ttrlxV6dk8iq5UUDQTXZXUag5rpQZz2SZoASIAv7xGyzW4fGEWX8K5N2fwROz1tYWZZKPqEPiqSCcU2vU1yoX8XZ1f7uo6djlfaYXVejsZ1nBbbZyahxZUlMbMq4R3ZX4d10WtTBFTHMory7jtNlI6FCsNqrUW6ZRACp0zr09h4SKibaI9WzDsNDI3R7VpUGyCwKc7FeP0Gz5PPCFoDpnMZ8OUmrdYG74VaWRzUUWJI8Qqli6oldqM2PECAMeOwV3IJd4lYddH1823dG8vvpeMhZhbLcu1WFtkNJXy/EV0OyGVUFyqzTmxfRNi6maN7rSH9DQ8X6HUDGiulMjEwihqwI3zqyjpJA9vtYgkkijuPA3h46HT9iSa5bG47HHlZpwHHh8iHvPQojESA+V9r02eZmGmQDou2LErRHe3SnF+bulOePiBcQV3khtjY3vqrSCWCyUj0IL5hSrVok+7uER56k0RFKYU2cyKrlSVyzebmNEIN3I6qhomwEJXDYJAEoqESUdhMOpx4cI0QyNJwkIgUQEF01TJl30isTqllSVmrtSYWYpRYoTCaiHwy1m6e8I8cNBmxwPblPjoQ+3lhcapdYsl+EC5AnlyTBVC+Be++UuX05mRfeLcQtBuOMr8gsam3haBvIl0ywjpc+lyk03dGYSusLJYwJc+mmmDcNA0wVq+wYHtIUaHba63akSS63mGvOMTDQkCN0AaHsL3ScZrBF4Tqk3UHLzzXFM5f7rIwNYBNMPxtx1+UvW7Hnzpwft/6LKUUhFCBB+cyQu4k+Io+Yn/S8YG6Nrao1htKBabzM75FFarLM/OMTuV49IthW0jYRauTlNrtPADhVhYodFu4rptIkLSO5QklNR5cE+YdAqGN6WJBypRQ6IpEhVJ1JaApNESpKItbr05w2svXCOW7sJr1IJwSlEcNXLF7Hn4n97tryd3TdjjxycCgCcu/dap5bx2o2c4qQiXwA4C1go+0/OSxXmHbNah7bnM3VimtNym3VAREjzXJWj7WJ7PoA1do7sRlkG9UUEqLQa3dNHlO1gtQVq3yNgKYTPAVAStss7ld2K88eIS0owRiSo0G2U5uLVXGImtN22j66yUcLes9W6HtFLKMZUTIiDceya1a78cvK87cGseCQ9aFZV8USVXltQrTfy2oNHS2ZxRCWsuOBV6LBWt3OTw4/cT37aL1Zk8tXYXNddg85FRNm3OcHvRJ5cPODho0W2oLEwHXDnf5M3Tt/DDGY48PkI6XSEWU0SodzOhnp2vSjmuMHFS+UBa7HpYOwaAH975+w69wurJKNKO4Lsq/WEbaiqeK4jqKgtzJXQJW1Jtei2fIVNhe8jn4P197HhykGZhCtsULC2WuXnlNlYs4ODH72O53CJXaJFQFTIhC7dtsrTSxI90c+joTh5+cI3BLTpC92Vs6H6pWZGyECcCxsbuaopEvbvCTkg5Pq70/NQvzz2xe+jw8GB0tHdI+qGwUMqrVeKRMLo0SIuAEbtOVGmRMAQRQ9Cd1Dn8+Ai7P/kY+aWbiHaFRs3gyuUFGuFeBuJtmstZ1EqdsCGYXw14+Kk+nviRvUijh91bwgymK6iqgxEyUGJDcmT/bqVUaX3tX33pG5eOHUP96ldPfyBdwbq4e64IIZBCHfqdt168Rq2uCXuwj1AmgicF1XyLoS1hIl0x7FQUM2UzNGqz84nNXCnHOfPaLS68ucqNKytMz1cQNRe/JbGTfVy+uEo6YaCbNn2jm7gxp7GYlxz/jR+iZ0jn+jtzlLMavkhTydXUmXOvSddpn30vLgg+sK7gvUnMlxLx9C/8zplIundqba6ulGVvsPPTBwn3KIQTBrNzJW4tV8k2PcyMwfDhzai2SspcZs/OgERMoioKV6eKRFSfzZEmq4U2qS6TQjNANyUDvVAtVJl99zbLl18hssnCSsaoZIvcnlGDnQ9swQxFL2f3/NTs+rx14oMtLMCp8aOqEKLds337t5NhyczLrwdvnV4ks2cXqW1dHPrMAX74n/wMu37gMEv+Jr73whS5+WXScYOF6RXSKZWhkThmNIlpwO6dcRampujd0k+2IVksOjj1Cgf3qoxsjWNbkBoZJdUXJlv0GTx0MNj9sccwk0OvHBbC5dS4erf7vDF7mY4dAyDWv+XV2GAvitISS9dnOfPcRaYXAl57V/Ktb97guVN55qdz9CQ8Gi24frPB7O0ahWIVzWgRCQmscJj+zQlMxWWhANmyz/npGn/xnWXeOu8TSqe5le8J4v0PuGszBQhnGBj0RGVpDSXc+7319uyRHwphJyfX/VlRbD9jbupvx3tCaiShyXhcoLpFSlPnWDx/FqVV4uCBXgIRZ7AvzO7RgO50QNNxyOcc/LaLaQnmFhzOXSpy4GCGkKkSsXSK9YCZ6TJf/b8v8m+//Kp49evf1pZvVNl1uF+2qlk1ny+VBg/94l+vt2jsrp9TUDdC2NOnT0spEf9+4Ovlndf+cqwvVulxm20Zj+nC81w0TUcPmbQ9HV+6SKmhulXMqE2zJVgsxii2YoSCOgnhU/QUaq6D2VqjuFylyzYoVj0eP9LFWssh090rGjcWRdQosufpx4JIIq64rjid3PLDfyglihAnPhwWCzD5zFH1hBDBu2cL36/XJIoZDoQbsGOzia62qZZqqG6dudtLuM0yy3mT8+dLOE4bWyuyOjdL1TGxQjrRSIj9h/YQSsX59A9kGOrTuf++JBVXsFb1uW9nFK+xxsihzZDokUGziRbq+nOQMLkxWzk3bBvnsT2/IOE09x395Hdzl//iV7P5GaVVhX22RnfaotGoo+mgq7C6tIpQwtiJOMmUgqVKQpGAekOjVFfI2N04TZeGY7J/Z5reQZOVbJ2leoTmfImDD4ygFVdIDNoyHE2qtVqpnew9/ML6Gyb4UAnL2LpfG3jsE9dD+nIrbVXN5VVLvvbWTTGyxWbHtig3pxoYGtimheO0cRoeZy8ZDKcDfCSGIallPcKFMtValbVik80jfdgxld3bhrn+rVukEjYD+x8mlUnLSqXsJ1MZzSmWJhM7fuz2nS1PG9HdDXMFQqwnk77IlgWhxW7HexIMbknLVF+a6dtVzLDF0EicZhMMTcWyQrhOgXzBYaWkcW3a5crNJvGIST5bZGTHFh765C7mF1ZoWcOEMsNs25rk6GOjSC1EqH+3iGw+rJamzsjSanVy3Q1sXH837EGAlCdPqieECEw7dD5kh4hnLNloGySjca5fqVCvBvR0hfF8UBWfeMhitK9NvQ7lhoOhuchAx/UU9uwzCSkOqh1H0VuUl26waaSfA4d6ZHVqEk9EZq1Q5rViriD0yPYX7mZS+966AoCuywKgWalerS8soKdScmRrCq+q4lRrVKtNkjGTUEinWq0RCptYPphhlViql1q5DqYgmrQIGS4rhQQvnb4JlRU29epYSWjk60TsXvzAE0Hu8qArElO7n/rVd+AfiY08DqpsqLDvLcyFGbvSNiLkV+ti9L4BBg4eYGmpTX9vGDNm4fkmdtgiFApwvTYKTVIJk0LBRbVg534br+1w8+o0lbLKcinN7ek27abH9NVVcXE2jqbWh9rZd4e0SP9pIUQgT45taF83+JDyZQkwcOB/OHtx5uV2akAzmihyrdQQjbZC4LjocZ1YSsdQY3jNGiFbUmlF0awwpm2hJNOgGUQiBqrqcW0qjyth2yZBJl1CF5IXvvYSQ+mya7SKWqQvfH19tOze0KNXG/oW108jIqBvLhwfvBS2BLlSVK4tFbj//gSqpdKoBPT0JUn1hUlkQmR6Ixx8ZBtdPSH6eyNopsDSQbFT1FyNXaNJCoUiLUfi1GskMx4P7Ciwcvkt0W7ool6uL66vsjYWhY1mclwVQsjeXQ99s+koRJvvBF3RHDI2QLniIJ0ahSWX5OA2MsMpIqkY4XiYSCLMwOYBdo7qdKU9KsEAS4sNFlfW0HUXzVDxPIVSyWHn4W6ph6OqI8KteO8PvAFwbJLgQy3sHctxAu2a56uUVvLiwGOHSHfrmAN7qPk67dIyy7cdIn3biKe78L0muqnSnWzjNbO0AoVSPke73qBZ9+lJhqnXK0i/gSkaBK4rLVkVgarf6t5z7Pb6YDnx4Rb2juW0WpsuR9MJj2ZFabYjWGqZVFeY2NA2PCtNfuY6tXYPSthGVz1iqTSqcHHbHnY8CUGbdrOGqqo0XRchJYaqkk6q1Ir1IGKHiSX6Tgsh5KlTR1U+7K5AnDgRyPFx5Q/+6NANERt5d/u+XrF287zfv2cPWmuW/gGbRFpgGj7Za+eRmOimTth2kdSx4jaRdA9zS23Wyj6paEA6KrEtn1jUINGdBqcmrLCGNHpe4B6h3JOnHkM5cUIEa/XYH8eGD1O8dRanYTE0OkAtu0x4ZC+JvggRvcj0hVsESgRVbxGNqXjoNGWGbNbBcRqgGmSzDqmIydAWiQgJKQKhllrxmtP10Jn1dPCk/xER9hkf4Mzloa9XzO21cDSu3px8S8a3HSPd5bFw+TYysRcfhUzKo1Guo6g6qR6bVF8XqBr5fBtFkXSnkxx86ABdvXGsqE3Lj0u/rWHG+uZ27nxqeT2aFh8NixVCyJMnx9Sf/Mkn86u59ne2Pv4EsjHl51ZcRh7/FFsGCtRWl8GKE4qayHYFt15GmFGUyADtZoNL564x0p/Gtlwi4haHD6mEYgatUj1IZcJShLreFELIU+NHVdj4+jAK95jlGed3y2wms6VbmXr1O5QLkt4dOwgFUxSKFnPTkrXlEsLswsjswIymyOUVZmZWMTWNQrFAMVvGbxZA1ZCtuvBFTKiZ0W/+3c9CHxlhjx+f8OX4uPLU//zbr8wtGy/07v+4EjOy/vQ7lyjWksS60wyP9tC/I026P4JiJ2i1PMK2xTtnbtGqNJlbKeB7bSzLxGmpoNqyVBHKbDE+P3zg508D4tixE/5HStj1Ne2kAjB/e+Hf5YsK6UOPEjJL5PIeIr6XSCqMnYxhZ7oIhEDVQxQqId6YPEcqaREETVzXBwJ0TcFR+vy63y/MTN+fCCGq4+NH1XtVJuqeCnvsmfXZev/DT57NLy44TjuhhmJJWZ+9ztT1MnOXZqmXW+hWBL9RJxaPB889f6t27sItNM1ndDBFo6lRq6uoqiHr2YpK2K4l+499eT10PnbPipvdU2EVZf245fYHP5cNheRiLBQm9cDPyYG9Q8S0ZaorK7jlHJVinWbdpOolxUvPvW6ZmoehuuQKdaSIUa7qVJ2wX8mWREu1v3TwMz+/ODEx9jflpz5ywkoJJ8dQhRBtw0zezl14DbVdlgMPPk2yx8aORmhUfaYuzhLp7uXsm0v+0rXrmm1bmIZKswHJsI4eT8h4d1SzBvY3d/zQP/s9CWLs8u57Winunq8KunYfFQBzc80z7VKWmVeek1K1sLv7aHlt7N5eduxOoTrLXHrprNZyPQwtYLngEjLCfOpYHztGItCuElJbctNAny9A3jm585EVNrdn/QBbyUl8v0aIxtwZZeb1N0j1RBkYsjC9WRLRgGtTAa+9cp5oRMHWBU5bIRFVKVVABlXZdiSrS7WsTVfpvdUyH2lhx8ZOBgD9D33uUtO1ylHDVc4997x89608RljFtnVEbCff/s4MlVKRRNSi0gjY2Z+hO26weSRMf39G1pugWYkbQojmunvho22xd8LNBx54oCTVUK7ebJOK+/KF//wyb7yaIxSNc3spzvTFi3SnDbLVgFjYJGGGGN4eR7ehmC9LO5ZADSUvAnT9r0fveZXRey4sIMdBEYrmR+KRrBQKUvjEkxJDOLTdEC997wqitoai6hQaATv6Mxgh2LW7m4VsndXVnKg1DLRo97n1YOsXZEdY4JmTCKSPaoTmhGpSa/iBqkg2dYe4tWBx7s3LJOMaK8UW23sSuL7JlmGLWFeKm7O+bPm2WhMpZ/eBh19a/8PLHWEBJrvWh66qKdOqadBqt4lGTJygh1fO1NcP3LV0eqMm+zYn0UMKI31w8WIJKyjJSEghZEUuK5kn5+Q9+FrwvhX2DnY0bkjXRdEEkbDObD7EwpWrhCyFlYLHns3DuH5AMlTF8cN4qPR3B7LthohEQ8sy8JgYe3/06X3RiDv5JysW0vR4HLcdkEh2U1prQi1HzbfoTSWRKsQ0hyce6Eemh5idydFoJxkdhERMqO+nIvnvD4t9rxiDopndGAYhVaPpR5m9Pk2h6oHnsXM4TbVS5sCRTbR6djPxrQvMXJuGyioHj+6BSHS9suRYR9j/imapYHiVCj39A+TybYrZZZqewoP7UjQrFfbsiNC9Y5AzL5xhX2yFIzsUdOFSXl7CVHUVYOwy74v7Ed4n5frXT97WSmXXdSWraz5L16+hSJ/edJh62WNoKMKhT+zlrclrhBorEFJYyqqkuk0l0G18K7p3elpaYrNw3gu75EfeYie71kudtILUzUDLUFgp0ii4hDSL3nSK7p4QT/7oYa6enebG2RtcnmlxdUHjyKfuQ7PaSCuBEF4yqP5FfD25IzsWu67sJAAtT2sGTZ96ocq2gSiDWyK0TYOtD+zk9ORNbr56mTYmtbZBWFRQmkvsHE1jBFnaa3OR+PBDKWD1vStUOhabu3JagqBdLjxUWV1BV+PC7ooQHUwxcmALhXyd6XPz+IFKttxEVxzScZOla4vosT4RGd7h2yFD+F5raP0f93RCWimlOD6BL2UQks3VI3O3swgDJdGvsfvpp8iuSb71ldMsrBbJO4KB/jj7DwyydVuMzQ/tJ7XrCHo4KkOmwKnMPSolgsnLouMK1usLymd/79d2tlaXezNdUbnryBDhwWG++2dv8+LXX6Ank6DH9BjZlqBvpI/c4jw+sPXhfcQSksbKgmi7HkJJPyYEUkqCj7yw731QlH5p9u8Jvyb2Hd3txQaGtdPfvszp75xly1CSwYSNEdc49IlRXnrpJoatsGtfAsWr01yrUZm/qRg9O2XIch918m/shoeu3s2yJB8IVzB54nSA0GQhv/zxwG8jVMSFUzdw5rM8eWSAuKqQ6Xd5ZOwIhEJsHxLs2GJg2BHMSJzy9bfwWooIrJQfi7WMytLr/3g9F3tcfGR9rBwfV06A/E//5p9sD4vGQ/2bM1IiVVkv0ptwUS2D+z+W4r5P7iKUSks7asn+/ihBPUfX1l1UV8pUpm7hJ0eJxKNqc/V8IKoXjl89/91RmAikHFc+ksJOXDkhALkpuPIroz0tw3Ecf+7mKg2nRGQ4xSNPb6Jv2MJRkqjx3SI2fFgII4Td3Q9CsvTKX+JH++nZ+wj1pYs0G66bSTuhSPHFXxQCOTk5ec/6J+7xaAke+fjHNz3an72yJ1aJ9XeH6R7KiJ7hQeLhJo3cDJ4aD7rv/0GF9GMX8Qp24fWvbKmtTEsadVFczrLlscex9/0oq6srqIbNyvJFXrtUWNJih+//2Z/4zSzIe3IN4D2bvI4ePaq8dPp0EMmUf+Eb8434HzZd7/4dYe2BZgLl2hq1agFd1onEdNE19S5GMD0UtSJ5L9+orxRa4Wrdo9pOomXnA/nCnyk9fVuvqW7j187mc5/y09ovPZWq/bgQfGn81DMqd7k0//vNYgVIDo4dvHlzMbc10hULHt19QNmX7ue1ixd4fWqaarEKlSbokngkRFQYjboTyLoR2K4OqiawBDJmq+J/evzh4r8e/6P94DU/deJzi1szmQu/94t/9EAgA3EvLPae+KCxsTEVkL//+b/3mVHqWyxVBhEjokREmLJTpKE1UQwP3YLQ5gThoSRKT0T6CT1spXXbUBVU30eRAYquihoiOFcqJP/5l77wfz7zzOePxtzm6iPx3JHa2//iM3e2jH4kXMHuiQmJUHHWFv73z272xU/uTQdXV+u0tWUqTUi0qmwSUDUMqoUm7VqTdsYWQjOlLDjCNiCmqDjFNsmYYKg3o2zWApKh+o/vPTb84z/aCsmt5hWW51/7l1LK50B4G5082HBh71zo86df/LmPV27/9REzJPyMqag79gcktitoVoKmso+3X7lNdr5EI3eDgw/sZ/Zqlmi4JMyBPWSzLWTLx8kukkonuf9TTzCwPYWesKWSHJbFaZOl24syIld3XPr+v3x031NMbvRNdBvvCiYmAAWtNf8rqlulkA9kIF2UuI0nFTwEIpJmarZKxJnlyft8tmxPsm3A4MCQ4PD9KXTdxJR1uiMu2/ekuHpxntvLOi6IdqWgJAd7FCsaDoIgkK3y7N//24zvh9Ri36sX4J/7yy/unXnl65+q5POB1ZfQ9LCBCKXxHB+Ex6uvXiQTTLF7FAypsJqrsZCvY2sBxZsFgmqOqKgjTJuFBQ9frfPGsy/Tym6T0U39dasnnOvbPjRYalyTRn7hR2Rl8ddFrD+/Ebci3WFDnfrkJOrs7GzgifwXjMraw3HF9fftTildwwmCxAFW3J3y3YsFsbawxNCmBEZIh/RWbkx52HqNWMQjWw4TCkfpSrdot3y0SJqpGwsMb8tQKzr1c5eVuURPfLF/d2ar2a6KpaU188vPfm/15Zevvw6T2unTsxuSP9jI5ZYA5Bc//zPRr5596WaguD2bhS8fHjDFA7uj9Gw7Im/NmUG9UFD7oxVM36MhNMxkAs1p0hvNIoMaRiTB1A2FlF2hkcvi2sMErTaLJZORR45QyhfdzJZkW5pW9u2rN+t/tpjd4xe9m/+u92P79p444d4ZPB8aVzA2NqZMTEz43759/nHiWs9qxfWv1wL11JzC/lqIfTM5oTgVdXkhS3cIVtcgabioqkImquILCMwkEb9MqSkJa200Q+XK4iJBzEYxG7L8n74nH7p/dztWMv/4N//ZyS+M/+5P/G+zxfm9GUPZ/oXlV/cDZ8fGxtSJiQn/Q+RjJ5BSih/7yQc/e7PgypoTyGi3TW86TiocJ7YpSbWuc30py1/dykPgITQdCJCroFQD4mYF1TYoFMoEQQCGjzYQw3MK6I4qYoqCMbcc/syjw//g+e9+3lgrrv1Ql9RZaJTED+/r/6lnpXz7+PHjH6rISwDyO9+5Yb79Jz+yNF+vpp4vau1FVL03GhHDyRh96QSLuRVurGWpOwEaEHg+KCDbLiJQ8UouihqghAyo+4iQQMZURNLCr7fxmh4DsTRHtm1lV18/2dW8N1evyPt617RDRqz8o//Hiz1CiPbdviRtIy1Wjo+j/OAPbm9//tP+7z2YFL/5ic2msWokWZa2XKi7/nw2y2q+KholhIsmnKAFhaZAF+B74AUQsiDXgrgPLaCuQtmXiqNgGprMaJbstg0ZU33Zl5TekW2bg31dLXvxzVc59c7KvxZCbY+t7531P0yT13vPU+TTh7Y92m+u/YPRQfvp0e2Z3t7+FIoIaPlQrnusZEvk8k2avobjq/hC0PI06VuW1HxPqoGvaFJiyLYwhIOlBnQnLUaHovQM9RIYYXLFFiuL5ezifO70u/PqV/7wuxdfAH/DArANT8KMg3ICAlBIHvrZ+N7Cs6OZkLtHU4L9fV2h7VErGGzWW91N1w/Hw2bM9aDhSnwUbMtCCKg3W+gCFHwUIbyW55URailmG3kfZWYqWz1fLPlvnpqrnwMK7y0DhNjAqPaeZLfGxlCZgAn+yyEp3vv9WAR7IfzofZmuwsoca4U1xTRtc2d/OhWKhvXZxaWcpoY8xbRadSXVuvJuJQ+TddDc//IvT46hTqwHfB/eu7//K8cL4vgYyu7sejuudCO/8Q38/68bWSSIiTGUy1nElW7kyQkCcY82brx/9j3+N9o1Pj4uOLF+D8wVEH9bsHyC3bvfE+wEnPhb8SQdOnTo0KFDhw4dOnTo0KFDhw4dOnTo0KFDhw4dOnT4/4X/B28r58KKi2jZAAAAAElFTkSuQmCC" alt="Copa del Mundo">
     </div>
   </div>
+  <!-- selección favorita (renderizado por JS) -->
+  <div id="home-fav-team"></div>
   <!-- partido del día (renderizado por JS) -->
   <div id="home-match"></div>
   <!-- pronósticos amigos (renderizado por JS) -->
@@ -849,5 +913,421 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-</body>
-</html>
+
+<div class="fav-team-modal" id="fav-team-modal" onclick="if(event.target===this)closeFavTeamModal()">
+  <div class="fav-team-panel">
+    <h3>⭐ Tu Selección Favorita</h3>
+    <p>Elige la selección que te acompañará todo el mundial y sumará puntos en sus victorias y empates.</p>
+    <div class="fav-team-list" id="fav-team-list"></div>
+    <button class="rules-close" onclick="closeFavTeamModal()" style="margin-top:12px">Cerrar</button>
+  </div>
+</div>
+
+<div class="share-modal" id="share-modal" onclick="if(event.target===this)closeShareModal()">
+  <div class="share-card">
+    <div class="share-card-title">🎉 ¡Sala creada!</div>
+    <div class="share-card-sub">Comparte el código con tus amigos para que se unan</div>
+    <div class="share-code-box" onclick="copyRoomCode()" title="Toca para copiar">
+      <div class="share-code-label">Código de sala</div>
+      <div class="share-code-value" id="share-code-value">----</div>
+    </div>
+    <div class="share-btn-row">
+      <button class="share-btn" onclick="doShareRoom()">📤 Compartir</button>
+      <button class="share-btn" onclick="copyRoomLink()">🔗 Copiar enlace</button>
+    </div>
+    <button class="share-btn secondary" onclick="closeShareModal()">Entrar a la sala</button>
+    <div class="share-note" style="margin-top:14px">Los jugadores solo necesitan abrir la app,<br>escribir su nombre e introducir este código.</div>
+  </div>
+</div>
+
+<div class="premios-modal" id="premios-modal" onclick="if(event.target===this)closePremios()">
+  <div class="premios-panel" id="premios-panel">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<script>
+// ── SELECCIÓN FAVORITA ──
+window._FAV_TEAMS = window._FAV_TEAMS || null;
+
+function _getFavDeadline() {
+  // 1 hour before the very first RTVE match (first date in RTVE array)
+  if (!window._FAV_DEADLINE) {
+    const sorted = [...RTVE].sort((a,b) => {
+      const [da,ma] = a.d.split('/'); const [db,mb] = b.d.split('/');
+      const dateA = new Date(2026, +ma-1, +da);
+      const dateB = new Date(2026, +mb-1, +db);
+      return dateA - dateB;
+    });
+    const first = sorted[0];
+    const [dd,mm] = first.d.split('/');
+    const [hh,mi] = first.t.replace('+','').split(':');
+    const matchDate = new Date(2026, +mm-1, +dd, +hh, +mi||0);
+    window._FAV_DEADLINE = new Date(matchDate.getTime() - 60*60*1000);
+  }
+  return window._FAV_DEADLINE;
+}
+
+function isFavTeamLocked() {
+  return new Date() >= _getFavDeadline();
+}
+
+async function loadFavTeams() {
+  if (!window._MYROOM) return;
+  const { data } = await _supa.from('room_members')
+    .select('player_name,fav_team')
+    .eq('room_code', window._MYROOM.code);
+  window._FAV_TEAMS = {};
+  if (data) data.forEach(r => { if (r.fav_team) window._FAV_TEAMS[r.player_name] = r.fav_team; });
+}
+
+async function saveFavTeam(team) {
+  if (!window._MYROOM) return;
+  if (isFavTeamLocked()) { showToast('El plazo para elegir ya cerró', 'err'); return; }
+  const { error } = await _supa.from('room_members')
+    .update({ fav_team: team })
+    .eq('room_code', window._MYROOM.code)
+    .eq('player_name', window._MYROOM.playerName);
+  if (!error) {
+    if (!window._FAV_TEAMS) window._FAV_TEAMS = {};
+    window._FAV_TEAMS[window._MYROOM.playerName] = team;
+    closeFavTeamModal();
+    const el = document.getElementById('home-fav-team');
+    if (el) el.innerHTML = renderFavTeamCard();
+    showToast('⭐ Selección guardada: ' + team);
+  } else {
+    showToast('Error: ' + error.message, 'err');
+  }
+}
+
+function calcFavTeamPoints(playerName) {
+  const fav = window._FAV_TEAMS?.[playerName];
+  if (!fav) return 0;
+  let pts = 0;
+  RTVE.forEach(m => {
+    const fx = FX.find(f => f[4] === m.h && f[5] === m.a);
+    if (!fx) return;
+    const real = R.scores?.[fx[0]];
+    if (!real || real[0] === '' || real[1] === '') return;
+    const rh = +real[0], ra = +real[1];
+    if (m.h === fav) { if (rh > ra) pts += 2; else if (rh === ra) pts += 1; }
+    else if (m.a === fav) { if (ra > rh) pts += 2; else if (rh === ra) pts += 1; }
+  });
+  return pts;
+}
+
+function renderFavTeamCard() {
+  if (!window._MYROOM) return '';
+  const myName = window._MYROOM.playerName;
+  const myFav = window._FAV_TEAMS?.[myName];
+  const locked = isFavTeamLocked();
+  const flagImg = (team) => {
+    const code = FLAGCODE[team];
+    return code
+      ? `<img class="fav-flag-big" src="https://flagcdn.com/${code}.svg" alt="${team}">`
+      : `<span style="font-size:28px">${TEAMS[team]?.f||'🏳️'}</span>`;
+  };
+  if (myFav) {
+    const pts = calcFavTeamPoints(myName);
+    return `<div class="gc" style="border:1px solid rgba(250,204,21,.25)">
+      <div class="gc-head">⭐ Tu Selección Favorita</div>
+      <div class="fav-card">
+        ${flagImg(myFav)}
+        <div style="flex:1">
+          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1.15rem;color:#fff">${myFav}</div>
+          <div style="font-size:.72rem;color:var(--mut)">+2 pts victoria · +1 pt empate</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1.4rem;color:var(--gold)">${pts > 0 ? '+'+pts : pts} pts</div>
+          <div style="font-size:.68rem;color:var(--mut)">acumulados</div>
+        </div>
+        ${!locked ? `<button class="pred-edit-btn" onclick="openFavTeamModal()" style="padding:5px 10px;margin-left:4px">✏️</button>` : '<span style="font-size:10px;color:var(--mut);margin-left:6px">🔒</span>'}
+      </div>
+    </div>`;
+  } else {
+    return `<div class="gc" style="border:2px dashed rgba(250,204,21,.35)">
+      <div class="gc-head">⭐ Tu Selección Favorita</div>
+      <div style="padding:14px 14px 6px">
+        <p style="font-size:.8rem;color:rgba(255,255,255,.65);text-align:center;margin:0 0 10px">
+          Elige la selección que te acompañará todo el mundial y sumará puntos en sus victorias y empates.
+        </p>
+        ${!locked
+          ? `<button class="prox-btn-pred" style="width:100%;padding:10px;font-size:12px" onclick="openFavTeamModal()">⭐ ELEGIR SELECCIÓN FAVORITA</button>`
+          : `<div style="text-align:center;font-size:.8rem;color:var(--mut);padding-bottom:8px">🔒 Plazo cerrado — no elegiste selección favorita</div>`
+        }
+      </div>
+    </div>`;
+  }
+}
+
+function openFavTeamModal() {
+  if (isFavTeamLocked()) { showToast('El plazo para elegir ya cerró', 'err'); return; }
+  document.getElementById('fav-team-modal').classList.add('open');
+  _renderFavTeamList();
+}
+
+function closeFavTeamModal() {
+  document.getElementById('fav-team-modal').classList.remove('open');
+}
+
+function _renderFavTeamList() {
+  const container = document.getElementById('fav-team-list');
+  if (!container) return;
+  const myFav = window._FAV_TEAMS?.[window._MYROOM?.playerName];
+  const teams = Object.keys(TEAMS).sort((a,b) => a.localeCompare(b,'es'));
+  container.innerHTML = teams.map(t => {
+    const code = FLAGCODE[t];
+    const flag = code
+      ? `<img src="https://flagcdn.com/${code}.svg" style="width:28px;height:19px;border-radius:3px;object-fit:cover;flex-shrink:0">`
+      : `<span style="font-size:18px;flex-shrink:0">${TEAMS[t]?.f||'🏳️'}</span>`;
+    const sel = myFav === t;
+    return `<div class="fav-team-option${sel?' selected':''}" onclick="saveFavTeam('${t.replace(/'/g,"\'")}')">
+      ${flag}<span class="fav-team-name">${t}</span>${sel?'<span style="color:var(--gold)">⭐</span>':''}
+    </div>`;
+  }).join('');
+}
+
+// Porra section: add fav team column
+function renderFavTeamPorraSection() {
+  if (!window._FAV_TEAMS || !window._MYROOM) return '';
+  const players = Object.keys(window._FAV_TEAMS);
+  if (!players.length) return '';
+  const rows = players.map(name => {
+    const team = window._FAV_TEAMS[name];
+    const pts = calcFavTeamPoints(name);
+    const code = FLAGCODE[team];
+    const flag = code
+      ? `<img src="https://flagcdn.com/${code}.svg" style="width:22px;height:14px;border-radius:2px;object-fit:cover">`
+      : `<span style="font-size:14px">${TEAMS[team]?.f||'🏳️'}</span>`;
+    return `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div style="font-size:.85rem;font-weight:600;color:#fff">${name}</div>
+      <div style="display:flex;align-items:center;gap:5px">${flag}<span style="font-size:.8rem;color:rgba(255,255,255,.7)">${team}</span></div>
+      <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--gold);min-width:36px;text-align:right">${pts>0?'+'+pts:pts}</div>
+    </div>`;
+  }).join('');
+  return `<div class="gc" style="margin-top:12px">
+    <div class="gc-head">⭐ Puntos Selección Favorita</div>
+    ${rows}
+  </div>`;
+}
+
+// ── Monkey-patch renderHome ──
+const _origRenderHome = typeof renderHome === 'function' ? renderHome : null;
+renderHome = async function() {
+  if (_origRenderHome) _origRenderHome();
+  if (!window._FAV_TEAMS) await loadFavTeams();
+  const el = document.getElementById('home-fav-team');
+  if (el) el.innerHTML = renderFavTeamCard();
+};
+
+// ── Desglose de puntos ──
+function calcScoreBreakdown(playerName) {
+  let pronPts = 0, signoPts = 0;
+  RTVE.forEach(match => {
+    const fx = FX.find(f => f[4] === match.h && f[5] === match.a);
+    if (!fx) return;
+    const matchId = fx[0];
+    const actual = R.scores[matchId];
+    if (!actual || actual[0] === '' || actual[1] === '') return;
+    const actualH = +actual[0], actualA = +actual[1];
+    const actualSign = actualH > actualA ? 1 : actualH < actualA ? -1 : 0;
+    const key = _porraKey({h: match.h, a: match.a, d: match.d});
+    const pred = (window._PS?.[key] || {})[playerName];
+    if (!pred) return;
+    const predH = +pred.loc, predA = +pred.vis;
+    const predSign = predH > predA ? 1 : predH < predA ? -1 : 0;
+    if (predSign === actualSign) signoPts += 1;
+    if (predH === actualH && predA === actualA) pronPts += 3;
+  });
+  const adjPts = (window._ADJUSTMENTS?.[playerName]?.adj || 0);
+  const totalFromCalc = calcPlayerPts(playerName);
+  const goleadorPts = Math.max(0, totalFromCalc - adjPts - signoPts - pronPts);
+  const favPts = calcFavTeamPoints(playerName);
+  const total = pronPts + signoPts + goleadorPts + favPts + adjPts;
+  return { pronPts, signoPts, goleadorPts, favPts, adjPts, total };
+}
+
+function renderDesglosePorraSection() {
+  if (!window._MYROOM) return '';
+  const players = typeof getPlayers === 'function' ? getPlayers() : [];
+  if (!players.length) return '';
+  const rows = players.map(p => ({...p, ...calcScoreBreakdown(p.name)}))
+    .sort((a, b) => b.total - a.total);
+
+  const fmt = (v) => v > 0 ? '+'+v : v === 0 ? '—' : v;
+  const tdBase = `text-align:center;padding:8px 5px;font-family:'Barlow Condensed';font-weight:700;font-size:.92rem;`;
+
+  const tableRows = rows.map((r, i) => {
+    const isMe = r.name === window._MYROOM?.playerName;
+    const rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.05);${rowBg}">
+      <td style="padding:8px 10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:24px;height:24px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">${r.initials}</div>
+          <span style="font-size:.82rem;font-weight:${isMe?'800':'600'};color:${isMe?'var(--gold)':'#fff'}">${r.name}</span>
+        </div>
+      </td>
+      <td style="${tdBase}color:${r.pronPts>0?'#fff':'rgba(255,255,255,.3)'}">${fmt(r.pronPts)}</td>
+      <td style="${tdBase}color:${r.signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.3)'}">${fmt(r.signoPts)}</td>
+      <td style="${tdBase}color:${r.goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.3)'}">${fmt(r.goleadorPts)}</td>
+      <td style="${tdBase}color:${r.favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.3)'}">${fmt(r.favPts)}</td>
+      <td style="${tdBase}color:var(--gold);font-weight:900;font-size:1rem">${fmt(r.total)}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="gc" style="margin-top:12px;overflow-x:auto">
+    <div class="gc-head">📊 Desglose de Puntos</div>
+    <table style="width:100%;border-collapse:collapse;min-width:340px">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(255,255,255,.1)">
+          <th style="padding:6px 10px;text-align:left;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.05em;text-transform:uppercase">Jugador</th>
+          <th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.04em;text-transform:uppercase" title="Resultado exacto: +3 pts">🎯 Prono</th>
+          <th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(52,211,153,.5);font-weight:700;letter-spacing:.04em;text-transform:uppercase" title="Signo correcto 1X2: +1 pt">1X2</th>
+          <th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(96,165,250,.5);font-weight:700;letter-spacing:.04em;text-transform:uppercase" title="Bonus goleador por posición">⚽ Gol</th>
+          <th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(250,204,21,.5);font-weight:700;letter-spacing:.04em;text-transform:uppercase" title="Selección favorita: +2 victoria / +1 empate">⭐ Fav</th>
+          <th style="padding:6px 5px;text-align:center;font-size:.68rem;color:var(--gold);font-weight:800;letter-spacing:.04em;text-transform:uppercase">Total</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ── Monkey-patch renderPorraFull ──
+const _origRenderPorraFull = typeof renderPorraFull === 'function' ? renderPorraFull : null;
+renderPorraFull = function() {
+  const base = _origRenderPorraFull ? _origRenderPorraFull() : '';
+  return base + renderDesglosePorraSection();
+};
+
+// ── Auto-rellenar código de sala desde URL (?sala=XXXX) ──
+(function _autoFillSala() {
+  const params = new URLSearchParams(location.search);
+  const sala = params.get('sala') || params.get('code') || params.get('codigo');
+  if (!sala) return;
+  const codeInput = document.getElementById('welcome-code');
+  if (codeInput) {
+    codeInput.value = sala.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    if (typeof updateWelcomeBtns === 'function') updateWelcomeBtns();
+  }
+})();
+
+// ── Modal compartir sala ──
+function openShareModal(roomCode) {
+  const el = document.getElementById('share-code-value');
+  if (el) el.textContent = roomCode;
+  document.getElementById('share-modal')?.classList.add('open');
+}
+function closeShareModal() {
+  document.getElementById('share-modal')?.classList.remove('open');
+}
+function _getRoomShareText() {
+  const code = window._MYROOM?.code || '';
+  const base = location.href.split('?')[0].split('#')[0];
+  const link = base + '?sala=' + code;
+  return { code, link, text: '⚽ Únete a la porra del Mundial 2026!\nCódigo: ' + code + '\n👉 ' + link };
+}
+function doShareRoom() {
+  const { code, link, text } = _getRoomShareText();
+  if (navigator.share) {
+    navigator.share({ title: 'Porra Mundial 2026 · Sala ' + code, text, url: link }).catch(() => {});
+  } else {
+    copyRoomLink();
+  }
+}
+function copyRoomCode() {
+  const code = window._MYROOM?.code || document.getElementById('share-code-value')?.textContent || '';
+  navigator.clipboard.writeText(code).then(() => showToast('📋 Código copiado: ' + code)).catch(() => showToast('Código: ' + code));
+}
+function copyRoomLink() {
+  const { code, text } = _getRoomShareText();
+  navigator.clipboard.writeText(text).then(() => showToast('🔗 Enlace copiado')).catch(() => showToast('Código: ' + code));
+}
+
+// Hook: mostrar modal compartir justo después de entrar a una sala recién creada
+const _origEnterRoom = typeof enterRoom === 'function' ? enterRoom : null;
+if (_origEnterRoom) {
+  enterRoom = async function(roomCode, playerName, pin) {
+    await _origEnterRoom(roomCode, playerName, pin);
+    // Solo mostrar si somos el admin (acabamos de crear la sala)
+    const room = window._MYROOM;
+    if (room && room.code === roomCode && window._IS_ADMIN) {
+      setTimeout(() => openShareModal(roomCode), 300);
+    }
+  };
+}
+
+// ── Registro múltiple de jugadores ──
+async function adminAddMultiple() {
+  const room = window._MYROOM;
+  if (!room || !window._IS_ADMIN) return;
+  const input = document.getElementById('admin-add-name');
+  const raw = input?.value || '';
+  // Split by comma or newline, trim, dedupe, filter empty
+  const names = [...new Set(
+    raw.split(/[\n,]+/).map(n => n.trim().toUpperCase()).filter(n => n.length > 0 && n.length <= 20)
+  )];
+  if (!names.length) { showToast('Escribe al menos un nombre', 'warn'); return; }
+  const existing = window._ROOM_MEMBERS || [];
+  const toAdd = names.filter(n => !existing.includes(n));
+  if (!toAdd.length) { showToast('Todos los jugadores ya están registrados', 'warn'); return; }
+  // Upsert all at once
+  const rows = toAdd.map(n => ({ room_code: room.code, player_name: n }));
+  const { error } = await _supa.from('room_members').upsert(rows, { onConflict: 'room_code,player_name' });
+  if (error) { showToast('Error: ' + error.message, 'err'); return; }
+  window._ROOM_MEMBERS = [...existing, ...toAdd];
+  if (input) input.value = '';
+  renderActive();
+  showToast('✅ ' + toAdd.length + ' jugador' + (toAdd.length > 1 ? 'es añadidos' : ' añadido'));
+  // Re-render admin panel if it's open
+  if (typeof renderAdminPanel === 'function') renderAdminPanel();
+}
+
+// ── Compartir código/enlace de sala ──
+function shareRoomCode() {
+  const room = window._MYROOM;
+  if (!room) return;
+  const base = location.href.split('?')[0].split('#')[0];
+  const link = base + '?sala=' + room.code;
+  const text = '⚽ Únete a la porra del Mundial 2026\nCódigo de sala: ' + room.code + '\n' + link;
+  if (navigator.share) {
+    navigator.share({ title: 'Porra Mundial 2026', text: '⚽ Únete a la porra del Mundial 2026', url: link })
+      .catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 Enlace copiado al portapapeles');
+    }).catch(() => {
+      showToast('Código: ' + room.code);
+    });
+  }
+}
+
+// ── PREMIOS ──
+function openPremios() {
+  document.getElementById('premios-modal').classList.add('open');
+  _renderPremiosPanel();
+}
+function closePremios() {
+  document.getElementById('premios-modal').classList.remove('open');
+}
+function _renderPremiosPanel() {
+  const panel = document.getElementById('premios-panel');
+  if (!panel) return;
+  const PRICE = 10;
+  const deadline = typeof _getFavDeadline === 'function' ? _getFavDeadline() : null;
+  const locked = deadline ? new Date() >= deadline : false;
+
+  // Get player count
+  const players = typeof getPlayers === 'function' ? getPlayers() : (window._MEMBERS || []);
+  const n = players.length || (window._ADJUSTMENTS ? Object.keys(window._ADJUSTMENTS).length : 0);
+  const pool = n * PRICE;
+  const p1 = Math.round(pool * 0.50);
+  const p2 = Math.round(pool * 0.30);
+  const p3 = Math.round(pool * 0.20);
+
+  const prizeFor = (pct, val) => n >= 1 
+    ? `<span class="podium-prize">${val}€</span><br><span class="podium-label">${pct}% del bote</span>`
+    : `<span class="podium-prize">${pct}%</span><br><span class="podium-label">del bote total</span>`;
+
+  const deadlineStr = deadline 
+    ? deadline.toLocaleString('es-ES', {day:'2-digit',month:'2-digi
