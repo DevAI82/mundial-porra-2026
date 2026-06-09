@@ -1315,19 +1315,108 @@ function _renderPremiosPanel() {
   if (!panel) return;
   const PRICE = 10;
   const deadline = typeof _getFavDeadline === 'function' ? _getFavDeadline() : null;
-  const locked = deadline ? new Date() >= deadline : false;
 
-  // Get player count
-  const players = typeof getPlayers === 'function' ? getPlayers() : (window._MEMBERS || []);
-  const n = players.length || (window._ADJUSTMENTS ? Object.keys(window._ADJUSTMENTS).length : 0);
+  const players = typeof getPlayers === 'function' ? getPlayers() : [];
+  const n = players.length || 0;
   const pool = n * PRICE;
   const p1 = Math.round(pool * 0.50);
   const p2 = Math.round(pool * 0.30);
   const p3 = Math.round(pool * 0.20);
 
-  const prizeFor = (pct, val) => n >= 1 
+  const prizeFor = (pct, val) => n >= 1
     ? `<span class="podium-prize">${val}€</span><br><span class="podium-label">${pct}% del bote</span>`
     : `<span class="podium-prize">${pct}%</span><br><span class="podium-label">del bote total</span>`;
 
-  const deadlineStr = deadline 
-    ? deadline.toLocaleString('es-ES', {day:'2-digit',month:'2-digi
+  const deadlineStr = deadline
+    ? deadline.toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : null;
+
+  panel.innerHTML = `
+    <div style="padding:0 2px">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-family:'Barlow Condensed';font-weight:900;font-size:2rem;color:var(--gold);letter-spacing:.05em">
+          🏆 PREMIOS
+        </div>
+        ${n > 0 ? `<div style="font-size:.82rem;color:rgba(255,255,255,.55);margin-top:2px">Bote total: <strong style="color:#fff">${pool}€</strong> (${n} jugadores × ${PRICE}€)</div>` : '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:2px">Los premios se calculan con los jugadores registrados</div>'}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;align-items:end">
+        <div style="text-align:center;background:rgba(192,192,192,.08);border:1px solid rgba(192,192,192,.2);border-radius:14px;padding:14px 8px">
+          <div style="font-size:1.6rem;margin-bottom:4px">🥈</div>
+          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:rgba(192,192,192,.9);margin-bottom:6px">2º PUESTO</div>
+          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.4rem;color:#C0C0C0">${prizeFor(30,p2)}</div>
+        </div>
+        <div style="text-align:center;background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.3);border-radius:14px;padding:18px 8px">
+          <div style="font-size:2rem;margin-bottom:4px">🥇</div>
+          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--gold);margin-bottom:6px">1º PUESTO</div>
+          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.6rem;color:var(--gold)">${prizeFor(50,p1)}</div>
+        </div>
+        <div style="text-align:center;background:rgba(205,127,50,.08);border:1px solid rgba(205,127,50,.2);border-radius:14px;padding:14px 8px">
+          <div style="font-size:1.6rem;margin-bottom:4px">🥉</div>
+          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:rgba(205,127,50,.9);margin-bottom:6px">3º PUESTO</div>
+          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.4rem;color:#CD7F32">${prizeFor(20,p3)}</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:rgba(255,255,255,.7);margin-bottom:10px;letter-spacing:.05em">📊 CÓMO SE PUNTUA</div>
+        <div style="display:grid;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
+            <span style="color:rgba(255,255,255,.7)">🎯 Resultado exacto</span>
+            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+3 pts</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
+            <span style="color:rgba(255,255,255,.7)">✅ Signo correcto (1X2)</span>
+            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+1 pt</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
+            <span style="color:rgba(255,255,255,.7)">⭐ Selección favorita (victoria)</span>
+            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+2 pts</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
+            <span style="color:rgba(255,255,255,.7)">⭐ Selección favorita (empate)</span>
+            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+1 pt</span>
+          </div>
+        </div>
+      </div>
+
+      ${deadlineStr ? `<div style="text-align:center;font-size:.74rem;color:rgba(255,255,255,.35);margin-top:4px">🔒 Plazo selección favorita: ${deadlineStr}</div>` : ''}
+    </div>`;
+}
+
+// ── Override renderPorraSection to show ALL room members ──
+(function _patchRenderPorraSection() {
+  const _orig = typeof renderPorraSection === 'function' ? renderPorraSection : null;
+  if (!_orig) { setTimeout(_patchRenderPorraSection, 200); return; }
+  renderPorraSection = function(match) {
+    const key = match.h + '|' + match.a + '|' + match.d;
+    const members = window._ROOM_MEMBERS || [];
+    if (!window._PS) window._PS = {};
+    if (!window._PS[key]) window._PS[key] = {};
+    const injected = [];
+    members.forEach(m => {
+      if (!(m in window._PS[key])) {
+        window._PS[key][m] = null;
+        injected.push(m);
+      }
+    });
+    const result = _orig(match);
+    injected.forEach(m => { delete window._PS[key][m]; });
+    if (Object.keys(window._PS[key]).length === 0) delete window._PS[key];
+    return result;
+  };
+})();
+
+// ── Init: load fav teams + re-fetch room members when room is ready ──
+(async function waitForRoom() {
+  if (!window._MYROOM) { setTimeout(waitForRoom, 500); return; }
+  if (typeof loadRoomData === 'function') {
+    await loadRoomData(window._MYROOM.code);
+  }
+  await loadFavTeams();
+  renderActive();
+})();
+
+</script>
+</body>
+</html>
