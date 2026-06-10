@@ -1381,6 +1381,12 @@ function renderDesglosePorraSection() {
 // ── Monkey-patch renderPorraFull ──
 const _origRenderPorraFull = typeof renderPorraFull === 'function' ? renderPorraFull : null;
 renderPorraFull = function() {
+  // Ensure fav teams are loaded; if not, load and re-render once ready
+  if (!window._FAV_TEAMS && window._MYROOM && typeof loadFavTeams === 'function') {
+    loadFavTeams().then(function() {
+      if (typeof renderActive === 'function') renderActive();
+    });
+  }
   const base = _origRenderPorraFull ? _origRenderPorraFull() : '';
   return base + renderDesglosePorraSection();
 };
@@ -1494,35 +1500,64 @@ function _renderPremiosPanel() {
   if (!panel) return;
   var players = typeof getPlayers === 'function' ? getPlayers() : [];
   if (!players.length) {
-    panel.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.5);padding:30px 20px">No hay jugadores en la sala todav\u00eda</div>';
+    panel.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.5);padding:30px 20px">No hay jugadores en la sala todavía</div>';
     return;
   }
+
   var ranked = players.map(function(p) {
     var pts = typeof calcPlayerPts === 'function' ? calcPlayerPts(p.name) : 0;
     return { name: p.name, color: p.color, initials: p.initials, pts: pts };
   }).sort(function(a, b) { return b.pts - a.pts; });
 
-  var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
-  var html = '';
-  html += '<div class="premios-title">\uD83C\uDFC6 Clasificaci\u00f3n General</div>';
-  html += '<div class="premios-subtitle">Puntos acumulados del Mundial 2026</div>';
+  // Prize pot calculation: 10 EUR per player
+  var PRICE_PP = 10;
+  var totalPot  = players.length * PRICE_PP;
+  var prizes    = [
+    Math.round(totalPot * 0.50),
+    Math.round(totalPot * 0.30),
+    Math.round(totalPot * 0.20)
+  ];
+  var medals    = ['🥇','🥈','🥉'];
+  var prizeColors = ['#FFD700','#C0C0C0','#CD7F32'];
 
-  // Podium top 3
+  var html = '';
+
+  // Header + pot banner
+  html += '<div class="premios-title">🏆 Premios del Mundial 2026</div>';
+  html += '<div style="background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(250,204,21,.06));border:1px solid rgba(250,204,21,.35);border-radius:14px;padding:14px 16px;margin:12px 0 16px">';
+  html += '<div style="font-size:.75rem;color:rgba(255,255,255,.55);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">Bote total (' + players.length + ' participantes × ' + PRICE_PP + '€)</div>';
+  html += '<div style="font-size:2.2rem;font-weight:900;color:#FFD700;letter-spacing:-.02em">' + totalPot + '€</div>';
+  html += '<div style="display:flex;gap:8px;margin-top:10px">';
+  ['1º','2º','3º'].forEach(function(pos, i) {
+    if (i >= ranked.length) return;
+    html += '<div style="flex:1;background:rgba(0,0,0,.25);border-radius:10px;padding:7px 6px;text-align:center">';
+    html += '<div style="font-size:1rem">' + medals[i] + '</div>';
+    html += '<div style="font-size:.65rem;color:rgba(255,255,255,.5);margin:2px 0">' + pos + ' clasificado</div>';
+    html += '<div style="font-size:1.1rem;font-weight:900;color:' + prizeColors[i] + '">' + prizes[i] + '€</div>';
+    html += '<div style="font-size:.6rem;color:rgba(255,255,255,.35)">(' + [50,30,20][i] + '%)</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  // Podium visual (top 3)
   if (ranked.length >= 2) {
     var podiumIdxs = ranked.length >= 3 ? [1, 0, 2] : [1, 0];
-    var podiumH   = ranked.length >= 3 ? ['85px','110px','70px'] : ['85px','100px'];
+    var podiumH    = ranked.length >= 3 ? ['85px','110px','70px'] : ['85px','100px'];
     html += '<div class="podium-row">';
-    podiumIdxs.forEach(function(idx, i) {
-      var p = ranked[idx];
+    podiumIdxs.forEach(function(rankIdx, i) {
+      var p = ranked[rankIdx];
       if (!p) return;
-      var sz = idx === 0 ? '44px' : '36px';
+      var sz = rankIdx === 0 ? '44px' : '36px';
       html += '<div class="podium-item" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">';
-      html += '<div style="font-size:' + (idx===0?'1.6rem':'1.2rem') + '">' + (medals[idx]||'') + '</div>';
+      html += '<div style="font-size:' + (rankIdx===0?'1.6rem':'1.2rem') + '">' + (medals[rankIdx]||'') + '</div>';
       html += '<div style="width:'+sz+';height:'+sz+';border-radius:50%;background:'+p.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">'+p.initials+'</div>';
       html += '<div style="font-size:.75rem;font-weight:700;color:#fff;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</div>';
-      html += '<div style="font-size:1rem;font-weight:900;color:var(--gold)">'+(p.pts>0?'+'+p.pts:p.pts)+' pts</div>';
+      html += '<div style="font-size:.85rem;font-weight:900;color:var(--gold)">'+(p.pts>0?'+'+p.pts:p.pts)+' pts</div>';
+      if (rankIdx < prizes.length) {
+        html += '<div style="font-size:.8rem;font-weight:800;color:'+prizeColors[rankIdx]+';background:rgba(0,0,0,.3);border-radius:20px;padding:1px 8px">'+prizes[rankIdx]+'€</div>';
+      }
       html += '<div style="background:rgba(255,255,255,.1);border-radius:8px 8px 0 0;width:100%;height:'+podiumH[i]+';display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px">';
-      html += '<span style="font-size:.7rem;color:rgba(255,255,255,.4);font-weight:700">'+(idx+1)+'\u00ba</span>';
+      html += '<span style="font-size:.7rem;color:rgba(255,255,255,.4);font-weight:700">'+(rankIdx+1)+'º</span>';
       html += '</div></div>';
     });
     html += '</div>';
@@ -1532,16 +1567,22 @@ function _renderPremiosPanel() {
   html += '<div style="margin-top:4px">';
   ranked.forEach(function(p, i) {
     var isMe = p.name === (window._MYROOM && window._MYROOM.playerName);
+    var prizeBadge = '';
+    if (i < prizes.length) {
+      prizeBadge = '<span style="margin-left:auto;font-size:.85rem;font-weight:900;color:'+prizeColors[i]+'">'+prizes[i]+'€</span>';
+    }
     html += '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);'+(isMe?'background:rgba(250,204,21,.07);border-radius:8px;':'')+'">';
-    html += '<div style="min-width:22px;text-align:center;font-size:.85rem">'+(medals[i]||(i+1)+'\u00ba')+'</div>';
-    html += '<div style="width:28px;height:28px;border-radius:50%;background:'+p.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">'+p.initials+'</div>';
-    html += '<div style="flex:1;font-size:.85rem;font-weight:'+(isMe?'800':'600')+';color:'+(isMe?'var(--gold)':'#fff')+'">'+p.name+'</div>';
-    html += '<div style="font-size:.95rem;font-weight:900;color:var(--gold)">'+(p.pts>0?'+'+p.pts:p.pts)+' pts</div>';
+    html += '<div style="min-width:22px;text-align:center;font-size:.85rem">'+(medals[i]||(i+1)+'º')+'</div>';
+    html += '<div style="width:28px;height:28px;border-radius:50%;background:'+p.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">'+p.initials+'</div>';
+    html += '<div style="font-size:.9rem;font-weight:700;color:#fff'+(isMe?';color:#FDE68A':'')+'">'+(isMe?'⭐ ':'')+p.name+'</div>';
+    html += prizeBadge;
+    html += '<div style="font-size:.95rem;font-weight:900;color:var(--gold);'+(prizeBadge?'':'margin-left:auto')+'">'+(p.pts>0?'+'+p.pts:p.pts)+' pts</div>';
     html += '</div>';
   });
   html += '</div>';
   panel.innerHTML = html;
 }
+
 
 // ── PREMIOS ──
 function openPremios() {
@@ -1631,6 +1672,12 @@ function closeWelcomePopup() {
   function _checkOnStartup() {
     if (!window._MYROOM || !window._supa) { setTimeout(_checkOnStartup, 800); return; }
     _recheckAdmin();
+    // Load fav teams if not yet loaded, then refresh display
+    if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
+      loadFavTeams().then(function() {
+        if (typeof renderActive === 'function') renderActive();
+      });
+    }
   }
   setTimeout(_checkOnStartup, 3000);
 })();
