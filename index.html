@@ -721,18 +721,79 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <div id="rules-modal" onclick="if(event.target===this)closeRules()">
   <div id="rules-panel">
     <h3>📋 Reglas de la Porra</h3>
-    <div class="rule-row"><div class="rule-pts" style="color:var(--gold)">4 pts</div><div class="rule-desc"><b>Resultado exacto</b> — 3 pts por el marcador + 1 pt por el signo<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Ej: pronosticas 2-0 y el resultado es 2-0 → 4 pts</span></div></div>
-    <div class="rule-row"><div class="rule-pts">1 pt</div><div class="rule-desc"><b>Signo correcto</b> — aciertas quién gana (o empate) pero no el marcador<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Ej: pronosticas 2-0 y el resultado es 1-0 → 1 pt</span></div></div>
-    <div class="rule-row"><div class="rule-pts">⚡</div><div class="rule-desc"><b style="color:var(--grn)">Bonus goleador</b> — elige 1 jugador por partido</div></div>
+
+    <!-- Pronóstico -->
+    <div class="rule-row">
+      <div class="rule-pts" style="color:var(--gold)">🎯</div>
+      <div class="rule-desc">
+        <b>Pronóstico</b>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
+          <span style="background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:3px 10px;font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--gold)">+3 pts</span>
+          <span style="font-size:.82rem;color:rgba(255,255,255,.7)">por acertar el marcador exacto</span>
+        </div>
+        <div style="font-size:.73rem;color:rgba(255,255,255,.38);margin-top:3px">Ej: pronosticas 2-0 y el resultado es 2-0 → +3 pts</div>
+      </div>
+    </div>
+
+    <!-- 1X2 -->
+    <div class="rule-row">
+      <div class="rule-pts" style="color:var(--grn)">1X2</div>
+      <div class="rule-desc">
+        <b>Signo del partido</b>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
+          <span style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:3px 10px;font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--grn)">+1 pt</span>
+          <span style="font-size:.82rem;color:rgba(255,255,255,.7)">por acertar quién gana o si hay empate</span>
+        </div>
+        <div style="font-size:.73rem;color:rgba(255,255,255,.38);margin-top:3px">Ej: pronosticas 2-0 y el resultado es 1-0 → +1 pt</div>
+      </div>
+    </div>
+
+    <!-- Goleador -->
+    <div class="rule-row">
+      <div class="rule-pts">⚡</div>
+      <div class="rule-desc">
+        <b style="color:var(--grn)">Bonus goleador</b> — elige 1 jugador por partido
+      </div>
+    </div>
     <div class="pos-grid-rules">
       <div class="pos-item-r"><div class="pos-icon-r">⚡</div><div class="pos-name-r">Delantero</div><div class="pos-pts-r">+1</div></div>
       <div class="pos-item-r"><div class="pos-icon-r">🎯</div><div class="pos-name-r">Centrocampista</div><div class="pos-pts-r">+2</div></div>
       <div class="pos-item-r"><div class="pos-icon-r">🛡️</div><div class="pos-name-r">Defensa</div><div class="pos-pts-r">+3</div></div>
       <div class="pos-item-r"><div class="pos-icon-r">🧤</div><div class="pos-name-r">Portero</div><div class="pos-pts-r">+5</div></div>
     </div>
-    <div class="rule-row"><div class="rule-pts" style="color:var(--gold);font-size:1.4rem">⭐</div><div class="rule-desc"><b style="color:var(--gold)">Selección favorita</b> — sumas +2 pts si gana su partido, +1 pt si empata<br><span style="font-size:.75rem;color:rgba(255,255,255,.45)">Avance de ronda: +1 pt extra · Campeón final: +3 pts extra</span></div></div>
-    <div class="rule-row"><div class="rule-pts" style="color:var(--warn)">−1h</div><div class="rule-desc">Los pronósticos cierran <b>1 hora antes</b> del inicio del partido</div></div>
-    <div style="font-size:9.5px;color:rgba(255,255,255,.35);margin-top:10px">⏰ Cierre al pitido inicial · 1 jugador por partido</div>
+
+    <!-- Selección favorita -->
+    <div class="rule-row" style="align-items:flex-start">
+      <div class="rule-pts" style="color:var(--gold);font-size:1.4rem;padding-top:2px">⭐</div>
+      <div class="rule-desc">
+        <b style="color:var(--gold)">Bonus Selección Favorita</b>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:2px 9px;font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:var(--gold);flex-shrink:0">+2 pts</span>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.7)">si tu selección gana el partido</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:2px 9px;font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:var(--gold);flex-shrink:0">+1 pt</span>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.7)">si tu selección empata</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.3);border-radius:8px;padding:2px 9px;font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:var(--gold);flex-shrink:0">+1 pt</span>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.7)">adicional por pasar de ronda</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(250,204,21,.2);border:1px solid rgba(250,204,21,.5);border-radius:8px;padding:2px 9px;font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:var(--gold);flex-shrink:0">+3 pts</span>
+            <span style="font-size:.8rem;color:rgba(255,255,255,.7)">extra si gana el <b style="color:var(--gold)">Mundial</b> 🏆</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cierre -->
+    <div class="rule-row" style="border-bottom:none">
+      <div class="rule-pts" style="color:var(--warn)">−1h</div>
+      <div class="rule-desc">Los pronósticos cierran <b>1 hora antes</b> del inicio del partido</div>
+    </div>
+
     <button class="rules-close" onclick="closeRules()">Cerrar</button>
   </div>
 </div>
