@@ -1167,8 +1167,9 @@ function renderDesglosePorraSection() {
     const rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
     return `<tr style="border-bottom:1px solid rgba(255,255,255,.05);${rowBg}">
       <td style="padding:8px 10px">
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
           <div style="width:24px;height:24px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">${r.initials}</div>
+          ${(()=>{const _t=window._FAV_TEAMS?.[r.name];const _c=_t&&FLAGCODE?.[_t];return _c?`<img src="https://flagcdn.com/${_c}.svg" style="width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0" title="${_t}">`:'';})()}
           <span style="font-size:.82rem;font-weight:${isMe?'800':'600'};color:${isMe?'var(--gold)':'#fff'}">${r.name}</span>
         </div>
       </td>
@@ -1499,8 +1500,9 @@ function _renderPremiosPanel() {
 
         return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);${isMe ? 'background:rgba(250,204,21,.05);' : ''}">
           <td style="padding:6px 8px">
-            <div style="display:flex;align-items:center;gap:5px">
+            <div style="display:flex;align-items:center;gap:4px">
               <div style="width:20px;height:20px;border-radius:50%;background:${p.color};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;flex-shrink:0">${p.initials}</div>
+              ${(()=>{const _t=window._FAV_TEAMS?.[p.name];const _c=_t&&FLAGCODE?.[_t];return _c?`<img src="https://flagcdn.com/${_c}.svg" style="width:17px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="${_t}">`:'';})()}
               <span style="font-size:.76rem;font-weight:${isMe ? '800' : '500'};color:${isMe ? 'var(--gold)' : 'rgba(255,255,255,.85)'};white-space:nowrap">${p.name}</span>
             </div>
           </td>
@@ -1564,5 +1566,57 @@ function _renderPremiosPanel() {
     <span style="font-size:.62rem;color:rgba(255,255,255,.18)">Aplicación original. Prohibida su reproducción sin autorización.</span>
   </div>
 </div>
+
+
+<script>
+// ── Patch: Banderas de selección favorita en filas de jugadores ──
+(function _injectFavFlags() {
+  function _injectIntoRows() {
+    if (!window._FAV_TEAMS || !FLAGCODE) return;
+    // Procesar .porra-player-row (clasificación obfuscada)
+    document.querySelectorAll('.porra-player-row:not([data-flag-ok])').forEach(row => {
+      // La celda del nombre es la 2ª (índice 1, columna 1fr)
+      const nameCell = row.children[1];
+      if (!nameCell) return;
+      // Buscar el nombre del jugador comparando con los jugadores conocidos
+      const players = typeof getPlayers === 'function' ? getPlayers() : [];
+      const cellText = nameCell.textContent.trim();
+      const player = players.find(p => cellText.includes(p.name));
+      if (!player) { row.setAttribute('data-flag-ok', '1'); return; }
+      const team = window._FAV_TEAMS[player.name];
+      const code = team && FLAGCODE[team];
+      if (!code) { row.setAttribute('data-flag-ok', '1'); return; }
+      // Crear img de bandera e insertarla entre el avatar y el nombre
+      const flag = document.createElement('img');
+      flag.src = `https://flagcdn.com/${code}.svg`;
+      flag.alt = team;
+      flag.title = `Favorita: ${team}`;
+      flag.style.cssText = 'width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0;vertical-align:middle';
+      // Buscar el div contenedor dentro de la celda (display:flex)
+      const flex = nameCell.querySelector('div') || nameCell;
+      const avatar = flex.querySelector ? flex.querySelector('div') : null;
+      if (avatar && avatar.nextSibling) {
+        flex.insertBefore(flag, avatar.nextSibling);
+      } else {
+        flex.appendChild(flag);
+      }
+      row.setAttribute('data-flag-ok', '1');
+    });
+  }
+
+  // Ejecutar al cargar y observar cambios en el DOM
+  const obs = new MutationObserver(() => _injectIntoRows());
+  obs.observe(document.body, { childList: true, subtree: true });
+  // También ejecutar con un pequeño delay tras cada renderizado
+  const _origRenderActive = typeof renderActive === 'function' ? renderActive : null;
+  if (_origRenderActive) {
+    renderActive = function() {
+      _origRenderActive();
+      setTimeout(_injectIntoRows, 50);
+    };
+  }
+  setTimeout(_injectIntoRows, 500);
+})();
+</script>
 </body>
 </html>
