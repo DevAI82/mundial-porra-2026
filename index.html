@@ -1431,28 +1431,39 @@ function _renderPremiosPanel() {
   const _prevRPF = typeof renderPorraFull === 'function' ? renderPorraFull : null;
   if (!_prevRPF) { setTimeout(_patchJornadaBreakdown, 300); return; }
 
+  // Calcula desglose para un partido concreto
   function calcMatchBD(playerName, matchH, matchA, matchD, matchId) {
-    const actual = R.scores?.[matchId];
-    const ok = actual && actual[0] !== '' && actual[1] !== '';
-    if (!ok) return { pending: true };
-    const rh = +actual[0], ra = +actual[1];
     const key = _porraKey({ h: matchH, a: matchA, d: matchD });
     const pred = (window._PS?.[key] || {})[playerName];
     if (!pred) return { noPred: true };
+
+    const scoreTxt = pred.score || ((pred.loc !== undefined && pred.vis !== undefined)
+      ? pred.loc + '-' + pred.vis : null);
+    const goleador = pred.goleador || null;
+
+    const actual = R.scores?.[matchId];
+    const hasResult = !!(actual && actual[0] !== '' && actual[1] !== '');
+
+    if (!hasResult) return { pending: true, score: scoreTxt, goleador };
+
+    const rh = +actual[0], ra = +actual[1];
     const ph = +pred.loc, pa = +pred.vis;
     const realSign = rh > ra ? 1 : rh < ra ? -1 : 0;
     const predSign = ph > pa ? 1 : ph < pa ? -1 : 0;
     let prono = 0, signo = 0;
     if (predSign === realSign) signo = 1;
     if (ph === rh && pa === ra) prono = 3;
+
     let fav = 0;
     const ft = window._FAV_TEAMS?.[playerName];
     if (ft) {
       if (matchH === ft) { if (rh > ra) fav = 2; else if (rh === ra) fav = 1; }
       else if (matchA === ft) { if (ra > rh) fav = 2; else if (rh === ra) fav = 1; }
     }
-    const score = pred.score || (pred.loc + '-' + pred.vis);
-    return { prono, signo, fav, score, total: prono + signo + fav };
+
+    // Puntos del goleador: derivamos del total obfuscado para ese partido
+    // No disponibles per-partido → mostramos '?' hasta que haya datos
+    return { prono, signo, fav, score: scoreTxt, goleador, total: prono + signo + fav, hasResult };
   }
 
   function buildJornadaHTML() {
@@ -1466,7 +1477,7 @@ function _renderPremiosPanel() {
       if (!fx) return;
       const mid = fx[0];
       const act = R.scores?.[mid];
-      const hasR = act && act[0] !== '' && act[1] !== '';
+      const hasR = !!(act && act[0] !== '' && act[1] !== '');
 
       const resultBadge = hasR
         ? `<span style="font-family:'Barlow Condensed';font-size:1rem;font-weight:900;color:var(--gold)">${act[0]}–${act[1]}</span>`
@@ -1479,17 +1490,29 @@ function _renderPremiosPanel() {
         const isMe = window._MYROOM?.playerName === p.name;
         const bd = calcMatchBD(p.name, match.h, match.a, match.d, mid);
 
+        // Columna Pronóstico (marcador)
+        const predCell = () => {
+          if (bd.noPred || !bd.score)
+            return `<td style="padding:5px 4px;text-align:center;color:rgba(255,255,255,.2);font-size:.75rem">—</td>`;
+          const opacity = hasR ? '1' : '0.6';
+          return `<td style="padding:5px 4px;text-align:center;font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;opacity:${opacity}">${bd.score}</td>`;
+        };
+
+        // Columna Goleador
+        const golCell = () => {
+          if (bd.noPred || !bd.goleador)
+            return `<td style="padding:5px 3px;text-align:center;color:rgba(255,255,255,.2);font-size:.75rem">—</td>`;
+          // Apellido corto para ahorrar espacio
+          const short = bd.goleador.split(' ').pop();
+          const opacity = hasR ? '1' : '0.6';
+          return `<td style="padding:5px 3px;text-align:center;font-size:.72rem;color:rgba(255,255,255,${hasR ? '.75' : '.4'});opacity:${opacity};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px" title="${bd.goleador}">${short}</td>`;
+        };
+
+        // Celda de puntos
         const cell = (v, color, available) => {
           if (!available || bd.noPred)
             return `<td style="padding:5px 3px;text-align:center;color:rgba(255,255,255,.13);font-family:'Barlow Condensed';font-size:.82rem">—</td>`;
           return `<td style="padding:5px 3px;text-align:center;font-family:'Barlow Condensed';font-weight:700;font-size:.82rem;color:${v > 0 ? color : 'rgba(255,255,255,.2)'}">${v > 0 ? '+' + v : '—'}</td>`;
-        };
-
-        const predCell = () => {
-          if (bd.noPred)
-            return `<td style="padding:5px 4px;text-align:center;color:rgba(255,255,255,.2);font-size:.75rem">—</td>`;
-          const opacity = hasR ? '1' : '0.55';
-          return `<td style="padding:5px 4px;text-align:center;font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;opacity:${opacity}">${bd.score}</td>`;
         };
 
         const totCell = () => {
@@ -1498,15 +1521,23 @@ function _renderPremiosPanel() {
           return `<td style="padding:5px 3px;text-align:center;font-family:'Barlow Condensed';font-weight:900;font-size:.88rem;color:${bd.total > 0 ? 'var(--gold)' : 'rgba(255,255,255,.2)'}">${bd.total > 0 ? '+' + bd.total : '0'}</td>`;
         };
 
+        // Flag favorita
+        const favFlag = (() => {
+          const t = window._FAV_TEAMS?.[p.name];
+          const c = t && FLAGCODE?.[t];
+          return c ? `<img src="https://flagcdn.com/${c}.svg" style="width:17px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="${t}">` : '';
+        })();
+
         return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);${isMe ? 'background:rgba(250,204,21,.05);' : ''}">
           <td style="padding:6px 8px">
             <div style="display:flex;align-items:center;gap:4px">
               <div style="width:20px;height:20px;border-radius:50%;background:${p.color};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;flex-shrink:0">${p.initials}</div>
-              ${(()=>{const _t=window._FAV_TEAMS?.[p.name];const _c=_t&&FLAGCODE?.[_t];return _c?`<img src="https://flagcdn.com/${_c}.svg" style="width:17px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="${_t}">`:'';})()}
+              ${favFlag}
               <span style="font-size:.76rem;font-weight:${isMe ? '800' : '500'};color:${isMe ? 'var(--gold)' : 'rgba(255,255,255,.85)'};white-space:nowrap">${p.name}</span>
             </div>
           </td>
           ${predCell()}
+          ${golCell()}
           ${cell(bd.prono || 0, 'rgba(255,255,255,.95)', hasR && !bd.noPred)}
           ${cell(bd.signo || 0, 'rgba(52,211,153,.9)', hasR && !bd.noPred)}
           ${cell(bd.fav || 0, 'rgba(250,204,21,.9)', hasR && !bd.noPred)}
@@ -1519,10 +1550,11 @@ function _renderPremiosPanel() {
           <span style="font-size:.82rem;font-weight:700">${match.h} vs ${match.a}</span>
           ${resultBadge}
         </div>
-        <table style="width:100%;border-collapse:collapse;min-width:300px">
+        <table style="width:100%;border-collapse:collapse;min-width:340px">
           <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08)">
             ${TH('Jugador', 'rgba(255,255,255,.38)')}
-            ${TH('Prono')}
+            ${TH('Marcador')}
+            ${TH('⚽', 'rgba(96,165,250,.6)', 'Goleador predicho')}
             ${TH('🎯', 'rgba(255,255,255,.5)', 'Resultado exacto: +3 pts')}
             ${TH('1X2', 'rgba(52,211,153,.6)', 'Signo correcto: +1 pt')}
             ${TH('⭐', 'rgba(250,204,21,.6)', 'Favorito: +2 victoria / +1 empate')}
@@ -1539,17 +1571,11 @@ function _renderPremiosPanel() {
   renderPorraFull = function() {
     const tab = window._porraTab || 'clasif';
     const origHTML = _prevRPF();
-
-    if (tab !== 'jornada') return origHTML; // pestaña clasificación — sin cambios
-
-    // Construir nueva vista de jornadas con desglose
+    if (tab !== 'jornada') return origHTML;
     const newContent = buildJornadaHTML();
     if (!newContent) return origHTML;
-
-    // Mantener cabecera (pestañas, botones) y reemplazar los bloques de jornada
     const jStart = origHTML.indexOf('<div class="jornada-block"');
     if (jStart === -1) return origHTML;
-
     const before = origHTML.substring(0, jStart);
     return before + newContent + '</div>' + renderDesglosePorraSection();
   };
