@@ -667,6 +667,21 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .wp-btn{margin-top:12px;width:100%;padding:12px;background:var(--gold);border:none;border-radius:12px;font-family:'Barlow Condensed';font-weight:900;font-size:1rem;color:#1a1206;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.15s}
 .wp-btn:hover{background:#fcd34d}
 
+/* ── Botón volver a Inicio ── */
+#back-home-btn{
+  display:none;
+  position:fixed;top:10px;left:10px;z-index:200;
+  align-items:center;gap:5px;
+  background:rgba(20,30,15,.88);backdrop-filter:blur(6px);
+  border:1px solid rgba(250,204,21,.3);border-radius:20px;
+  padding:6px 12px 6px 8px;
+  color:var(--gold);font-size:.75rem;font-weight:700;letter-spacing:.03em;
+  cursor:pointer;transition:.2s;text-transform:uppercase;
+  box-shadow:0 2px 12px rgba(0,0,0,.4)
+}
+#back-home-btn:hover{background:rgba(250,204,21,.18);border-color:rgba(250,204,21,.6)}
+#back-home-btn svg{flex-shrink:0}
+#back-home-btn.visible{display:flex}
 /* ── Share-room modal ── */
 .share-modal{position:fixed;inset:0;z-index:10002;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:.25s;padding:20px}
 .share-modal.open{opacity:1;visibility:visible}
@@ -686,6 +701,12 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 </style>
 </head>
 <body>
+
+<!-- Botón volver a Inicio -->
+<button id="back-home-btn" onclick="nav('home', document.querySelector('.ni'))">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  Inicio
+</button>
 
 <div id="splash">
   <video id="intro-video" src="nuevaintro.mp4"
@@ -1443,15 +1464,41 @@ function closeWelcomePopup() {
   document.getElementById('welcome-popup').classList.remove('open');
   sessionStorage.setItem('wp_shown', '1');
 }
+// Mostrar popup DESPUÉS del splash (se llama desde hideSplash monkey-patch)
 (function() {
-  if (!sessionStorage.getItem('wp_shown')) {
-    if (document.readyState === 'loading') {
-      window.addEventListener('DOMContentLoaded', function() { setTimeout(openWelcomePopup, 600); });
-    } else {
-      setTimeout(openWelcomePopup, 600);
-    }
+  // Espera a que hideSplash esté disponible y la sobreescribe
+  function _patchHideSplash() {
+    if (typeof hideSplash !== 'function') { setTimeout(_patchHideSplash, 100); return; }
+    const _origHideSplash = hideSplash;
+    hideSplash = function() {
+      _origHideSplash.apply(this, arguments);
+      if (!sessionStorage.getItem('wp_shown')) {
+        setTimeout(openWelcomePopup, 400);
+      }
+    };
   }
+  _patchHideSplash();
 })();
+
+// ── BOTÓN VOLVER A INICIO ──
+(function _patchNavForBackBtn() {
+  function _waitForNav() {
+    if (typeof nav !== 'function') { setTimeout(_waitForNav, 150); return; }
+    const _origNav = nav;
+    nav = function(screen, el) {
+      _origNav.apply(this, arguments);
+      const btn = document.getElementById('back-home-btn');
+      if (!btn) return;
+      if (screen === 'home') {
+        btn.classList.remove('visible');
+      } else {
+        btn.classList.add('visible');
+      }
+    };
+  }
+  _waitForNav();
+})();
+
 function _renderPremiosPanel() {
   const panel = document.getElementById('premios-panel');
   if (!panel) return;
