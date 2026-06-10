@@ -434,7 +434,7 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .porra-board{padding:8px 0}
 .porra-hdr{display:grid;grid-template-columns:auto 1fr repeat(3,auto);gap:4px;padding:6px 14px;font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.06)}
 .porra-player-row{display:grid;grid-template-columns:auto 1fr repeat(3,auto);gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
-.porra-player-row:last-child{border-bottom:0}
+.porra-player-row:last-child{border-bottom:0}.fav-flag-inline{width:18px;height:12px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-left:3px;flex-shrink:0}
 .porra-rank{font-family:'Barlow Condensed';font-weight:800;font-size:16px;color:var(--mut);min-width:20px;text-align:center}
 .porra-rank.top{color:var(--gold)}
 .porra-pts{font-family:'Barlow Condensed';font-weight:800;font-size:18px;color:var(--gold);min-width:32px;text-align:right}
@@ -1381,7 +1381,7 @@ function renderDesglosePorraSection() {
 // ── Monkey-patch renderPorraFull ──
 const _origRenderPorraFull = typeof renderPorraFull === 'function' ? renderPorraFull : null;
 renderPorraFull = function() {
-  // Ensure fav teams are loaded; if not, load and re-render once ready
+  // Ensure fav teams are loaded; if not, load async and re-render once ready
   if (!window._FAV_TEAMS && window._MYROOM && typeof loadFavTeams === 'function') {
     loadFavTeams().then(function() {
       if (typeof renderActive === 'function') renderActive();
@@ -1390,6 +1390,55 @@ renderPorraFull = function() {
   const base = _origRenderPorraFull ? _origRenderPorraFull() : '';
   return base + renderDesglosePorraSection();
 };
+
+// ── Inject flag icons into obfuscated .porra-player-row elements ──
+(function _patchPorraFlags() {
+  function _injectFlags() {
+    var ft = window._FAV_TEAMS;
+    var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : null;
+    if (!ft || !fc) return;
+    var knownPlayers = Object.keys(ft);
+    document.querySelectorAll('.porra-player-row').forEach(function(row) {
+      if (row.querySelector('.fav-flag-inline')) return; // already injected
+      var fnameEl = row.querySelector('.fname');
+      if (!fnameEl) return;
+      // Match player name against known FAV_TEAMS keys
+      var rowText = fnameEl.textContent || '';
+      var name = knownPlayers.find(function(n) { return rowText.indexOf(n) !== -1; });
+      if (!name) return;
+      var fav = ft[name];
+      var code = fav && fc[fav];
+      if (!code) return;
+      var img = document.createElement('img');
+      img.src = 'https://flagcdn.com/' + code + '.svg';
+      img.className = 'fav-flag-inline';
+      img.title = fav;
+      fnameEl.appendChild(img);
+    });
+  }
+  function _setup() {
+    var el = document.getElementById('porra-content');
+    if (!el) { setTimeout(_setup, 800); return; }
+    // Watch for tab switches and re-renders
+    var obs = new MutationObserver(function() {
+      // Small delay to let DOM settle
+      setTimeout(_injectFlags, 80);
+    });
+    obs.observe(el, { childList: true });
+    _injectFlags();
+  }
+  // Run after app has loaded and fav teams are available
+  function _waitForFavTeams() {
+    if (window._FAV_TEAMS) { _setup(); return; }
+    if (!window._MYROOM || !window._supa) { setTimeout(_waitForFavTeams, 800); return; }
+    if (typeof loadFavTeams === 'function') {
+      loadFavTeams().then(function() { _setup(); });
+    } else {
+      setTimeout(_waitForFavTeams, 800);
+    }
+  }
+  setTimeout(_waitForFavTeams, 2500);
+})();
 
 // ── Auto-rellenar código de sala desde URL (?sala=XXXX) ──
 (function _autoFillSala() {
