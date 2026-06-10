@@ -1634,7 +1634,7 @@ function closeWelcomePopup() {
 
       html += '<div style="margin-bottom:10px;border-radius:18px;overflow:hidden;border:1px solid '+borderColor+';background:rgba(8,30,6,.82);backdrop-filter:blur(12px)">';
       html += '<div style="padding:8px 14px;background:'+headerBg+';border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px">';
-      html += '<span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:800;color:'+dayColor+';text-transform:capitalize">'+dayLabel+'</span>';
+      html += '<span style="font-family:Barlow Condensed,sans-serif;font-size:.88rem;font-weight:800;color:'+dayColor+';text-transform:capitalize">'+dayLabel+'</span>';
       html += todayBadge;
       html += '</div>';
 
@@ -1644,7 +1644,7 @@ function closeWelcomePopup() {
         const hasScore = score && score[0] !== '' && score[1] !== '' && score[0] != null && score[1] != null;
         const rtveBadge = isRTVE ? '<span style="background:linear-gradient(135deg,#e63946,#c1121f);color:#fff;font-size:.58rem;font-weight:900;padding:2px 5px;border-radius:4px;flex-shrink:0;letter-spacing:.04em">RTVE</span>' : '';
         const scoreOrTime = hasScore
-          ? '<span style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:.05em">'+score[0]+'\u2013'+score[1]+'</span>'
+          ? '<span style="font-family:Barlow Condensed,sans-serif;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:.05em">'+score[0]+'\u2013'+score[1]+'</span>'
           : '<span style="font-size:.8rem;color:rgba(255,255,255,.45)">'+m.time+'</span>';
 
         html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05)">';
@@ -1655,7 +1655,7 @@ function closeWelcomePopup() {
         html += '<span style="font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+m.away+'</span>';
         html += '</div>';
         html += '<div style="display:flex;align-items:center;gap:5px;flex-shrink:0">';
-        html += '<span style="font-size:.65rem;color:rgba(255,255,255,.35);font-family:'Barlow Condensed'">'+m.group+'</span>';
+        html += '<span style="font-size:.65rem;color:rgba(255,255,255,.35);font-family:Barlow Condensed,sans-serif">'+m.group+'</span>';
         html += scoreOrTime;
         html += '</div></div>';
       });
