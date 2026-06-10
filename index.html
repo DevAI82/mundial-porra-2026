@@ -1580,8 +1580,10 @@ function closeWelcomePopup() {
 })();
 
 // ════════════════════════════════════════════════════════
-// ── RESULTADOS CRONOLÓGICO + SYNC SUPABASE ──
+// ── RESULTADOS CRONOLÓGICO + AUTO-SYNC SUPABASE ──
 // ════════════════════════════════════════════════════════
+
+// ── Vista cronológica de partidos ──
 (function _patchResultadosCronologico() {
   function _waitAndPatch() {
     if (typeof renderGrupos !== 'function' || typeof FX === 'undefined') {
@@ -1590,27 +1592,27 @@ function closeWelcomePopup() {
     const _origRG = renderGrupos;
     renderGrupos = function() {
       _origRG.apply(this, arguments);
-      _renderCrono();
+      window._renderCrono();
     };
   }
+  _waitAndPatch();
 
   window._renderCrono = function _renderCrono() {
     const el = document.getElementById('grupos-content');
     if (!el || typeof FX === 'undefined' || typeof RTVE === 'undefined') return;
 
-    const rtveKeys = new Set((RTVE || []).map(m => m.h + '|' + m.a));
+    const rtveKeys = new Set((RTVE || []).map(function(m){ return m.h + '|' + m.a; }));
 
-    // Group FX by date
     const byDate = {};
-    (FX || []).forEach(fx => {
+    (FX || []).forEach(function(fx) {
       const d = fx[1];
       if (!byDate[d]) byDate[d] = [];
       byDate[d].push({ mid:fx[0], date:fx[1], time:fx[2], group:fx[3], home:fx[4], away:fx[5] });
     });
 
-    const sortedDates = Object.keys(byDate).sort((a,b) => {
-      const [da,ma]=a.split('/'), [db,mb]=b.split('/');
-      return new Date(2026,+ma-1,+da) - new Date(2026,+mb-1,+db);
+    const sortedDates = Object.keys(byDate).sort(function(a,b) {
+      const pa=a.split('/'), pb=b.split('/');
+      return new Date(2026,+pa[1]-1,+pa[0]) - new Date(2026,+pb[1]-1,+pb[0]);
     });
 
     const now = new Date();
@@ -1618,45 +1620,44 @@ function closeWelcomePopup() {
 
     let html = '<div style="padding:4px 8px 80px">';
 
-    sortedDates.forEach(date => {
-      const [dd,mm] = date.split('/');
-      const dateObj = new Date(2026,+mm-1,+dd);
-      const isToday = date === todayStr;
+    sortedDates.forEach(function(date) {
+      const parts = date.split('/');
+      const dd = parts[0], mm = parts[1];
+      const dateObj = new Date(2026, +mm-1, +dd);
+      const isToday = (date === todayStr);
       const isPast  = dateObj < new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const dayLabel = dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+      const borderColor = isToday ? 'rgba(250,204,21,.4)' : 'rgba(255,255,255,.10)';
+      const headerBg = isToday ? 'rgba(250,204,21,.13)' : isPast ? 'rgba(255,255,255,.04)' : 'rgba(255,255,255,.06)';
+      const dayColor = isToday ? 'var(--gold)' : isPast ? 'rgba(255,255,255,.5)' : '#fff';
+      const todayBadge = isToday ? '<span style="background:var(--gold);color:#000;font-size:.65rem;font-weight:900;padding:2px 6px;border-radius:8px;letter-spacing:.04em">HOY</span>' : '';
 
-      html += `<div style="margin-bottom:10px;border-radius:18px;overflow:hidden;border:1px solid ${isToday?'rgba(250,204,21,.4)':'rgba(255,255,255,.10)'};background:rgba(8,30,6,.82);backdrop-filter:blur(12px)">
-        <div style="padding:8px 14px;background:${isToday?'rgba(250,204,21,.13)':isPast?'rgba(255,255,255,.04)':'rgba(255,255,255,.06)'};border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px">
-          <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:800;color:${isToday?'var(--gold)':isPast?'rgba(255,255,255,.45)':'rgba(255,255,255,.8)'};text-transform:capitalize">${dayLabel}</span>
-          ${isToday?'<span style="background:var(--gold);color:#111;font-size:.55rem;font-weight:900;padding:2px 6px;border-radius:8px;letter-spacing:.06em">HOY</span>':''}
-        </div>`;
+      html += '<div style="margin-bottom:10px;border-radius:18px;overflow:hidden;border:1px solid '+borderColor+';background:rgba(8,30,6,.82);backdrop-filter:blur(12px)">';
+      html += '<div style="padding:8px 14px;background:'+headerBg+';border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px">';
+      html += '<span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:800;color:'+dayColor+';text-transform:capitalize">'+dayLabel+'</span>';
+      html += todayBadge;
+      html += '</div>';
 
-      byDate[date].slice().sort((a,b)=>a.time.localeCompare(b.time)).forEach((m,i,arr) => {
-        const isRTVE = rtveKeys.has(m.home+'|'+m.away);
-        const actual = typeof R!=='undefined' && R.scores?.[m.mid];
-        const hasResult = actual && actual[0]!=='' && actual[1]!=='';
-        const hF = (typeof FLAGCODE!=='undefined' && FLAGCODE?.[m.home]) ? `<img src="https://flagcdn.com/${FLAGCODE[m.home]}.svg" style="width:15px;height:10px;border-radius:2px;vertical-align:middle;margin-right:3px;object-fit:cover">` : '';
-        const aF = (typeof FLAGCODE!=='undefined' && FLAGCODE?.[m.away]) ? `<img src="https://flagcdn.com/${FLAGCODE[m.away]}.svg" style="width:15px;height:10px;border-radius:2px;vertical-align:middle;margin-left:3px;object-fit:cover">` : '';
+      byDate[date].forEach(function(m) {
+        const isRTVE = rtveKeys.has(m.home + '|' + m.away);
+        const score = (window.R && window.R.scores) ? window.R.scores[m.mid] : null;
+        const hasScore = score && score[0] !== '' && score[1] !== '' && score[0] != null && score[1] != null;
+        const rtveBadge = isRTVE ? '<span style="background:linear-gradient(135deg,#e63946,#c1121f);color:#fff;font-size:.58rem;font-weight:900;padding:2px 5px;border-radius:4px;flex-shrink:0;letter-spacing:.04em">RTVE</span>' : '';
+        const scoreOrTime = hasScore
+          ? '<span style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:.05em">'+score[0]+'\u2013'+score[1]+'</span>'
+          : '<span style="font-size:.8rem;color:rgba(255,255,255,.45)">'+m.time+'</span>';
 
-        const scoreCell = hasResult
-          ? `<div style="display:flex;align-items:center;justify-content:center;gap:4px">
-               <span style="font-family:'Barlow Condensed';font-weight:900;font-size:1.2rem;color:var(--gold)">${actual[0]}</span>
-               <span style="color:var(--mut);font-size:.7rem">–</span>
-               <span style="font-family:'Barlow Condensed';font-weight:900;font-size:1.2rem;color:var(--gold)">${actual[1]}</span>
-             </div>`
-          : `<span style="font-family:'Barlow Condensed';font-size:.82rem;font-weight:700;color:${isPast?'#f87171':'var(--mut)'}">${isPast?'–':m.time}</span>`;
-
-        html += `<div style="display:grid;grid-template-columns:1fr 90px 1fr;align-items:center;padding:8px 12px;${i<arr.length-1?'border-bottom:1px solid rgba(255,255,255,.05)':''};background:${hasResult?'rgba(250,204,21,.05)':'rgba(0,0,0,.15)'}">
-          <div style="font-size:.8rem;font-weight:700;text-align:right;display:flex;align-items:center;justify-content:flex-end">${hF}${m.home}</div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-            ${scoreCell}
-            <div style="display:flex;gap:3px">
-              ${isRTVE?'<span style="background:linear-gradient(135deg,#c00,#f22);color:#fff;font-size:6px;font-weight:900;padding:1.5px 4px;border-radius:3px;letter-spacing:.04em">RTVE</span>':''}
-              <span style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.3);font-size:6px;padding:1.5px 4px;border-radius:3px">GRP ${m.group}</span>
-            </div>
-          </div>
-          <div style="font-size:.8rem;font-weight:700;display:flex;align-items:center">${m.away}${aF}</div>
-        </div>`;
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05)">';
+        html += '<div style="flex:1;display:flex;align-items:center;gap:6px;min-width:0">';
+        html += rtveBadge;
+        html += '<span style="font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+m.home+'</span>';
+        html += '<span style="color:rgba(255,255,255,.3);font-size:.7rem;flex-shrink:0">vs</span>';
+        html += '<span style="font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+m.away+'</span>';
+        html += '</div>';
+        html += '<div style="display:flex;align-items:center;gap:5px;flex-shrink:0">';
+        html += '<span style="font-size:.65rem;color:rgba(255,255,255,.35);font-family:'Barlow Condensed'">'+m.group+'</span>';
+        html += scoreOrTime;
+        html += '</div></div>';
       });
 
       html += '</div>';
@@ -1665,475 +1666,62 @@ function closeWelcomePopup() {
     html += '</div>';
     el.innerHTML = html;
   };
-
-  _waitAndPatch();
 })();
 
-// ── SYNC DE RESULTADOS DESDE SUPABASE ──
-(function _setupScoreSync() {
-  async function _fetchScores() {
-    if (!window._supa) { setTimeout(_fetchScores, 800); return; }
+// ── Auto-sync resultados desde Supabase ──
+// Tabla: results  |  Columnas: match_id, home_goals, away_goals
+// Se sincroniza al cargar la app y cada 3 minutos.
+// Para actualizar: el admin introduce los resultados desde el panel admin
+// y se guardan en Supabase => todos los usuarios los reciben automáticamente.
+(function _autoSyncResults() {
+  var _syncInterval = null;
+
+  function _showSyncDot(on) {
+    var dot = document.getElementById('sync-dot');
+    if (!dot) return;
+    if (on) dot.classList.add('active');
+    else dot.classList.remove('active');
+  }
+
+  async function _doSync() {
+    if (!window._supa) return;
     try {
-      const { data, error } = await window._supa
-        .from('world_cup_scores')
-        .select('match_id,home_score,away_score');
-      if (error || !data || !data.length) return;
-      let changed = false;
-      data.forEach(row => {
-        if (row.home_score !== null && row.away_score !== null) {
-          const hs = String(row.home_score), as2 = String(row.away_score);
-          const prev = typeof R !== 'undefined' && R.scores?.[row.match_id];
-          if (!prev || prev[0] !== hs || prev[1] !== as2) {
-            if (typeof R !== 'undefined') { R.scores[row.match_id] = [hs, as2]; changed = true; }
-          }
+      var res = await window._supa
+        .from('results')
+        .select('match_id,home_goals,away_goals');
+      if (res.error) { console.warn('Score sync:', res.error.message); return; }
+      if (!res.data || !res.data.length) return;
+      if (!window.R) window.R = {};
+      if (!window.R.scores) window.R.scores = {};
+      var updated = 0;
+      res.data.forEach(function(row) {
+        if (row.home_goals != null && row.away_goals != null) {
+          window.R.scores[row.match_id] = [String(row.home_goals), String(row.away_goals)];
+          updated++;
         }
       });
-      if (changed) {
-        try { localStorage.setItem('_wcs', JSON.stringify(typeof R!=='undefined'?R.scores:{})); } catch(e){}
-        if (typeof renderGrupos==='function') renderGrupos();
-        if (typeof renderTabla==='function') renderTabla();
-        if (typeof renderCuadro==='function') renderCuadro();
-        if (typeof renderActive==='function') renderActive();
-        _showSyncDot();
-      }
-    } catch(e) { console.log('ScoreSync error:', e); }
-  }
-
-  function _showSyncDot() {
-    const dot = document.getElementById('sync-dot');
-    if (dot) { dot.classList.add('active'); setTimeout(()=>dot.classList.remove('active'), 3000); }
-  }
-
-  window._fetchScoresFromSupabase = _fetchScores;
-
-  // Run on load + every 3 min
-  const _startSync = () => { setTimeout(_fetchScores, 2000); setInterval(_fetchScores, 3*60*1000); };
-  if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', _startSync);
-  else _startSync();
-})();
-
-// ── MODAL ACTUALIZAR RESULTADOS (ADMIN) ──
-function openScoresModal() {
-  if (typeof FX === 'undefined') return;
-
-  const byDate = {};
-  (FX || []).forEach(fx => {
-    const d = fx[1];
-    if (!byDate[d]) byDate[d] = [];
-    byDate[d].push({ mid:fx[0], date:fx[1], time:fx[2], group:fx[3], home:fx[4], away:fx[5] });
-  });
-
-  const sortedDates = Object.keys(byDate).sort((a,b) => {
-    const [da,ma]=a.split('/'), [db,mb]=b.split('/');
-    return new Date(2026,+ma-1,+da) - new Date(2026,+mb-1,+db);
-  });
-
-  let html = '';
-  sortedDates.forEach(date => {
-    const [dd,mm] = date.split('/');
-    const dateObj = new Date(2026,+mm-1,+dd);
-    const label = dateObj.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
-    html += `<div class="sp-day">${label}</div>`;
-    byDate[date].forEach(m => {
-      const v = typeof R!=='undefined' && R.scores?.[m.mid];
-      const hv = v ? v[0] : '', av = v ? v[1] : '';
-      html += `<div class="sp-match">
-        <div class="sp-team right">${m.home}</div>
-        <div class="sp-inputs">
-          <input class="sp-inp" type="number" min="0" max="30" id="sc-h-${m.mid}" value="${hv}" placeholder="–">
-          <span class="sp-sep">–</span>
-          <input class="sp-inp" type="number" min="0" max="30" id="sc-a-${m.mid}" value="${av}" placeholder="–">
-        </div>
-        <div class="sp-team">${m.away}</div>
-      </div>`;
-    });
-  });
-
-  document.getElementById('scores-body').innerHTML = html;
-  document.getElementById('scores-modal').classList.add('open');
-}
-
-function closeScoresModal() {
-  document.getElementById('scores-modal').classList.remove('open');
-}
-
-async function saveAllScores() {
-  if (typeof FX === 'undefined' || typeof R === 'undefined') return;
-  const btn = document.querySelector('.sp-save-btn');
-  if (btn) { btn.textContent = '⏳ Guardando...'; btn.disabled = true; }
-
-  const toUpsert = [];
-  (FX || []).forEach(fx => {
-    const mid = fx[0];
-    const hEl = document.getElementById('sc-h-'+mid);
-    const aEl = document.getElementById('sc-a-'+mid);
-    if (!hEl || !aEl) return;
-    const hv = hEl.value.trim(), av = aEl.value.trim();
-    if (hv !== '' && av !== '') {
-      R.scores[mid] = [hv, av];
-      toUpsert.push({ match_id: mid, home_score: parseInt(hv), away_score: parseInt(av) });
-    } else {
-      // Clear if both empty
-      if (hv === '' && av === '') delete R.scores[mid];
-    }
-  });
-
-  // Save to localStorage
-  try { localStorage.setItem('_wcs', JSON.stringify(R.scores)); } catch(e){}
-
-  // Push to Supabase
-  const note = document.getElementById('sp-sync-note');
-  if (window._supa && toUpsert.length) {
-    try {
-      const { error } = await window._supa.from('world_cup_scores').upsert(toUpsert, { onConflict: 'match_id' });
-      if (!error) {
-        if (note) note.textContent = '✅ ' + toUpsert.length + ' resultados sincronizados en la nube';
-      } else {
-        if (note) note.textContent = '⚠️ Error Supabase: ' + error.message;
+      try { localStorage.setItem('wc26_results', JSON.stringify(window.R.scores)); } catch(e) {}
+      if (updated > 0) {
+        _showSyncDot(true);
+        if (typeof renderActive === 'function') renderActive();
+        else if (typeof window._renderCrono === 'function') window._renderCrono();
+        setTimeout(function(){ _showSyncDot(false); }, 4000);
       }
     } catch(e) {
-      if (note) note.textContent = '⚠️ Sin conexión — guardado localmente';
+      console.warn('_autoSyncResults error:', e);
     }
-  } else {
-    if (note) note.textContent = '💾 Guardado localmente (' + toUpsert.length + ' partidos)';
   }
 
-  // Re-render all affected views
-  if (typeof renderGrupos==='function') renderGrupos();
-  if (typeof renderTabla==='function') renderTabla();
-  if (typeof renderCuadro==='function') renderCuadro();
-  if (typeof renderActive==='function') renderActive();
-
-  if (btn) { btn.textContent = '✅ Guardado'; btn.disabled = false; setTimeout(()=>{ btn.textContent='💾 Guardar y Sincronizar'; }, 2000); }
-}
-
-function _renderPremiosPanel() {
-  const panel = document.getElementById('premios-panel');
-  if (!panel) return;
-  const PRICE = 10;
-  const deadline = typeof _getFavDeadline === 'function' ? _getFavDeadline() : null;
-
-  const players = typeof getPlayers === 'function' ? getPlayers() : [];
-  const n = players.length || 0;
-  const pool = n * PRICE;
-  const p1 = Math.round(pool * 0.50);
-  const p2 = Math.round(pool * 0.30);
-  const p3 = Math.round(pool * 0.20);
-
-  const prizeFor = (pct, val) => n >= 1
-    ? `<span class="podium-prize">${val}€</span><br><span class="podium-label">${pct}% del bote</span>`
-    : `<span class="podium-prize">${pct}%</span><br><span class="podium-label">del bote total</span>`;
-
-  const deadlineStr = deadline
-    ? deadline.toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
-    : null;
-
-  panel.innerHTML = `
-    <div style="padding:0 2px">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-family:'Barlow Condensed';font-weight:900;font-size:2rem;color:var(--gold);letter-spacing:.05em">
-          🏆 PREMIOS
-        </div>
-        ${n > 0 ? `<div style="font-size:.82rem;color:rgba(255,255,255,.55);margin-top:2px">Bote total: <strong style="color:#fff">${pool}€</strong> (${n} jugadores × ${PRICE}€)</div>` : '<div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:2px">Los premios se calculan con los jugadores registrados</div>'}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;align-items:end">
-        <div style="text-align:center;background:rgba(192,192,192,.08);border:1px solid rgba(192,192,192,.2);border-radius:14px;padding:14px 8px">
-          <div style="font-size:1.6rem;margin-bottom:4px">🥈</div>
-          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:rgba(192,192,192,.9);margin-bottom:6px">2º PUESTO</div>
-          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.4rem;color:#C0C0C0">${prizeFor(30,p2)}</div>
-        </div>
-        <div style="text-align:center;background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.3);border-radius:14px;padding:18px 8px">
-          <div style="font-size:2rem;margin-bottom:4px">🥇</div>
-          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:var(--gold);margin-bottom:6px">1º PUESTO</div>
-          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.6rem;color:var(--gold)">${prizeFor(50,p1)}</div>
-        </div>
-        <div style="text-align:center;background:rgba(205,127,50,.08);border:1px solid rgba(205,127,50,.2);border-radius:14px;padding:14px 8px">
-          <div style="font-size:1.6rem;margin-bottom:4px">🥉</div>
-          <div style="font-family:'Barlow Condensed';font-weight:800;font-size:1rem;color:rgba(205,127,50,.9);margin-bottom:6px">3º PUESTO</div>
-          <div style="font-family:'Barlow Condensed';font-weight:900;font-size:1.4rem;color:#CD7F32">${prizeFor(20,p3)}</div>
-        </div>
-      </div>
-
-      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:14px">
-        <div style="font-family:'Barlow Condensed';font-weight:800;font-size:.95rem;color:rgba(255,255,255,.7);margin-bottom:10px;letter-spacing:.05em">📊 CÓMO SE PUNTUA</div>
-        <div style="display:grid;gap:8px">
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
-            <span style="color:rgba(255,255,255,.7)">🎯 Resultado exacto</span>
-            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+3 pts</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
-            <span style="color:rgba(255,255,255,.7)">✅ Signo correcto (1X2)</span>
-            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+1 pt</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
-            <span style="color:rgba(255,255,255,.7)">⭐ Selección favorita (victoria)</span>
-            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+2 pts</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem">
-            <span style="color:rgba(255,255,255,.7)">⭐ Selección favorita (empate)</span>
-            <span style="font-family:'Barlow Condensed';font-weight:800;color:#fff">+1 pt</span>
-          </div>
-        </div>
-      </div>
-
-      ${deadlineStr ? `<div style="text-align:center;font-size:.74rem;color:rgba(255,255,255,.35);margin-top:4px">🔒 Plazo selección favorita: ${deadlineStr}</div>` : ''}
-    </div>`;
-}
-
-// ── Override renderPorraSection to show ALL room members ──
-(function _patchRenderPorraSection() {
-  const _orig = typeof renderPorraSection === 'function' ? renderPorraSection : null;
-  if (!_orig) { setTimeout(_patchRenderPorraSection, 200); return; }
-  renderPorraSection = function(match) {
-    const key = match.h + '|' + match.a + '|' + match.d;
-    const members = window._ROOM_MEMBERS || [];
-    if (!window._PS) window._PS = {};
-    if (!window._PS[key]) window._PS[key] = {};
-    const injected = [];
-    members.forEach(m => {
-      if (!(m in window._PS[key])) {
-        window._PS[key][m] = null;
-        injected.push(m);
-      }
-    });
-    const result = _orig(match);
-    injected.forEach(m => { delete window._PS[key][m]; });
-    if (Object.keys(window._PS[key]).length === 0) delete window._PS[key];
-    return result;
-  };
-})();
-
-// ── Init: load fav teams + re-fetch room members when room is ready ──
-(async function waitForRoom() {
-  if (!window._MYROOM) { setTimeout(waitForRoom, 500); return; }
-  if (typeof loadRoomData === 'function') {
-    await loadRoomData(window._MYROOM.code);
-  }
-  await loadFavTeams();
-  renderActive();
-})();
-
-</script>
-
-<script>
-// ── Patch: Columnas de desglose por jornada ──
-(function _patchJornadaBreakdown() {
-  const _prevRPF = typeof renderPorraFull === 'function' ? renderPorraFull : null;
-  if (!_prevRPF) { setTimeout(_patchJornadaBreakdown, 300); return; }
-
-  // Calcula desglose para un partido concreto
-  function calcMatchBD(playerName, matchH, matchA, matchD, matchId) {
-    const key = _porraKey({ h: matchH, a: matchA, d: matchD });
-    const pred = (window._PS?.[key] || {})[playerName];
-    if (!pred) return { noPred: true };
-
-    const scoreTxt = pred.score || ((pred.loc !== undefined && pred.vis !== undefined)
-      ? pred.loc + '-' + pred.vis : null);
-    const goleador = pred.goleador || null;
-
-    const actual = R.scores?.[matchId];
-    const hasResult = !!(actual && actual[0] !== '' && actual[1] !== '');
-
-    if (!hasResult) return { pending: true, score: scoreTxt, goleador };
-
-    const rh = +actual[0], ra = +actual[1];
-    const ph = +pred.loc, pa = +pred.vis;
-    const realSign = rh > ra ? 1 : rh < ra ? -1 : 0;
-    const predSign = ph > pa ? 1 : ph < pa ? -1 : 0;
-    let prono = 0, signo = 0;
-    if (predSign === realSign) signo = 1;
-    if (ph === rh && pa === ra) prono = 3;
-
-    let fav = 0;
-    const ft = window._FAV_TEAMS?.[playerName];
-    if (ft) {
-      if (matchH === ft) { if (rh > ra) fav = 2; else if (rh === ra) fav = 1; }
-      else if (matchA === ft) { if (ra > rh) fav = 2; else if (rh === ra) fav = 1; }
+  function _startSync() {
+    if (!window._supa) { setTimeout(_startSync, 800); return; }
+    _doSync();
+    if (!_syncInterval) {
+      _syncInterval = setInterval(_doSync, 3 * 60 * 1000);
     }
-
-    // Puntos del goleador: derivamos del total obfuscado para ese partido
-    // No disponibles per-partido → mostramos '?' hasta que haya datos
-    return { prono, signo, fav, score: scoreTxt, goleador, total: prono + signo + fav, hasResult };
   }
-
-  function buildJornadaHTML() {
-    if (!window._MYROOM) return null;
-    const players = typeof getPlayers === 'function' ? getPlayers() : [];
-    if (!players.length) return null;
-
-    let html = '';
-    RTVE.forEach(match => {
-      const fx = FX.find(f => f[4] === match.h && f[5] === match.a);
-      if (!fx) return;
-      const mid = fx[0];
-      const act = R.scores?.[mid];
-      const hasR = !!(act && act[0] !== '' && act[1] !== '');
-
-      const resultBadge = hasR
-        ? `<span style="font-family:'Barlow Condensed';font-size:1rem;font-weight:900;color:var(--gold)">${act[0]}–${act[1]}</span>`
-        : `<span style="font-size:.68rem;color:rgba(255,255,255,.3)">Por jugar</span>`;
-
-      const TH = (txt, color, title) =>
-        `<th style="padding:4px 3px;text-align:center;font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${color || 'rgba(255,255,255,.38)'};white-space:nowrap"${title ? ` title="${title}"` : ''}>${txt}</th>`;
-
-      const rows = players.map(p => {
-        const isMe = window._MYROOM?.playerName === p.name;
-        const bd = calcMatchBD(p.name, match.h, match.a, match.d, mid);
-
-        // Columna Pronóstico (marcador)
-        const predCell = () => {
-          if (bd.noPred || !bd.score)
-            return `<td style="padding:5px 4px;text-align:center;color:rgba(255,255,255,.2);font-size:.75rem">—</td>`;
-          const opacity = hasR ? '1' : '0.6';
-          return `<td style="padding:5px 4px;text-align:center;font-family:'Barlow Condensed';font-weight:800;font-size:.85rem;opacity:${opacity}">${bd.score}</td>`;
-        };
-
-        // Columna Goleador
-        const golCell = () => {
-          if (bd.noPred || !bd.goleador)
-            return `<td style="padding:5px 3px;text-align:center;color:rgba(255,255,255,.2);font-size:.75rem">—</td>`;
-          // Apellido corto para ahorrar espacio
-          const short = bd.goleador.split(' ').pop();
-          const opacity = hasR ? '1' : '0.6';
-          return `<td style="padding:5px 3px;text-align:center;font-size:.72rem;color:rgba(255,255,255,${hasR ? '.75' : '.4'});opacity:${opacity};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px" title="${bd.goleador}">${short}</td>`;
-        };
-
-        // Celda de puntos
-        const cell = (v, color, available) => {
-          if (!available || bd.noPred)
-            return `<td style="padding:5px 3px;text-align:center;color:rgba(255,255,255,.13);font-family:'Barlow Condensed';font-size:.82rem">—</td>`;
-          return `<td style="padding:5px 3px;text-align:center;font-family:'Barlow Condensed';font-weight:700;font-size:.82rem;color:${v > 0 ? color : 'rgba(255,255,255,.2)'}">${v > 0 ? '+' + v : '—'}</td>`;
-        };
-
-        const totCell = () => {
-          if (!hasR || bd.noPred)
-            return `<td style="padding:5px 3px;text-align:center;color:rgba(255,255,255,.13);font-family:'Barlow Condensed';font-size:.88rem">—</td>`;
-          return `<td style="padding:5px 3px;text-align:center;font-family:'Barlow Condensed';font-weight:900;font-size:.88rem;color:${bd.total > 0 ? 'var(--gold)' : 'rgba(255,255,255,.2)'}">${bd.total > 0 ? '+' + bd.total : '0'}</td>`;
-        };
-
-        // Flag favorita
-        const favFlag = (() => {
-          const t = window._FAV_TEAMS?.[p.name];
-          const c = t && FLAGCODE?.[t];
-          return c ? `<img src="https://flagcdn.com/${c}.svg" style="width:17px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="${t}">` : '';
-        })();
-
-        return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);${isMe ? 'background:rgba(250,204,21,.05);' : ''}">
-          <td style="padding:6px 8px">
-            <div style="display:flex;align-items:center;gap:4px">
-              <div style="width:20px;height:20px;border-radius:50%;background:${p.color};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;flex-shrink:0">${p.initials}</div>
-              ${favFlag}
-              <span style="font-size:.76rem;font-weight:${isMe ? '800' : '500'};color:${isMe ? 'var(--gold)' : 'rgba(255,255,255,.85)'};white-space:nowrap">${p.name}</span>
-            </div>
-          </td>
-          ${predCell()}
-          ${golCell()}
-          ${cell(bd.prono || 0, 'rgba(255,255,255,.95)', hasR && !bd.noPred)}
-          ${cell(bd.signo || 0, 'rgba(52,211,153,.9)', hasR && !bd.noPred)}
-          ${cell(bd.fav || 0, 'rgba(250,204,21,.9)', hasR && !bd.noPred)}
-          ${totCell()}
-        </tr>`;
-      }).join('');
-
-      html += `<div class="gc" style="margin-bottom:10px;overflow-x:auto">
-        <div class="gc-head" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px">
-          <span style="font-size:.82rem;font-weight:700">${match.h} vs ${match.a}</span>
-          ${resultBadge}
-        </div>
-        <table style="width:100%;border-collapse:collapse;min-width:340px">
-          <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08)">
-            ${TH('Jugador', 'rgba(255,255,255,.38)')}
-            ${TH('Marcador')}
-            ${TH('⚽', 'rgba(96,165,250,.6)', 'Goleador predicho')}
-            ${TH('🎯', 'rgba(255,255,255,.5)', 'Resultado exacto: +3 pts')}
-            ${TH('1X2', 'rgba(52,211,153,.6)', 'Signo correcto: +1 pt')}
-            ${TH('⭐', 'rgba(250,204,21,.6)', 'Favorito: +2 victoria / +1 empate')}
-            ${TH('Total', 'rgba(250,204,21,.8)')}
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-    });
-
-    return html || null;
-  }
-
-  renderPorraFull = function() {
-    const tab = window._porraTab || 'clasif';
-    const origHTML = _prevRPF();
-    if (tab !== 'jornada') return origHTML;
-    const newContent = buildJornadaHTML();
-    if (!newContent) return origHTML;
-    const jStart = origHTML.indexOf('<div class="jornada-block"');
-    if (jStart === -1) return origHTML;
-    const before = origHTML.substring(0, jStart);
-    return before + newContent + '</div>' + renderDesglosePorraSection();
-  };
+  setTimeout(_startSync, 2500);
+  window._forceSyncResults = _doSync;
 })();
-</script>
-
-
-<!-- Copyright footer -->
-<div id="app-copyright" style="text-align:center;padding:18px 16px 28px;margin-top:8px;border-top:1px solid rgba(255,255,255,.06)">
-  <div style="font-size:.68rem;color:rgba(255,255,255,.3);letter-spacing:.04em;line-height:1.7">
-    <span style="font-size:.85rem">⚽</span><br>
-    <strong style="color:rgba(255,255,255,.45);font-family:'Barlow Condensed';font-size:.82rem;letter-spacing:.08em">PORRA MUNDIAL 2026</strong><br>
-    <span>© 2026 Jose Olmeda · Todos los derechos reservados</span><br>
-    <span style="font-size:.62rem;color:rgba(255,255,255,.18)">Aplicación original. Prohibida su reproducción sin autorización.</span>
-  </div>
-</div>
-
-
-<script>
-// ── Patch: Banderas de selección favorita en filas de jugadores ──
-(function _injectFavFlags() {
-  function _injectIntoRows() {
-    if (!window._FAV_TEAMS || !FLAGCODE) return;
-    // Procesar .porra-player-row (clasificación obfuscada)
-    document.querySelectorAll('.porra-player-row:not([data-flag-ok])').forEach(row => {
-      // La celda del nombre es la 2ª (índice 1, columna 1fr)
-      const nameCell = row.children[1];
-      if (!nameCell) return;
-      // Buscar el nombre del jugador comparando con los jugadores conocidos
-      const players = typeof getPlayers === 'function' ? getPlayers() : [];
-      const cellText = nameCell.textContent.trim();
-      const player = players.find(p => cellText.includes(p.name));
-      if (!player) { row.setAttribute('data-flag-ok', '1'); return; }
-      const team = window._FAV_TEAMS[player.name];
-      const code = team && FLAGCODE[team];
-      if (!code) { row.setAttribute('data-flag-ok', '1'); return; }
-      // Crear img de bandera e insertarla entre el avatar y el nombre
-      const flag = document.createElement('img');
-      flag.src = `https://flagcdn.com/${code}.svg`;
-      flag.alt = team;
-      flag.title = `Favorita: ${team}`;
-      flag.style.cssText = 'width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0;vertical-align:middle';
-      // Buscar el div contenedor dentro de la celda (display:flex)
-      const flex = nameCell.querySelector('div') || nameCell;
-      const avatar = flex.querySelector ? flex.querySelector('div') : null;
-      if (avatar && avatar.nextSibling) {
-        flex.insertBefore(flag, avatar.nextSibling);
-      } else {
-        flex.appendChild(flag);
-      }
-      row.setAttribute('data-flag-ok', '1');
-    });
-  }
-
-  // Ejecutar al cargar y observar cambios en el DOM
-  const obs = new MutationObserver(() => _injectIntoRows());
-  obs.observe(document.body, { childList: true, subtree: true });
-  // También ejecutar con un pequeño delay tras cada renderizado
-  const _origRenderActive = typeof renderActive === 'function' ? renderActive : null;
-  if (_origRenderActive) {
-    renderActive = function() {
-      _origRenderActive();
-      setTimeout(_injectIntoRows, 50);
-    };
-  }
-  setTimeout(_injectIntoRows, 500);
-})();
-</script>
+  </script>
 </body>
 </html>
