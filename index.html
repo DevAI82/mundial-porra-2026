@@ -1538,6 +1538,47 @@ function closeWelcomePopup() {
   _waitForNav();
 })();
 
+// ── FIX ADMIN STATUS (case-insensitive) ──
+(function _fixAdminStatus() {
+  // Re-checks admin comparing names in lowercase (fixes Kaiser vs KAISER mismatch)
+  async function _recheckAdmin() {
+    if (!window._supa || !window._MYROOM) return;
+    if (window._IS_ADMIN) return; // already admin, nothing to do
+    try {
+      const { data } = await window._supa
+        .from('rooms')
+        .select('admin_name')
+        .eq('code', window._MYROOM.code)
+        .maybeSingle();
+      if (data?.admin_name && window._MYROOM.playerName &&
+          data.admin_name.toLowerCase() === window._MYROOM.playerName.toLowerCase()) {
+        window._IS_ADMIN = true;
+        // Show admin button in settings
+        const adminBtn = document.querySelector('.settings-btn.admin');
+        if (adminBtn) adminBtn.style.display = 'block';
+      }
+    } catch(e) {}
+  }
+
+  // Patch enterRoom so every login triggers the check
+  function _patchEnterRoom() {
+    if (typeof enterRoom !== 'function') { setTimeout(_patchEnterRoom, 200); return; }
+    const _orig = enterRoom;
+    enterRoom = async function() {
+      await _orig.apply(this, arguments);
+      setTimeout(_recheckAdmin, 500);
+    };
+  }
+  _patchEnterRoom();
+
+  // Also check on startup for users already logged in from localStorage
+  function _checkOnStartup() {
+    if (!window._MYROOM || !window._supa) { setTimeout(_checkOnStartup, 800); return; }
+    _recheckAdmin();
+  }
+  setTimeout(_checkOnStartup, 3000);
+})();
+
 // ════════════════════════════════════════════════════════
 // ── RESULTADOS CRONOLÓGICO + SYNC SUPABASE ──
 // ════════════════════════════════════════════════════════
