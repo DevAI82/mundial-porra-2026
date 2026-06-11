@@ -1385,9 +1385,8 @@ renderPorraFull = function() {
   return base;
 };
 
-// ── DOM injector: desglose table + flag icons after porra renders ──
+// ── DOM injector: desglose table + flag icons via setPorraTab patch ──
 (function _porraEnhancer() {
-
   var DESGLOSE_ID = 'desglose-pts-section';
 
   function _buildDesgloseHTML() {
@@ -1412,7 +1411,6 @@ renderPorraFull = function() {
       var flagImg = code ? '<img src="https://flagcdn.com/'+code+'.svg" style="width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+fav+'">' : '';
       var avatar = '<div style="width:24px;height:24px;border-radius:50%;background:'+r.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">'+r.initials+'</div>';
       var nameSpan = '<span style="font-size:.82rem;font-weight:'+(isMe?'800':'600')+';color:'+(isMe?'var(--gold)':'#fff')+'">'+r.name+'</span>';
-      var isMe2 = r.name === (window._MYROOM && window._MYROOM.playerName);
       return '<tr style="border-bottom:1px solid rgba(255,255,255,.05);'+rowBg+'">'
         +'<td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:5px">'+avatar+flagImg+nameSpan+'</div></td>'
         +'<td style="'+tdS+'color:'+(r.pronPts>0?'#fff':'rgba(255,255,255,.3)')+'">'+fmt(r.pronPts||0)+'</td>'
@@ -1461,48 +1459,47 @@ renderPorraFull = function() {
     });
   }
 
-  function _injectDesglose() {
+  function _injectAll() {
     if (!window._MYROOM) return;
     var porraEl = document.getElementById('porra-content');
-    if (!porraEl) return;
-    // Remove old desglose if any
+    if (!porraEl || !porraEl.hasChildNodes()) return;
     var old = document.getElementById(DESGLOSE_ID);
     if (old) old.remove();
-    // Build and inject
     var html = _buildDesgloseHTML();
-    if (!html) return;
-    var wrapper = document.createElement('div');
-    wrapper.innerHTML = html;
-    porraEl.appendChild(wrapper.firstChild);
-    // Also inject flags into player rows
+    if (html) {
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      porraEl.appendChild(wrapper.firstChild);
+    }
     _injectFlags();
   }
 
-  function _onPorraChange() {
+  function _injectWithFavTeams() {
     if (!window._MYROOM) return;
-    // Wait for fav teams if needed, then inject
     if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
-      loadFavTeams().then(function() { _injectDesglose(); });
+      loadFavTeams().then(function() { _injectAll(); });
     } else {
-      _injectDesglose();
+      _injectAll();
     }
   }
 
-  function _setup() {
-    var el = document.getElementById('porra-content');
-    if (!el) { setTimeout(_setup, 600); return; }
-    var obs = new MutationObserver(function() {
-      setTimeout(_onPorraChange, 60);
-    });
-    obs.observe(el, { childList: true });
-    _onPorraChange();
+  // Patch setPorraTab so we inject after every porra render (no MutationObserver infinite-loop)
+  function _patchSetPorraTab() {
+    if (typeof setPorraTab !== 'function') { setTimeout(_patchSetPorraTab, 200); return; }
+    var _origSPT = setPorraTab;
+    setPorraTab = function(tab) {
+      _origSPT.apply(this, arguments);
+      setTimeout(_injectWithFavTeams, 120);
+    };
+    // Inject immediately in case porra tab is already visible
+    setTimeout(_injectWithFavTeams, 400);
   }
 
   function _waitReady() {
     if (!window._MYROOM || !window._supa) { setTimeout(_waitReady, 700); return; }
-    _setup();
+    _patchSetPorraTab();
   }
-  setTimeout(_waitReady, 2000);
+  setTimeout(_waitReady, 1500);
 })();
 
 // ── Auto-rellenar código de sala desde URL (?sala=XXXX) ──
@@ -1939,6 +1936,110 @@ function closeWelcomePopup() {
   setTimeout(_startSync, 2500);
   window._forceSyncResults = _doSync;
 })();
-  </script>
+
+// ── Override renderNoticias with working proxies ──
+(function _patchNoticias() {
+  function _waitForNoticias() {
+    if (typeof renderNoticias !== 'function') { setTimeout(_waitForNoticias, 300); return; }
+    renderNoticias = async function(forceRefresh) {
+      var el = document.getElementById('noticias-content');
+      if (!el) return;
+      el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.4);padding:20px;font-size:.85rem">⌛ Cargando noticias...</div>';
+      var feeds = [
+        { id: 'esp', title: '🇪🇸 Selección España', url: 'https://e00-marca.uecdn.es/rss/futbol/seleccion.xml' },
+        { id: 'mun', title: '🌎 Mundial 2026', url: 'https://e00-marca.uecdn.es/rss/futbol/mundial.xml' }
+      ];
+      var proxies = [
+        'https://api.allorigins.win/raw?url=',
+        'https://api.codetabs.com/v1/proxy?quest='
+      ];
+      async function fetchFeed(feedUrl) {
+        for (var i = 0; i < proxies.length; i++) {
+          try {
+            var resp = await fetch(proxies[i] + encodeURIComponent(feedUrl), { cache: forceRefresh ? 'no-cache' : 'default' });
+            if (!resp.ok) continue;
+            var text = await resp.text();
+            if (text && text.indexOf('<item') !== -1) return text;
+          } catch(e) {}
+        }
+        return null;
+      }
+      var html = '';
+      for (var fi = 0; fi < feeds.length; fi++) {
+        var feed = feeds[fi];
+        html += '<div style="padding:8px 14px 4px;font-size:.72rem;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:2px">' + feed.title + '</div>';
+        try {
+          var feedText = await fetchFeed(feed.url);
+          if (!feedText) {
+            html += '<div style="padding:10px 14px;font-size:.78rem;color:rgba(255,255,255,.4)">No se pudieron cargar las noticias.</div>';
+            continue;
+          }
+          var xml = new DOMParser().parseFromString(feedText, 'text/xml');
+          var items = Array.from(xml.getElementsByTagName('item')).slice(0, 8);
+          if (!items.length) {
+            html += '<div style="padding:10px 14px;font-size:.78rem;color:rgba(255,255,255,.4)">Sin noticias recientes.</div>';
+            continue;
+          }
+          items.forEach(function(item) {
+            var title = item.querySelector('title') ? item.querySelector('title').textContent : '';
+            var link  = item.querySelector('link') ? item.querySelector('link').textContent : '#';
+            var date  = item.querySelector('pubDate') ? item.querySelector('pubDate').textContent : '';
+            var desc  = item.querySelector('description') ? item.querySelector('description').textContent : '';
+            var tmp = document.createElement('div');
+            tmp.innerHTML = desc;
+            var plainDesc = (tmp.textContent || '').trim().slice(0, 120);
+            var dateStr = '';
+            if (date) {
+              try { dateStr = new Date(date).toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); } catch(e) {}
+            }
+            html += '<a href="' + link + '" target="_blank" rel="noopener" style="display:block;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.05);text-decoration:none;color:inherit;">'
+              + '<div style="font-size:.82rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:3px">' + title + '</div>'
+              + (plainDesc ? '<div style="font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.4;margin-bottom:3px">' + plainDesc + '…</div>' : '')
+              + (dateStr ? '<div style="font-size:.65rem;color:rgba(255,255,255,.3)">' + dateStr + '</div>' : '')
+              + '</a>';
+          });
+        } catch(e) {
+          html += '<div style="padding:10px 14px;font-size:.78rem;color:rgba(255,255,255,.4)">Error cargando noticias.</div>';
+        }
+        html += '<div style="height:8px"></div>';
+      }
+      el.innerHTML = html || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay noticias disponibles.</div>';
+    };
+  }
+  _waitForNoticias();
+})();
+
+// ── Timer: show countdown to kick-off during the final hour ──
+(function _patchMatchTimer() {
+  function _wait() {
+    if (typeof startMatchTimer !== 'function' || typeof parseMatchDT !== 'function') {
+      setTimeout(_wait, 300); return;
+    }
+    var _origSMT = startMatchTimer;
+    startMatchTimer = function(match) {
+      _origSMT(match);
+      if (window._extraMatchTimer) clearInterval(window._extraMatchTimer);
+      function _tick() {
+        var el = document.getElementById('match-timer');
+        if (!el) { clearInterval(window._extraMatchTimer); return; }
+        var dt = parseMatchDT(match.d, match.t);
+        var toMatch = dt.getTime() - Date.now();
+        var toClose = toMatch - 3600000;
+        if (toMatch <= 0) {
+          clearInterval(window._extraMatchTimer);
+        } else if (toClose <= 0 && toMatch > 0) {
+          var m = Math.floor(toMatch / 60000);
+          var s = Math.floor(toMatch % 60000 / 1000);
+          el.textContent = '⚽ Partido en ' + m + 'm ' + s + 's';
+          el.className = 'match-timer urgent';
+        }
+      }
+      _tick();
+      window._extraMatchTimer = setInterval(_tick, 1000);
+    };
+  }
+  _wait();
+})();
+</script>
 </body>
 </html>
