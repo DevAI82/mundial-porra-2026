@@ -1496,7 +1496,7 @@ renderPorraFull = function() {
   }
 
   function _waitReady() {
-    if (!window._MYROOM || !window._supa) { setTimeout(_waitReady, 700); return; }
+    if (!window._MYROOM || typeof _supa === 'undefined') { setTimeout(_waitReady, 700); return; }
     _patchSetPorraTab();
   }
   setTimeout(_waitReady, 1500);
@@ -1750,10 +1750,10 @@ function closeWelcomePopup() {
 (function _fixAdminStatus() {
   // Re-checks admin comparing names in lowercase (fixes Kaiser vs KAISER mismatch)
   async function _recheckAdmin() {
-    if (!window._supa || !window._MYROOM) return;
+    if (typeof _supa === 'undefined' || !window._MYROOM) return;
     if (window._IS_ADMIN) return; // already admin, nothing to do
     try {
-      const { data } = await window._supa
+      const { data } = await _supa
         .from('rooms')
         .select('admin_name')
         .eq('code', window._MYROOM.code)
@@ -1781,7 +1781,7 @@ function closeWelcomePopup() {
 
   // Also check on startup for users already logged in from localStorage
   function _checkOnStartup() {
-    if (!window._MYROOM || !window._supa) { setTimeout(_checkOnStartup, 800); return; }
+    if (!window._MYROOM || typeof _supa === 'undefined') { setTimeout(_checkOnStartup, 800); return; }
     _recheckAdmin();
     // Load fav teams if not yet loaded, then refresh display
     if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
@@ -1898,9 +1898,9 @@ function closeWelcomePopup() {
   }
 
   async function _doSync() {
-    if (!window._supa) return;
+    if (typeof _supa === 'undefined') return;
     try {
-      var res = await window._supa
+      var res = await _supa
         .from('results')
         .select('match_id,home_goals,away_goals');
       if (res.error) { console.warn('Score sync:', res.error.message); return; }
@@ -1927,7 +1927,7 @@ function closeWelcomePopup() {
   }
 
   function _startSync() {
-    if (!window._supa) { setTimeout(_startSync, 800); return; }
+    if (typeof _supa === 'undefined') { setTimeout(_startSync, 800); return; }
     _doSync();
     if (!_syncInterval) {
       _syncInterval = setInterval(_doSync, 3 * 60 * 1000);
@@ -1989,37 +1989,44 @@ function closeWelcomePopup() {
   }
   _waitForNoticias();
 })();
-// ── Timer: show countdown to kick-off during the final hour ──
+// ── Timer: reemplaza startMatchTimer para contar hasta 1h antes del partido ──
 (function _patchMatchTimer() {
   function _wait() {
     if (typeof startMatchTimer !== 'function' || typeof parseMatchDT !== 'function') {
       setTimeout(_wait, 300); return;
     }
-    var _origSMT = startMatchTimer;
     startMatchTimer = function(match) {
-      _origSMT(match);
-      if (window._extraMatchTimer) clearInterval(window._extraMatchTimer);
+      if (window._matchTimer) clearInterval(window._matchTimer);
       function _tick() {
         var el = document.getElementById('match-timer');
-        if (!el) { clearInterval(window._extraMatchTimer); return; }
+        if (!el) { clearInterval(window._matchTimer); return; }
         var dt = parseMatchDT(match.d, match.t);
         var toMatch = dt.getTime() - Date.now();
         var toClose = toMatch - 3600000;
         if (toMatch <= 0) {
-          clearInterval(window._extraMatchTimer);
-        } else if (toClose <= 0 && toMatch > 0) {
-          var m = Math.floor(toMatch / 60000);
-          var s = Math.floor(toMatch % 60000 / 1000);
-          el.textContent = '⚽ Partido en ' + m + 'm ' + s + 's';
-          el.className = 'match-timer urgent';
+          el.textContent = '⚽ Partido en juego';
+          el.className = 'match-timer closed';
+          clearInterval(window._matchTimer);
+        } else if (toClose <= 0) {
+          var mm = Math.floor(toMatch / 60000);
+          var ss = Math.floor(toMatch % 60000 / 1000);
+          el.textContent = '🔒 Pronósticos cerrados · ⚽ Partido en ' + mm + 'm ' + ss + 's';
+          el.className = 'match-timer closed';
+          document.querySelectorAll('.pred-save-btn').forEach(function(b) { b.disabled = true; });
+          document.querySelectorAll('.pred-edit-btn').forEach(function(b) { b.style.display = 'none'; });
+        } else {
+          var h = Math.floor(toClose / 3600000);
+          var m = Math.floor(toClose % 3600000 / 60000);
+          var s = Math.floor(toClose % 60000 / 1000);
+          el.textContent = '⏳ Cierre de pronósticos en ' + h + 'h ' + m + 'm ' + s + 's';
+          el.className = 'match-timer' + (toClose < 7200000 ? ' urgent' : '');
         }
       }
       _tick();
-      window._extraMatchTimer = setInterval(_tick, 1000);
+      window._matchTimer = setInterval(_tick, 1000);
     };
   }
   _wait();
-})();
-</script>
+})();</script>
 </body>
 </html>
