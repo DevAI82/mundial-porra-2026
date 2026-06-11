@@ -2330,6 +2330,199 @@ function closeWelcomePopup() {
     };
   }
   _wait();
+})();
+
+// ── Estadísticas: Goleadores del torneo (football-data.org API) ──────────────
+(function _patchFutStats() {
+  var FD_KEY = 'd5dae42172804440865d29c51a6768c5';
+
+  // Mapeo nombre inglés → código de bandera (iso2)
+  var TEAM_FLAG = {
+    'Mexico':'mx','South Korea':'kr','Canada':'ca','Bosnia and Herzegovina':'ba',
+    'United States':'us','Paraguay':'py','Qatar':'qa','Switzerland':'ch',
+    'Brazil':'br','Morocco':'ma','Haiti':'ht','Scotland':'gb-sct',
+    'Australia':'au','Turkey':'tr','Germany':'de','Netherlands':'nl',
+    'Ivory Coast':'ci','Ecuador':'ec','Sweden':'se','Tunisia':'tn',
+    'Spain':'es','Cape Verde':'cv','Belgium':'be','Egypt':'eg',
+    'Saudi Arabia':'sa','Uruguay':'uy','Iran':'ir','New Zealand':'nz',
+    'France':'fr','Iraq':'iq','Norway':'no','Algeria':'dz',
+    'Argentina':'ar','Austria':'at','Portugal':'pt','DR Congo':'cd',
+    'England':'gb-eng','Croatia':'hr','Ghana':'gh','Panama':'pa',
+    'Colombia':'co','Uzbekistan':'uz','Senegal':'sn','Jordan':'jo',
+    'Japan':'jp','Czechia':'cz','Czech Republic':'cz','South Africa':'za',
+    'Curacao':'cw','Turkiye':'tr',
+  };
+
+  // Mapeo nombre inglés → español
+  var NOMBRES = {
+    'Mexico':'México','South Korea':'Corea del Sur','Canada':'Canadá',
+    'Bosnia and Herzegovina':'Bosnia-Herzegovina','United States':'Estados Unidos',
+    'Paraguay':'Paraguay','Qatar':'Catar','Switzerland':'Suiza',
+    'Brazil':'Brasil','Morocco':'Marruecos','Haiti':'Haití','Scotland':'Escocia',
+    'Australia':'Australia','Turkey':'Turquía','Turkiye':'Turquía','Germany':'Alemania',
+    'Netherlands':'Países Bajos','Ivory Coast':'Costa de Marfil','Ecuador':'Ecuador',
+    'Sweden':'Suecia','Tunisia':'Túnez','Spain':'España','Cape Verde':'Cabo Verde',
+    'Belgium':'Bélgica','Egypt':'Egipto','Saudi Arabia':'Arabia Saudita',
+    'Uruguay':'Uruguay','Iran':'Irán','New Zealand':'Nueva Zelanda',
+    'France':'Francia','Iraq':'Irak','Norway':'Noruega','Algeria':'Argelia',
+    'Argentina':'Argentina','Austria':'Austria','Portugal':'Portugal',
+    'DR Congo':'RD Congo','England':'Inglaterra','Croatia':'Croacia',
+    'Ghana':'Ghana','Panama':'Panamá','Colombia':'Colombia','Uzbekistan':'Uzbekistán',
+    'Senegal':'Senegal','Jordan':'Jordania','Japan':'Japón',
+    'Czechia':'Chequia','Czech Republic':'Chequia','South Africa':'Sudáfrica',
+    'Curacao':'Curazao',
+  };
+
+  function _flag(teamEn) {
+    var code = TEAM_FLAG[teamEn] || TEAM_FLAG[teamEn + ''] || null;
+    if (!code) return '';
+    return '<img src="https://flagcdn.com/'+code+'.svg" style="width:20px;height:14px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+teamEn+'">';
+  }
+
+  function _renderPanel(html) {
+    // renderFutStats sets innerHTML of an element; try both known IDs
+    var el = document.getElementById('fut-stats-panel')
+          || document.getElementById('fut-stats-content')
+          || document.getElementById('futbolistas-content');
+    if (!el) return;
+    // If we got fut-stats-panel, set its innerHTML directly
+    if (el.id === 'fut-stats-panel') { el.innerHTML = html; return; }
+    // Otherwise find fut-stats-panel inside
+    var inner = el.querySelector('#fut-stats-panel');
+    if (inner) { inner.innerHTML = html; return; }
+    // Fallback
+    el.innerHTML = html;
+  }
+
+  async function _loadGoleadores() {
+    var panel = document.getElementById('fut-stats-panel');
+    if (!panel) return;
+
+    panel.innerHTML = '<div style="padding:30px;text-align:center;color:rgba(255,255,255,.5);font-size:.85rem">⌛ Cargando goleadores...</div>';
+
+    var scorers = [];
+
+    // 1) Intentar API football-data.org
+    try {
+      var resp = await fetch(
+        'https://api.football-data.org/v4/competitions/WC/scorers?limit=30',
+        { headers: { 'X-Auth-Token': FD_KEY } }
+      );
+      if (resp.ok) {
+        var data = await resp.json();
+        (data.scorers || []).forEach(function(s) {
+          if (s.goals > 0) {
+            scorers.push({
+              name: s.player.name,
+              team: s.team.name,
+              goals: s.goals,
+              assists: s.assists || 0,
+              penalties: s.penalties || 0,
+            });
+          }
+        });
+      }
+    } catch(e) {}
+
+    // 2) Fallback: construir desde match_adjustments de Supabase
+    if (!scorers.length && typeof _supa !== 'undefined' && window._MYROOM) {
+      try {
+        var res = await _supa.from('match_adjustments')
+          .select('match_id,player_name,adjustment')
+          .eq('room_code', window._MYROOM.code);
+        if (res.data && res.data.length) {
+          // Agrupar por player_name → sumar adjustments = goles aproximados
+          var map = {};
+          res.data.forEach(function(r) {
+            if (!map[r.player_name]) map[r.player_name] = 0;
+            map[r.player_name] += r.adjustment;
+          });
+          // No son goleadores reales sino usuarios con bonus; mostrar aviso
+          scorers = Object.entries(map)
+            .filter(function(e) { return e[1] > 0; })
+            .sort(function(a, b) { return b[1] - a[1]; })
+            .map(function(e) { return { name: e[0], team: '', goals: e[1], assists: 0, penalties: 0, isFallback: true }; });
+        }
+      } catch(e) {}
+    }
+
+    if (!scorers.length) {
+      panel.innerHTML = '<div class="gc" style="margin:12px">'
+        + '<div class="gc-head">⚽ Goleadores del Mundial 2026</div>'
+        + '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.4);font-size:.82rem">'
+        + 'Todavía no hay goleadores registrados.<br>Se actualizarán automáticamente cuando termine cada partido.</div>'
+        + '</div>';
+      return;
+    }
+
+    var isFallback = scorers[0] && scorers[0].isFallback;
+    var medals = ['🥇','🥈','🥉'];
+    var rows = scorers.map(function(s, i) {
+      var teamEs = NOMBRES[s.team] || s.team;
+      var flagHtml = _flag(s.team);
+      var medal = medals[i] || '';
+      var isTop = i < 3;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);'
+        + (isTop ? 'background:rgba(250,204,21,.04);' : '') + '">'
+        + '<div style="min-width:28px;text-align:center;font-size:'+(isTop?'.95rem':'.78rem')+';color:rgba(255,255,255,.5)">'
+        + (medal || (i+1)+'º') + '</div>'
+        + (flagHtml || '<div style="width:20px"></div>')
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="font-size:.88rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + s.name + '</div>'
+        +   (teamEs ? '<div style="font-size:.68rem;color:rgba(255,255,255,.4)">' + teamEs + '</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">'
+        +   '<div style="text-align:center">'
+        +     '<div style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:1.3rem;color:var(--gold);line-height:1">' + s.goals + '</div>'
+        +     '<div style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase">Goles</div>'
+        +   '</div>'
+        + (s.assists > 0
+            ? '<div style="text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:1.1rem;color:rgba(96,165,250,.9);line-height:1">' + s.assists + '</div>'
+            +  '<div style="font-size:.58rem;color:rgba(255,255,255,.3);text-transform:uppercase">Asist.</div></div>'
+            : '')
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    var note = isFallback
+      ? '<div style="padding:8px 14px 2px;font-size:.65rem;color:rgba(255,255,255,.3)">* Datos basados en los bonus registrados en la porra</div>'
+      : '<div style="padding:8px 14px 2px;font-size:.65rem;color:rgba(255,255,255,.3)">Actualizado automáticamente desde football-data.org</div>';
+
+    panel.innerHTML = '<div class="gc" style="margin:12px;overflow:hidden">'
+      + '<div class="gc-head" style="display:flex;justify-content:space-between;align-items:center">'
+      +   '<span>⚽ Goleadores del Mundial 2026</span>'
+      +   '<button onclick="window._reloadFutStats&&window._reloadFutStats()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.6);font-size:.65rem;padding:3px 8px;cursor:pointer">🔄</button>'
+      + '</div>'
+      + rows
+      + note
+      + '</div>';
+  }
+
+  function _wait() {
+    if (typeof renderFutStats !== 'function') { setTimeout(_wait, 300); return; }
+    renderFutStats = function() {
+      // Render the existing futbolistas list (players tab) via original if needed
+      // but for stats tab, trigger our async loader
+      var panel = document.getElementById('fut-stats-panel');
+      if (panel && panel.style.display !== 'none') {
+        _loadGoleadores();
+      }
+    };
+    window._reloadFutStats = _loadGoleadores;
+  }
+
+  // Also hook setFutTab to trigger our loader when switching to stats
+  function _waitTab() {
+    if (typeof setFutTab !== 'function') { setTimeout(_waitTab, 300); return; }
+    var _origSFT = setFutTab;
+    setFutTab = function(tab) {
+      _origSFT.apply(this, arguments);
+      if (tab === 'stats') setTimeout(_loadGoleadores, 80);
+    };
+  }
+
+  _wait();
+  _waitTab();
 })();</script>
 </body>
 </html>
