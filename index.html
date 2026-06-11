@@ -1378,31 +1378,75 @@ function renderDesglosePorraSection() {
   </div>`;
 }
 
-// ── Monkey-patch renderPorraFull ──
+// ── Monkey-patch renderPorraFull (keep base only, desglose injected via DOM) ──
 const _origRenderPorraFull = typeof renderPorraFull === 'function' ? renderPorraFull : null;
 renderPorraFull = function() {
-  // Ensure fav teams are loaded; if not, load async and re-render once ready
-  if (!window._FAV_TEAMS && window._MYROOM && typeof loadFavTeams === 'function') {
-    loadFavTeams().then(function() {
-      if (typeof renderActive === 'function') renderActive();
-    });
-  }
   const base = _origRenderPorraFull ? _origRenderPorraFull() : '';
-  return base + renderDesglosePorraSection();
+  return base;
 };
 
-// ── Inject flag icons into obfuscated .porra-player-row elements ──
-(function _patchPorraFlags() {
+// ── DOM injector: desglose table + flag icons after porra renders ──
+(function _porraEnhancer() {
+
+  var DESGLOSE_ID = 'desglose-pts-section';
+
+  function _buildDesgloseHTML() {
+    if (!window._MYROOM) return '';
+    var players = typeof getPlayers === 'function' ? getPlayers() : [];
+    if (!players.length) return '';
+    var rows = players.map(function(p) {
+      var b = typeof calcScoreBreakdown === 'function' ? calcScoreBreakdown(p.name) : {};
+      return Object.assign({}, p, b);
+    }).sort(function(a, b) { return (b.total||0) - (a.total||0); });
+
+    var fmt = function(v) { return v > 0 ? '+'+v : v === 0 ? '—' : v; };
+    var tdS = 'text-align:center;padding:8px 5px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:.92rem;';
+
+    var tableRows = rows.map(function(r) {
+      var isMe = r.name === (window._MYROOM && window._MYROOM.playerName);
+      var rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
+      var ft = window._FAV_TEAMS || {};
+      var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : {};
+      var fav = ft[r.name];
+      var code = fav ? fc[fav] : null;
+      var flagImg = code ? '<img src="https://flagcdn.com/'+code+'.svg" style="width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+fav+'">' : '';
+      var avatar = '<div style="width:24px;height:24px;border-radius:50%;background:'+r.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">'+r.initials+'</div>';
+      var nameSpan = '<span style="font-size:.82rem;font-weight:'+(isMe?'800':'600')+';color:'+(isMe?'var(--gold)':'#fff')+'">'+r.name+'</span>';
+      var isMe2 = r.name === (window._MYROOM && window._MYROOM.playerName);
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,.05);'+rowBg+'">'
+        +'<td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:5px">'+avatar+flagImg+nameSpan+'</div></td>'
+        +'<td style="'+tdS+'color:'+(r.pronPts>0?'#fff':'rgba(255,255,255,.3)')+'">'+fmt(r.pronPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.signoPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.goleadorPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.favPts||0)+'</td>'
+        +'<td style="'+tdS+'color:var(--gold);font-weight:900;font-size:1rem">'+fmt(r.total||0)+'</td>'
+        +'</tr>';
+    }).join('');
+
+    return '<div id="'+DESGLOSE_ID+'" class="gc" style="margin-top:12px;overflow-x:auto">'
+      +'<div class="gc-head">📊 Desglose de Puntos</div>'
+      +'<table style="width:100%;border-collapse:collapse;min-width:340px">'
+      +'<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">'
+      +'<th style="padding:6px 10px;text-align:left;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase">Jugador</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase" title="Resultado exacto: +3 pts">🎯 Prono</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(52,211,153,.5);font-weight:700;text-transform:uppercase" title="Signo correcto 1X2: +1 pt">1X2</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(96,165,250,.5);font-weight:700;text-transform:uppercase" title="Bonus goleador">⚽ Gol</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(250,204,21,.5);font-weight:700;text-transform:uppercase" title="Selección favorita">⭐ Fav</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.68rem;color:var(--gold);font-weight:800;text-transform:uppercase">Total</th>'
+      +'</tr></thead>'
+      +'<tbody>'+tableRows+'</tbody>'
+      +'</table></div>';
+  }
+
   function _injectFlags() {
     var ft = window._FAV_TEAMS;
     var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : null;
     if (!ft || !fc) return;
     var knownPlayers = Object.keys(ft);
     document.querySelectorAll('.porra-player-row').forEach(function(row) {
-      if (row.querySelector('.fav-flag-inline')) return; // already injected
+      if (row.querySelector('.fav-flag-inline')) return;
       var fnameEl = row.querySelector('.fname');
       if (!fnameEl) return;
-      // Match player name against known FAV_TEAMS keys
       var rowText = fnameEl.textContent || '';
       var name = knownPlayers.find(function(n) { return rowText.indexOf(n) !== -1; });
       if (!name) return;
@@ -1410,34 +1454,55 @@ renderPorraFull = function() {
       var code = fav && fc[fav];
       if (!code) return;
       var img = document.createElement('img');
-      img.src = 'https://flagcdn.com/' + code + '.svg';
+      img.src = 'https://flagcdn.com/'+code+'.svg';
       img.className = 'fav-flag-inline';
       img.title = fav;
       fnameEl.appendChild(img);
     });
   }
-  function _setup() {
-    var el = document.getElementById('porra-content');
-    if (!el) { setTimeout(_setup, 800); return; }
-    // Watch for tab switches and re-renders
-    var obs = new MutationObserver(function() {
-      // Small delay to let DOM settle
-      setTimeout(_injectFlags, 80);
-    });
-    obs.observe(el, { childList: true });
+
+  function _injectDesglose() {
+    if (!window._MYROOM) return;
+    var porraEl = document.getElementById('porra-content');
+    if (!porraEl) return;
+    // Remove old desglose if any
+    var old = document.getElementById(DESGLOSE_ID);
+    if (old) old.remove();
+    // Build and inject
+    var html = _buildDesgloseHTML();
+    if (!html) return;
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    porraEl.appendChild(wrapper.firstChild);
+    // Also inject flags into player rows
     _injectFlags();
   }
-  // Run after app has loaded and fav teams are available
-  function _waitForFavTeams() {
-    if (window._FAV_TEAMS) { _setup(); return; }
-    if (!window._MYROOM || !window._supa) { setTimeout(_waitForFavTeams, 800); return; }
-    if (typeof loadFavTeams === 'function') {
-      loadFavTeams().then(function() { _setup(); });
+
+  function _onPorraChange() {
+    if (!window._MYROOM) return;
+    // Wait for fav teams if needed, then inject
+    if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
+      loadFavTeams().then(function() { _injectDesglose(); });
     } else {
-      setTimeout(_waitForFavTeams, 800);
+      _injectDesglose();
     }
   }
-  setTimeout(_waitForFavTeams, 2500);
+
+  function _setup() {
+    var el = document.getElementById('porra-content');
+    if (!el) { setTimeout(_setup, 600); return; }
+    var obs = new MutationObserver(function() {
+      setTimeout(_onPorraChange, 60);
+    });
+    obs.observe(el, { childList: true });
+    _onPorraChange();
+  }
+
+  function _waitReady() {
+    if (!window._MYROOM || !window._supa) { setTimeout(_waitReady, 700); return; }
+    _setup();
+  }
+  setTimeout(_waitReady, 2000);
 })();
 
 // ── Auto-rellenar código de sala desde URL (?sala=XXXX) ──
