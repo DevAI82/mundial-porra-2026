@@ -2068,6 +2068,269 @@ function closeWelcomePopup() {
     loadMatchAdjustments(window._MYROOM.code);
   }
   _wait();
+})();
+
+// ── Override Porra: Clasificación = sólo Desglose; Jornada = desglose por partido ──
+(function _patchNewPorraView() {
+  window._MYPORRA_TAB = 'clasif';
+
+  function _tabsBar(tab) {
+    return '<div class="porra-tabs">'
+      + '<div class="ptab ' + (tab==='clasif'?'on':'') + '" onclick="setPorraTab(\'clasif\')">🏆 Clasificación</div>'
+      + '<div class="ptab ' + (tab==='jornada'?'on':'') + '" onclick="setPorraTab(\'jornada\')">📋 Por Jornada</div>'
+      + '</div>';
+  }
+
+  function _refreshBtn() {
+    return '<div style="padding:4px 14px 4px;display:flex;align-items:center;gap:8px">'
+      + '<button onclick="typeof fetchRealResults===\'function\'&&fetchRealResults(true)"'
+      + ' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;'
+      + 'color:rgba(255,255,255,.7);font-size:.72rem;padding:5px 10px;cursor:pointer">🔄 Actualizar resultados</button>'
+      + '</div>';
+  }
+
+  function _buildClasifHTML() {
+    if (!window._MYROOM) return '';
+    var players = typeof getPlayers === 'function' ? getPlayers() : [];
+    if (!players.length) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay jugadores.</div>';
+
+    var rows = players.map(function(p) {
+      var b = typeof calcScoreBreakdown === 'function' ? calcScoreBreakdown(p.name) : {};
+      return Object.assign({}, p, b);
+    }).sort(function(a, b) { return (b.total||0) - (a.total||0); });
+
+    var fmt = function(v) { return v > 0 ? '+'+v : v === 0 ? '—' : String(v); };
+    var tdS = 'text-align:center;padding:8px 5px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:.92rem;';
+    var medals = ['🥇','🥈','🥉'];
+
+    var tableRows = rows.map(function(r, i) {
+      var isMe = r.name === (window._MYROOM && window._MYROOM.playerName);
+      var rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
+      var ft = window._FAV_TEAMS || {};
+      var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : {};
+      var fav = ft[r.name]; var code = fav ? fc[fav] : null;
+      var flagImg = code ? '<img src="https://flagcdn.com/'+code+'.svg" style="width:18px;height:12px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+fav+'">' : '';
+      var medal = medals[i] || ((i+1)+'º');
+      var avatar = '<div style="width:24px;height:24px;border-radius:50%;background:'+r.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0">'+r.initials+'</div>';
+      var nameSpan = '<span style="font-size:.82rem;font-weight:'+(isMe?'800':'600')+';color:'+(isMe?'var(--gold)':'#fff')+'">'+r.name+'</span>';
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,.05);'+rowBg+'">'
+        +'<td style="padding:8px 6px;text-align:center;font-size:.85rem">'+medal+'</td>'
+        +'<td style="padding:8px 10px 8px 2px"><div style="display:flex;align-items:center;gap:5px">'+avatar+flagImg+nameSpan+'</div></td>'
+        +'<td style="'+tdS+'color:'+(r.pronPts>0?'#fff':'rgba(255,255,255,.3)')+'">'+fmt(r.pronPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.signoPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.goleadorPts||0)+'</td>'
+        +'<td style="'+tdS+'color:'+(r.favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.3)')+'">'+fmt(r.favPts||0)+'</td>'
+        +'<td style="'+tdS+'color:var(--gold);font-weight:900;font-size:1rem">'+fmt(r.total||0)+'</td>'
+        +'</tr>';
+    }).join('');
+
+    return '<div class="gc" style="overflow-x:auto">'
+      +'<div class="gc-head">📊 Clasificación — Desglose de Puntos</div>'
+      +'<table style="width:100%;border-collapse:collapse;min-width:340px">'
+      +'<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">'
+      +'<th style="padding:6px 6px;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700">#</th>'
+      +'<th style="padding:6px 10px 6px 2px;text-align:left;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase">Jugador</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700" title="Resultado exacto: +3 pts">🎯 Prono</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(52,211,153,.5);font-weight:700" title="Signo correcto 1X2: +1 pt">1X2</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(96,165,250,.5);font-weight:700" title="Bonus goleador">⚽ Gol</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.65rem;color:rgba(250,204,21,.5);font-weight:700" title="Selección favorita">⭐ Fav</th>'
+      +'<th style="padding:6px 5px;text-align:center;font-size:.68rem;color:var(--gold);font-weight:800">Total</th>'
+      +'</tr></thead>'
+      +'<tbody>'+tableRows+'</tbody>'
+      +'</table></div>';
+  }
+
+  function _buildJornadaHTML() {
+    if (!window._MYROOM) return '';
+    var players = typeof getPlayers === 'function' ? getPlayers() : [];
+    if (!players.length) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay jugadores.</div>';
+
+    var fmt = function(v) { return v > 0 ? '+'+v : v === 0 ? '—' : String(v); };
+    var tdS = 'text-align:center;padding:7px 4px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:.88rem;';
+
+    if (typeof FX === 'undefined') return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay datos de partidos.</div>';
+
+    // Only show matches that have predictions
+    var matchBlocks = '';
+    FX.forEach(function(f) {
+      var jid = f[0], d = f[1], t = f[2], g = f[3], h = f[4], a = f[5];
+      var key = h + '|' + a + '|' + d;
+      var preds = (window._PS && window._PS[key]) || {};
+      var hasPreds = Object.keys(preds).length > 0;
+      var real = window.R && window.R.scores && window.R.scores[jid];
+      var hasResult = real && real[0] !== '' && real[1] !== '';
+      if (!hasPreds && !hasResult) return;
+
+      var rh = hasResult ? +real[0] : null;
+      var ra = hasResult ? +real[1] : null;
+      var rSign = hasResult ? (rh > ra ? 1 : rh < ra ? -1 : 0) : null;
+
+      var resultLabel = hasResult
+        ? '<span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:1.15rem;color:var(--gold)">' + rh + '–' + ra + '</span>'
+        : '<span style="font-size:.7rem;color:rgba(255,255,255,.4)">' + d + ' · ' + t + 'h ⏳</span>';
+
+      var tableRows = players.map(function(p) {
+        var sv = preds[p.name];
+        var pronPts = 0, signoPts = 0, goleadorPts = 0, favPts = 0;
+
+        if (hasResult && sv) {
+          var ph = +sv.loc, pa = +sv.vis;
+          var pSign = ph > pa ? 1 : ph < pa ? -1 : 0;
+          if (pSign === rSign) signoPts = 1;
+          if (ph === rh && pa === ra) pronPts = 3;
+        }
+
+        if (hasResult) {
+          var adjMap = window._MATCH_ADJ && window._MATCH_ADJ[jid];
+          goleadorPts = adjMap ? (adjMap[p.name] || 0) : 0;
+        }
+
+        var ft = window._FAV_TEAMS || {};
+        var fav = ft[p.name];
+        if (fav && hasResult) {
+          if (h === fav && rh > ra) favPts = 2;
+          else if (h === fav && rh === ra) favPts = 1;
+          else if (a === fav && ra > rh) favPts = 2;
+          else if (a === fav && rh === ra) favPts = 1;
+        }
+
+        var total = pronPts + signoPts + goleadorPts + favPts;
+        var isMe = p.name === (window._MYROOM && window._MYROOM.playerName);
+        var rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
+        var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : {};
+        var code = fav ? fc[fav] : null;
+        var flagImg = code ? '<img src="https://flagcdn.com/'+code+'.svg" style="width:16px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+fav+'">' : '';
+
+        var predStr = sv ? (sv.loc + '–' + sv.vis) : '—';
+        var golStr = sv && sv.player ? sv.player : '';
+
+        return '<tr style="border-bottom:1px solid rgba(255,255,255,.04);'+rowBg+'">'
+          + '<td style="padding:7px 10px">'
+          +   '<div style="display:flex;align-items:center;gap:4px">'
+          +     '<div style="width:22px;height:22px;border-radius:50%;background:'+p.color+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0">'+p.initials+'</div>'
+          +     flagImg
+          +     '<div>'
+          +       '<div style="font-size:.78rem;font-weight:'+(isMe?'800':'600')+';color:'+(isMe?'var(--gold)':'#fff')+'">'+p.name+'</div>'
+          +       '<div style="font-size:.64rem;color:rgba(255,255,255,.38)">'+predStr+(golStr?' · '+golStr:'')+'</div>'
+          +     '</div>'
+          +   '</div>'
+          + '</td>'
+          + '<td style="'+tdS+'color:'+(pronPts>0?'#fff':'rgba(255,255,255,.2)')+'">'+fmt(pronPts)+'</td>'
+          + '<td style="'+tdS+'color:'+(signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.2)')+'">'+fmt(signoPts)+'</td>'
+          + '<td style="'+tdS+'color:'+(goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.2)')+'">'+fmt(goleadorPts)+'</td>'
+          + '<td style="'+tdS+'color:'+(favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.2)')+'">'+fmt(favPts)+'</td>'
+          + '<td style="'+tdS+'color:var(--gold);font-weight:900;font-size:.95rem">'+fmt(total)+'</td>'
+          + '</tr>';
+      }).join('');
+
+      matchBlocks += '<div class="gc" style="margin-top:10px;overflow-x:auto">'
+        + '<div class="gc-head" style="display:flex;justify-content:space-between;align-items:center">'
+        +   '<span>' + h + ' vs ' + a + '</span>' + resultLabel
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse;min-width:340px">'
+        + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.08)">'
+        + '<th style="padding:5px 10px;text-align:left;font-size:.6rem;color:rgba(255,255,255,.35);font-weight:700;text-transform:uppercase">Jugador</th>'
+        + '<th style="padding:5px 4px;text-align:center;font-size:.6rem;color:rgba(255,255,255,.35);font-weight:700" title="Resultado exacto +3">🎯 Prono</th>'
+        + '<th style="padding:5px 4px;text-align:center;font-size:.6rem;color:rgba(52,211,153,.4);font-weight:700" title="Signo correcto +1">1X2</th>'
+        + '<th style="padding:5px 4px;text-align:center;font-size:.6rem;color:rgba(96,165,250,.4);font-weight:700" title="Goleador +1">⚽ Gol</th>'
+        + '<th style="padding:5px 4px;text-align:center;font-size:.6rem;color:rgba(250,204,21,.4);font-weight:700" title="Selección fav">⭐ Fav</th>'
+        + '<th style="padding:5px 4px;text-align:center;font-size:.6rem;color:var(--gold);font-weight:800">Total</th>'
+        + '</tr></thead>'
+        + '<tbody>'+tableRows+'</tbody>'
+        + '</table></div>';
+    });
+
+    return matchBlocks || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay pronósticos todavía.</div>';
+  }
+
+  function _renderPorra(tab) {
+    var el = document.getElementById('porra-content');
+    if (!el) return;
+    var body = tab === 'jornada' ? _buildJornadaHTML() : _buildClasifHTML();
+    el.innerHTML = _tabsBar(tab) + _refreshBtn() + body;
+  }
+
+  function _renderWithFavs(tab) {
+    if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
+      loadFavTeams().then(function() { _renderPorra(tab); });
+    } else {
+      _renderPorra(tab);
+    }
+  }
+
+  function _wait() {
+    if (typeof setPorraTab !== 'function' || !window._MYROOM) { setTimeout(_wait, 400); return; }
+
+    // Replace setPorraTab with our version
+    setPorraTab = function(tab) {
+      window._MYPORRA_TAB = tab || 'clasif';
+      _renderWithFavs(window._MYPORRA_TAB);
+    };
+
+    // Replace renderPorraFull so renderActive() also uses our view
+    if (typeof renderPorraFull === 'function') {
+      renderPorraFull = function() {
+        var tab = window._MYPORRA_TAB || 'clasif';
+        if (!window._FAV_TEAMS && typeof loadFavTeams === 'function') {
+          loadFavTeams().then(function() {
+            var el = document.getElementById('porra-content');
+            if (el) el.innerHTML = _tabsBar(tab) + _refreshBtn() + (tab==='jornada'?_buildJornadaHTML():_buildClasifHTML());
+          });
+          return _tabsBar(tab) + '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">⌛ Cargando...</div>';
+        }
+        return _tabsBar(tab) + _refreshBtn() + (tab==='jornada' ? _buildJornadaHTML() : _buildClasifHTML());
+      };
+    }
+
+    // Refresh current view if porra is already active
+    setTimeout(function() {
+      if (typeof ACTIVE !== 'undefined' && ACTIVE === 'porra') _renderWithFavs(window._MYPORRA_TAB || 'clasif');
+    }, 200);
+  }
+
+  function _waitRoom() {
+    if (!window._MYROOM) { setTimeout(_waitRoom, 500); return; }
+    _wait();
+  }
+  _waitRoom();
+})();
+
+// ── Inicio: mostrar siguiente partido sin resultado (salta partidos ya jugados) ──
+(function _patchGetMatchOfDay() {
+  function _wait() {
+    if (typeof getMatchOfDay !== 'function') { setTimeout(_wait, 300); return; }
+    var _orig = getMatchOfDay;
+    getMatchOfDay = function() {
+      var match = _orig();
+      if (!match) return null;
+
+      // Find the FX entry for this match
+      var fx = typeof FX !== 'undefined' && FX.find(function(f) { return f[4] === match.h && f[5] === match.a; });
+      if (!fx) return match;
+
+      var jid = fx[0];
+      var scores = (window.R && window.R.scores) || {};
+      var hasResult = scores[jid] && String(scores[jid][0]) !== '';
+      if (!hasResult) return match; // No result yet → show this match
+
+      // Match is done. Find the next unplayed match (today or future).
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      for (var i = 0; i < FX.length; i++) {
+        var f = FX[i];
+        var fJid = f[0];
+        if (scores[fJid] && String(scores[fJid][0]) !== '') continue; // already has result
+        var parts = f[1].split('/');
+        var fDate = new Date(2026, +parts[1]-1, +parts[0]);
+        if (fDate < today) continue; // past date, skip
+        // Found next unplayed match – check if it's in RTVE for channel info
+        var rtveM = typeof RTVE !== 'undefined' && RTVE.find(function(m) { return m.h === f[4] && m.a === f[5]; });
+        if (rtveM) return {d:rtveM.d, t:rtveM.t, h:rtveM.h, a:rtveM.a, ch:rtveM.ch, g:rtveM.g||f[3], rtve:true, venue:f[6], next:true};
+        return {d:f[1], t:f[2], h:f[4], a:f[5], ch:null, g:f[3], rtve:false, venue:f[6], next:true};
+      }
+      return match; // fallback
+    };
+  }
+  _wait();
 })();</script>
 </body>
 </html>
