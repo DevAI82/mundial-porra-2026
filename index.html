@@ -2025,6 +2025,16 @@ function closeWelcomePopup() {
       _tick();
       window._matchTimer = setInterval(_tick, 1000);
     };
+    // Restart timer immediately for the currently displayed match
+    try {
+      var _now = Date.now();
+      var _next = RTVE.filter(function(m) {
+        return parseMatchDT(m.d, m.t).getTime() > _now;
+      }).sort(function(a, b) {
+        return parseMatchDT(a.d, a.t).getTime() - parseMatchDT(b.d, b.t).getTime();
+      })[0];
+      if (_next) startMatchTimer(_next);
+    } catch(e) {}
   }
   _wait();
 })();</script>
