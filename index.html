@@ -1188,14 +1188,13 @@ function calcFavTeamPoints(playerName) {
   const fav = window._FAV_TEAMS?.[playerName];
   if (!fav) return 0;
   let pts = 0;
-  RTVE.forEach(m => {
-    const fx = FX.find(f => f[4] === m.h && f[5] === m.a);
-    if (!fx) return;
-    const real = R.scores?.[fx[0]];
+  // Iterar sobre TODOS los partidos (FX), no solo RTVE
+  (typeof FX !== 'undefined' ? FX : []).forEach(f => {
+    const real = R.scores?.[f[0]];
     if (!real || real[0] === '' || real[1] === '') return;
     const rh = +real[0], ra = +real[1];
-    if (m.h === fav) { if (rh > ra) pts += 2; else if (rh === ra) pts += 1; }
-    else if (m.a === fav) { if (ra > rh) pts += 2; else if (rh === ra) pts += 1; }
+    if (f[4] === fav) { if (rh > ra) pts += 2; else if (rh === ra) pts += 1; }
+    else if (f[5] === fav) { if (ra > rh) pts += 2; else if (rh === ra) pts += 1; }
   });
   return pts;
 }
