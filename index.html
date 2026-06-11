@@ -1938,16 +1938,50 @@ function closeWelcomePopup() {
 
 // ── Override renderNoticias — usa rss2json (funciona sin CORS) ──
 (function _patchNoticias() {
+  // Fuentes de noticias agrupadas por medio
+  var MEDIA = [
+    {
+      id: 'as', label: 'AS', color: '#e30613',
+      feeds: [
+        { title: '🌎 Mundial 2026', url: 'https://as.com/rss/tags/mundial_2026.xml' },
+        { title: '🇪🇸 Selección', url: 'https://as.com/rss/futbol/seleccion-espanola.xml' },
+      ]
+    },
+    {
+      id: 'marca', label: 'MARCA', color: '#f7b731',
+      feeds: [
+        { title: '🌎 Mundial 2026', url: 'https://e00-marca.uecdn.es/rss/futbol/mundial.xml' },
+        { title: '🇪🇸 Selección', url: 'https://e00-marca.uecdn.es/rss/futbol/seleccion.xml' },
+      ]
+    },
+    {
+      id: 'espn', label: 'ESPN', color: '#cc0000',
+      feeds: [
+        { title: '⚽ Fútbol', url: 'https://www.espn.com/espn/rss/futbol/noticias' },
+      ]
+    },
+    {
+      id: 'md', label: 'MUNDO DEP.', color: '#0a6dc2',
+      feeds: [
+        { title: '🌍 Internacional', url: 'https://www.mundodeportivo.com/rss/futbol.xml' },
+        { title: '🇪🇸 Selección', url: 'https://www.mundodeportivo.com/rss/seleccion-espanola.xml' },
+      ]
+    },
+    {
+      id: 'goal', label: 'GOAL', color: '#00a652',
+      feeds: [
+        { title: '⚽ Noticias', url: 'https://www.goal.com/feeds/es/news' },
+      ]
+    },
+  ];
+
   function _waitForNoticias() {
     if (typeof renderNoticias !== 'function') { setTimeout(_waitForNoticias, 300); return; }
     renderNoticias = async function(forceRefresh) {
       var el = document.getElementById('noticias-content');
       if (!el) return;
-      el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.4);padding:20px;font-size:.85rem">⌛ Cargando noticias...</div>';
-      var feeds = [
-        { id: 'esp', title: '🇪🇸 Selección España', url: 'https://e00-marca.uecdn.es/rss/futbol/seleccion.xml' },
-        { id: 'mun', title: '🌎 Mundial 2026', url: 'https://e00-marca.uecdn.es/rss/futbol/mundial.xml' }
-      ];
+      el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.4);padding:20px;font-size:.85rem">⌛ Cargando noticias…</div>';
+
       async function fetchFeed(feedUrl) {
         var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + (forceRefresh ? '&t=' + Date.now() : '');
         try {
@@ -1958,31 +1992,54 @@ function closeWelcomePopup() {
         } catch(e) {}
         return null;
       }
-      var html = '';
-      for (var fi = 0; fi < feeds.length; fi++) {
-        var feed = feeds[fi];
-        html += '<div style="padding:8px 14px 4px;font-size:.72rem;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:2px">' + feed.title + '</div>';
-        var items = await fetchFeed(feed.url);
-        if (!items) {
-          html += '<div style="padding:10px 14px;font-size:.78rem;color:rgba(255,255,255,.4)">No se pudieron cargar las noticias.</div>';
-        } else {
-          items.slice(0, 8).forEach(function(item) {
-            var title = item.title || '';
-            var link  = item.link || '#';
-            var desc  = (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 120);
-            var dateStr = '';
-            if (item.pubDate) {
-              try { dateStr = new Date(item.pubDate).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); } catch(e) {}
-            }
-            html += '<a href="' + link + '" target="_blank" rel="noopener" style="display:block;padding:10px 14px;margin:4px 8px;border-radius:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.13);text-decoration:none;color:inherit;box-shadow:0 2px 8px rgba(0,0,0,.3);">'
-              + '<div style="font-size:.82rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:3px">' + title + '</div>'
-              + (desc ? '<div style="font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.4;margin-bottom:3px">' + desc + '…</div>' : '')
-              + (dateStr ? '<div style="font-size:.65rem;color:rgba(255,255,255,.3)">' + dateStr + '</div>' : '')
-              + '</a>';
-          });
+
+      // Merge y deduplicar artículos por medio
+      async function fetchMedia(medium) {
+        var allItems = [];
+        var seen = new Set();
+        for (var i = 0; i < medium.feeds.length; i++) {
+          var items = await fetchFeed(medium.feeds[i].url);
+          if (items) {
+            items.forEach(function(it) {
+              var key = (it.title||'').trim();
+              if (key && !seen.has(key)) { seen.add(key); allItems.push(it); }
+            });
+          }
         }
-        html += '<div style="height:8px"></div>';
+        // Ordenar por fecha desc
+        allItems.sort(function(a,b){ return new Date(b.pubDate||0) - new Date(a.pubDate||0); });
+        return allItems;
       }
+
+      var html = '';
+      for (var mi = 0; mi < MEDIA.length; mi++) {
+        var med = MEDIA[mi];
+        var items = await fetchMedia(med);
+        if (!items || !items.length) continue; // omitir fuentes sin datos
+
+        // Cabecera del medio con badge de color
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px 6px;margin-top:' + (mi>0?'10px':'0') + '">'
+          + '<span style="background:' + med.color + ';color:#fff;font-size:.65rem;font-weight:900;padding:2px 7px;border-radius:4px;letter-spacing:.05em">' + med.label + '</span>'
+          + '<div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>'
+          + '</div>';
+
+        items.slice(0, 6).forEach(function(item) {
+          var title   = (item.title || '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
+          var link    = item.link || '#';
+          var desc    = (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 110);
+          var dateStr = '';
+          if (item.pubDate) {
+            try { dateStr = new Date(item.pubDate).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); } catch(e) {}
+          }
+          html += '<a href="' + link + '" target="_blank" rel="noopener" '
+            + 'style="display:block;padding:10px 14px;margin:3px 8px;border-radius:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);text-decoration:none;color:inherit;box-shadow:0 2px 8px rgba(0,0,0,.3);">'
+            + '<div style="font-size:.82rem;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px">' + title + '</div>'
+            + (desc ? '<div style="font-size:.72rem;color:rgba(255,255,255,.48);line-height:1.4;margin-bottom:3px">' + desc + '…</div>' : '')
+            + (dateStr ? '<div style="font-size:.64rem;color:rgba(255,255,255,.28)">' + dateStr + '</div>' : '')
+            + '</a>';
+        });
+      }
+
       el.innerHTML = html || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay noticias disponibles.</div>';
     };
   }
