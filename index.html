@@ -2037,6 +2037,37 @@ function closeWelcomePopup() {
     } catch(e) {}
   }
   _wait();
+})();
+
+// ── Fix: reload match_adjustments on room entry & keep _MATCH_ADJ in sync ──
+(function _patchMatchAdj() {
+  function _wait() {
+    if (typeof loadMatchAdjustments !== 'function' || !window._MYROOM) {
+      setTimeout(_wait, 500); return;
+    }
+    // Patch loadMatchAdjustments to also populate window._MATCH_ADJ correctly
+    var _origLoad = loadMatchAdjustments;
+    loadMatchAdjustments = async function(roomCode) {
+      await _origLoad(roomCode);
+      // After original loads, sync window._MATCH_ADJ from whatever obfuscated key was used
+      // by reading the DB directly and repopulating both keys
+      try {
+        var res = await _supa.from('match_adjustments')
+          .select('match_id,player_name,adjustment')
+          .eq('room_code', roomCode);
+        if (res.data && res.data.length) {
+          window._MATCH_ADJ = window._MATCH_ADJ || {};
+          res.data.forEach(function(r) {
+            if (!window._MATCH_ADJ[r.match_id]) window._MATCH_ADJ[r.match_id] = {};
+            window._MATCH_ADJ[r.match_id][r.player_name] = r.adjustment;
+          });
+        }
+      } catch(e) {}
+    };
+    // Immediately reload for current room (fixes users already logged in)
+    loadMatchAdjustments(window._MYROOM.code);
+  }
+  _wait();
 })();</script>
 </body>
 </html>
