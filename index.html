@@ -2460,8 +2460,9 @@ function closeWelcomePopup() {
           try {
             var kickoff = parseMatchDT(rtveM0.d, rtveM0.t);
             var twoHoursAfter = new Date(kickoff.getTime() + 2 * 3600000);
-            if (now >= kickoff && now < twoHoursAfter) {
-              // Partido en curso o recién terminado: mantener en pantalla
+            // Mostrar el partido de hoy hasta 2h después del pitido inicial
+            // (tanto si aún no ha empezado como si está en curso)
+            if (now < twoHoursAfter) {
               return {d:rtveM0.d, t:rtveM0.t, h:rtveM0.h, a:rtveM0.a, ch:rtveM0.ch, g:rtveM0.g||f[3], rtve:true, venue:f[6], next:true};
             }
           } catch(e) {}
