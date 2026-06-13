@@ -2434,6 +2434,46 @@ function closeWelcomePopup() {
   _waitRoom();
 })();
 
+// ── Cargar TODAS las predicciones de la sala en _PS (no solo el partido actual) ──
+(function _patchLoadAllPredictions() {
+  var _loading = false;
+
+  async function _loadAll() {
+    if (_loading) return;
+    _loading = true;
+    try {
+      var room = window._MYROOM && window._MYROOM.code;
+      if (!room || typeof _supa === 'undefined') { _loading = false; return; }
+      var res = await _supa.from('predictions')
+        .select('player_name,match_key,loc,vis,goleador')
+        .eq('room_code', room);
+      if (res.data && res.data.length) {
+        window._PS = window._PS || {};
+        res.data.forEach(function(p) {
+          if (!p.match_key) return;
+          if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
+          window._PS[p.match_key][p.player_name] = {
+            loc: p.loc, vis: p.vis, goleador: p.goleador
+          };
+        });
+        // Re-render Jornada tab si está activa
+        if (typeof ACTIVE !== 'undefined' && ACTIVE === 'porra'
+            && window._MYPORRA_TAB === 'jornada'
+            && typeof setPorraTab === 'function') {
+          setPorraTab('jornada');
+        }
+      }
+    } catch(e) { console.warn('_loadAllPredictions error:', e); }
+    _loading = false;
+  }
+
+  function _wait() {
+    if (!window._MYROOM || typeof _supa === 'undefined') { setTimeout(_wait, 600); return; }
+    _loadAll();
+  }
+  _wait();
+})();
+
 // ── Inicio: mostrar siguiente partido RTVE sin resultado (siempre filtra RTVE) ──
 (function _patchGetMatchOfDay() {
   function _wait() {
