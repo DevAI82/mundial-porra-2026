@@ -2409,55 +2409,7 @@ function closeWelcomePopup() {
   _wait();
 })();
 
-// ── Privacidad: parche sobre renderPorraFull ──────────────────────────────
-(function _patchPrivacyMain() {
-  function _wait() {
-    if (typeof renderPorraFull !== 'function') { setTimeout(_wait, 300); return; }
-    var _orig = renderPorraFull;
-    renderPorraFull = function() {
-      var _PS_save = window._PS;
-      try {
-        var now = Date.now();
-        var myName = window._MYROOM && window._MYROOM.playerName;
-        if (_PS_save && myName) {
-          var masked = {};
-          Object.keys(_PS_save).forEach(function(key) {
-            var parts = key.split('|');
-            var h = parts[0], a = parts[1];
-            // Find match in RTVE to get date/time
-            var rtveM = typeof RTVE !== 'undefined' && RTVE.find(function(m) { return m.h === h && m.a === a; });
-            var locked = false;
-            if (rtveM && typeof parseMatchDT === 'function') {
-              try { locked = now >= parseMatchDT(rtveM.d, rtveM.t).getTime() - 3600000; } catch(e) {}
-            }
-            // Also locked if there is a result
-            if (!locked && typeof FX !== 'undefined' && typeof R !== 'undefined') {
-              var fx = FX.find(function(f) { return f[4] === h && f[5] === a; });
-              if (fx) {
-                var res = R.scores && R.scores[fx[0]];
-                if (res && String(res[0]) !== '') locked = true;
-              }
-            }
-            if (locked) {
-              masked[key] = _PS_save[key];
-            } else {
-              // Only show current user's prediction
-              masked[key] = {};
-              if (_PS_save[key] && _PS_save[key][myName]) {
-                masked[key][myName] = _PS_save[key][myName];
-              }
-            }
-          });
-          window._PS = masked;
-        }
-      } catch(e) {}
-      var html = _orig.apply(this, arguments);
-      window._PS = _PS_save;
-      return html;
-    };
-  }
-  _wait();
-})();
+
 
 // ── Estadísticas: Goleadores del torneo (football-data.org API) ──────────────
 (function _patchFutStats() {
@@ -2650,6 +2602,77 @@ function closeWelcomePopup() {
 
   _wait();
   _waitTab();
-})();</script>
+})();
+// ── Privacidad pronósticos: interceptar window._PS con defineProperty ────────
+(function _patchPrivacyPS() {
+  var _realPS = undefined;
+
+  function _isLocked(h, a) {
+    var now = Date.now();
+    // Si hay resultado → visible para todos
+    if (typeof FX !== 'undefined' && typeof R !== 'undefined') {
+      var fx = null;
+      for (var i = 0; i < FX.length; i++) {
+        if (FX[i][4] === h && FX[i][5] === a) { fx = FX[i]; break; }
+      }
+      if (fx) {
+        var res = R.scores && R.scores[fx[0]];
+        if (res && String(res[0]) !== '') return true;
+      }
+    }
+    // Si hora de cierre ya pasó (1h antes del partido) → visible
+    if (typeof RTVE !== 'undefined' && typeof parseMatchDT === 'function') {
+      for (var j = 0; j < RTVE.length; j++) {
+        if (RTVE[j].h === h && RTVE[j].a === a) {
+          try {
+            var dt = parseMatchDT(RTVE[j].d, RTVE[j].t);
+            return now >= dt.getTime() - 3600000;
+          } catch(e) {}
+          break;
+        }
+      }
+    }
+    return false; // por defecto: privado
+  }
+
+  function _getMasked(ps) {
+    var myName = window._MYROOM && window._MYROOM.playerName;
+    if (!myName) return ps;
+    var masked = {};
+    var keys = Object.keys(ps);
+    for (var k = 0; k < keys.length; k++) {
+      var key = keys[k];
+      var parts = key.split('|');
+      var h = parts[0], a = parts[1];
+      if (_isLocked(h, a)) {
+        masked[key] = ps[key];
+      } else {
+        masked[key] = {};
+        if (ps[key] && ps[key][myName]) {
+          masked[key][myName] = ps[key][myName];
+        }
+      }
+    }
+    return masked;
+  }
+
+  try {
+    var existing = window._PS;
+    if (existing !== undefined) _realPS = existing;
+    delete window._PS;
+    Object.defineProperty(window, '_PS', {
+      get: function() {
+        if (_realPS === undefined) return undefined;
+        return _getMasked(_realPS);
+      },
+      set: function(val) {
+        _realPS = val;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  } catch(e) { console.warn('_patchPrivacyPS failed:', e); }
+})();
+</script>
 </body>
 </html>
