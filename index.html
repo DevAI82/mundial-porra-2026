@@ -1377,11 +1377,61 @@ function renderDesglosePorraSection() {
   </div>`;
 }
 
-// ── Monkey-patch renderPorraFull (keep base only, desglose injected via DOM) ──
+// ── Privacidad: ocultar pronósticos ajenos hasta 1h antes del partido ──
+function _isMatchLocked(h, a) {
+  var now = Date.now();
+  if (typeof FX !== 'undefined' && typeof R !== 'undefined') {
+    for (var i = 0; i < FX.length; i++) {
+      if (FX[i][4] === h && FX[i][5] === a) {
+        var res = R.scores && R.scores[FX[i][0]];
+        if (res && String(res[0]) !== '') return true;
+        break;
+      }
+    }
+  }
+  if (typeof RTVE !== 'undefined' && typeof parseMatchDT === 'function') {
+    for (var j = 0; j < RTVE.length; j++) {
+      if (RTVE[j].h === h && RTVE[j].a === a) {
+        try {
+          var dt = parseMatchDT(RTVE[j].d, RTVE[j].t);
+          return now >= dt.getTime() - 3600000;
+        } catch(e) {}
+        break;
+      }
+    }
+  }
+  return false;
+}
+
+// ── Monkey-patch renderPorraFull: swap _PS with masked copy during render ──
 const _origRenderPorraFull = typeof renderPorraFull === 'function' ? renderPorraFull : null;
 renderPorraFull = function() {
-  const base = _origRenderPorraFull ? _origRenderPorraFull() : '';
-  return base;
+  var myName = window._MYROOM && window._MYROOM.playerName;
+  var ps = window._PS;
+  if (!myName || !ps) {
+    return _origRenderPorraFull ? _origRenderPorraFull() : '';
+  }
+  var masked = {};
+  var keys = Object.keys(ps);
+  for (var k = 0; k < keys.length; k++) {
+    var key = keys[k];
+    var parts = key.split('|');
+    var h = parts[0], a = parts[1];
+    if (_isMatchLocked(h, a)) {
+      masked[key] = ps[key];
+    } else {
+      masked[key] = {};
+      if (ps[key] && ps[key][myName]) masked[key][myName] = ps[key][myName];
+    }
+  }
+  window._PS = masked;
+  var html;
+  try {
+    html = _origRenderPorraFull ? _origRenderPorraFull() : '';
+  } finally {
+    window._PS = ps;
+  }
+  return html;
 };
 
 // ── DOM injector: desglose table + flag icons via setPorraTab patch ──
@@ -2604,75 +2654,7 @@ function closeWelcomePopup() {
   _waitTab();
 })();
 // ── Privacidad pronósticos: interceptar window._PS con defineProperty ────────
-(function _patchPrivacyPS() {
-  var _realPS = undefined;
 
-  function _isLocked(h, a) {
-    var now = Date.now();
-    // Si hay resultado → visible para todos
-    if (typeof FX !== 'undefined' && typeof R !== 'undefined') {
-      var fx = null;
-      for (var i = 0; i < FX.length; i++) {
-        if (FX[i][4] === h && FX[i][5] === a) { fx = FX[i]; break; }
-      }
-      if (fx) {
-        var res = R.scores && R.scores[fx[0]];
-        if (res && String(res[0]) !== '') return true;
-      }
-    }
-    // Si hora de cierre ya pasó (1h antes del partido) → visible
-    if (typeof RTVE !== 'undefined' && typeof parseMatchDT === 'function') {
-      for (var j = 0; j < RTVE.length; j++) {
-        if (RTVE[j].h === h && RTVE[j].a === a) {
-          try {
-            var dt = parseMatchDT(RTVE[j].d, RTVE[j].t);
-            return now >= dt.getTime() - 3600000;
-          } catch(e) {}
-          break;
-        }
-      }
-    }
-    return false; // por defecto: privado
-  }
-
-  function _getMasked(ps) {
-    var myName = window._MYROOM && window._MYROOM.playerName;
-    if (!myName) return ps;
-    var masked = {};
-    var keys = Object.keys(ps);
-    for (var k = 0; k < keys.length; k++) {
-      var key = keys[k];
-      var parts = key.split('|');
-      var h = parts[0], a = parts[1];
-      if (_isLocked(h, a)) {
-        masked[key] = ps[key];
-      } else {
-        masked[key] = {};
-        if (ps[key] && ps[key][myName]) {
-          masked[key][myName] = ps[key][myName];
-        }
-      }
-    }
-    return masked;
-  }
-
-  try {
-    var existing = window._PS;
-    if (existing !== undefined) _realPS = existing;
-    delete window._PS;
-    Object.defineProperty(window, '_PS', {
-      get: function() {
-        if (_realPS === undefined) return undefined;
-        return _getMasked(_realPS);
-      },
-      set: function(val) {
-        _realPS = val;
-      },
-      configurable: true,
-      enumerable: true
-    });
-  } catch(e) { console.warn('_patchPrivacyPS failed:', e); }
-})();
 </script>
 </body>
 </html>
