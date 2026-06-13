@@ -2444,9 +2444,31 @@ function closeWelcomePopup() {
       if (typeof FX === 'undefined') return match;
 
       var scores = (window.R && window.R.scores) || {};
+      var now = new Date();
       var today = new Date(); today.setHours(0, 0, 0, 0);
 
-      // Buscar siempre el primer partido RTVE sin resultado, hoy o futuro
+      // Prioridad: si hay un partido RTVE HOY que comenzó hace menos de 2 horas,
+      // seguir mostrándolo aunque ya tenga resultado provisional.
+      if (typeof RTVE !== 'undefined' && typeof parseMatchDT === 'function') {
+        for (var i = 0; i < FX.length; i++) {
+          var f = FX[i];
+          var parts0 = f[1].split('/');
+          var fDate0 = new Date(2026, +parts0[1]-1, +parts0[0]);
+          if (fDate0.getTime() !== today.getTime()) continue; // solo hoy
+          var rtveM0 = RTVE.find(function(m) { return m.h === f[4] && m.a === f[5]; });
+          if (!rtveM0) continue;
+          try {
+            var kickoff = parseMatchDT(rtveM0.d, rtveM0.t);
+            var twoHoursAfter = new Date(kickoff.getTime() + 2 * 3600000);
+            if (now >= kickoff && now < twoHoursAfter) {
+              // Partido en curso o recién terminado: mantener en pantalla
+              return {d:rtveM0.d, t:rtveM0.t, h:rtveM0.h, a:rtveM0.a, ch:rtveM0.ch, g:rtveM0.g||f[3], rtve:true, venue:f[6], next:true};
+            }
+          } catch(e) {}
+        }
+      }
+
+      // Normal: primer partido RTVE sin resultado, hoy o futuro
       for (var i = 0; i < FX.length; i++) {
         var f = FX[i];
         var fJid = f[0];
