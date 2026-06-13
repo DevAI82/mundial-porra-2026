@@ -2258,8 +2258,16 @@ function closeWelcomePopup() {
 
     // Only show matches that have predictions
     var matchBlocks = '';
+    // Solo mostrar partidos que retransmite RTVE
+    var rtveSet = new Set();
+    if (typeof RTVE !== 'undefined') {
+      RTVE.forEach(function(m) { rtveSet.add(m.h + '|' + m.a); });
+    }
+
     FX.forEach(function(f) {
       var jid = f[0], d = f[1], t = f[2], g = f[3], h = f[4], a = f[5];
+      // Filtrar: solo partidos de RTVE
+      if (rtveSet.size > 0 && !rtveSet.has(h + '|' + a)) return;
       var key = h + '|' + a + '|' + d;
       var preds = (window._PS && window._PS[key]) || {};
       var hasPreds = Object.keys(preds).length > 0;
