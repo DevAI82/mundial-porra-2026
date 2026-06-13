@@ -2221,13 +2221,28 @@ function closeWelcomePopup() {
       var ra = hasResult ? +real[1] : null;
       var rSign = hasResult ? (rh > ra ? 1 : rh < ra ? -1 : 0) : null;
 
+      // ── Privacidad: pronósticos ocultos hasta 1h antes del partido ──
+      var matchStart = null;
+      try {
+        if (typeof parseMatchDT === 'function') matchStart = parseMatchDT(d, t);
+      } catch(e) {}
+      var nowMs = Date.now();
+      // isLocked = ya pasó el plazo de cierre (1h antes) O ya hay resultado
+      var isLocked = hasResult || !matchStart || (nowMs >= matchStart.getTime() - 3600000);
+      var myName = window._MYROOM && window._MYROOM.playerName;
+
       var resultLabel = hasResult
         ? '<span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:1.15rem;color:var(--gold)">' + rh + '–' + ra + '</span>'
-        : '<span style="font-size:.7rem;color:rgba(255,255,255,.4)">' + d + ' · ' + t + 'h ⏳</span>';
+        : isLocked
+          ? '<span style="font-size:.7rem;color:rgba(255,165,0,.7)">🔓 ' + d + ' · ' + t + 'h</span>'
+          : '<span style="font-size:.7rem;color:rgba(255,255,255,.4)">🔒 ' + d + ' · ' + t + 'h</span>';
 
       var tableRows = players.map(function(p) {
         var sv = preds[p.name];
         var pronPts = 0, signoPts = 0, goleadorPts = 0, favPts = 0;
+        var isMe = p.name === myName;
+        // Mostrar pronóstico si: soy yo, o partido bloqueado, o hay resultado
+        var canSee = isMe || isLocked;
 
         if (hasResult && sv) {
           var ph = +sv.loc, pa = +sv.vis;
@@ -2251,14 +2266,28 @@ function closeWelcomePopup() {
         }
 
         var total = pronPts + signoPts + goleadorPts + favPts;
-        var isMe = p.name === (window._MYROOM && window._MYROOM.playerName);
         var rowBg = isMe ? 'background:rgba(250,204,21,.07);' : '';
         var fc = typeof FLAGCODE !== 'undefined' ? FLAGCODE : {};
         var code = fav ? fc[fav] : null;
         var flagImg = code ? '<img src="https://flagcdn.com/'+code+'.svg" style="width:16px;height:11px;border-radius:2px;object-fit:cover;flex-shrink:0" title="'+fav+'">' : '';
 
-        var predStr = sv ? (sv.loc + '–' + sv.vis) : '—';
-        var golStr = sv && sv.player ? sv.player : '';
+        var predStr, golStr;
+        if (canSee) {
+          predStr = sv ? (sv.loc + '–' + sv.vis) : '—';
+          golStr = sv ? (sv.goleador || sv.player || '') : '';
+        } else {
+          // Oculto: mostrar si el usuario tiene pronóstico registrado o no
+          predStr = sv ? '<span style="color:rgba(255,255,255,.2);font-size:.7rem">🔒</span>' : '—';
+          golStr = '';
+        }
+
+        var ptsCells = canSee
+          ? ('<td style="'+tdS+'color:'+(pronPts>0?'#fff':'rgba(255,255,255,.2)')+'">'+fmt(pronPts)+'</td>'
+            +'<td style="'+tdS+'color:'+(signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.2)')+'">'+fmt(signoPts)+'</td>'
+            +'<td style="'+tdS+'color:'+(goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.2)')+'">'+fmt(goleadorPts)+'</td>'
+            +'<td style="'+tdS+'color:'+(favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.2)')+'">'+fmt(favPts)+'</td>'
+            +'<td style="'+tdS+'color:var(--gold);font-weight:900;font-size:.95rem">'+fmt(total)+'</td>')
+          : ('<td colspan="5" style="text-align:center;font-size:.65rem;color:rgba(255,255,255,.2);padding:7px 4px">— oculto hasta cierre —</td>');
 
         return '<tr style="border-bottom:1px solid rgba(255,255,255,.04);'+rowBg+'">'
           + '<td style="padding:7px 10px">'
@@ -2271,11 +2300,7 @@ function closeWelcomePopup() {
           +     '</div>'
           +   '</div>'
           + '</td>'
-          + '<td style="'+tdS+'color:'+(pronPts>0?'#fff':'rgba(255,255,255,.2)')+'">'+fmt(pronPts)+'</td>'
-          + '<td style="'+tdS+'color:'+(signoPts>0?'rgba(52,211,153,.9)':'rgba(255,255,255,.2)')+'">'+fmt(signoPts)+'</td>'
-          + '<td style="'+tdS+'color:'+(goleadorPts>0?'rgba(96,165,250,.9)':'rgba(255,255,255,.2)')+'">'+fmt(goleadorPts)+'</td>'
-          + '<td style="'+tdS+'color:'+(favPts>0?'rgba(250,204,21,.9)':'rgba(255,255,255,.2)')+'">'+fmt(favPts)+'</td>'
-          + '<td style="'+tdS+'color:var(--gold);font-weight:900;font-size:.95rem">'+fmt(total)+'</td>'
+          + ptsCells
           + '</tr>';
       }).join('');
 
@@ -2351,39 +2376,34 @@ function closeWelcomePopup() {
   _waitRoom();
 })();
 
-// ── Inicio: mostrar siguiente partido sin resultado (salta partidos ya jugados) ──
+// ── Inicio: mostrar siguiente partido RTVE sin resultado (siempre filtra RTVE) ──
 (function _patchGetMatchOfDay() {
   function _wait() {
     if (typeof getMatchOfDay !== 'function') { setTimeout(_wait, 300); return; }
     var _orig = getMatchOfDay;
     getMatchOfDay = function() {
-      var match = _orig();
-      if (!match) return null;
+      var match = _orig(); // fallback por si FX no está listo
+      if (typeof FX === 'undefined') return match;
 
-      // Find the FX entry for this match
-      var fx = typeof FX !== 'undefined' && FX.find(function(f) { return f[4] === match.h && f[5] === match.a; });
-      if (!fx) return match;
-
-      var jid = fx[0];
       var scores = (window.R && window.R.scores) || {};
-      var hasResult = scores[jid] && String(scores[jid][0]) !== '';
-      if (!hasResult) return match; // No result yet → show this match
-
-      // Match is done. Find the next unplayed match (today or future).
       var today = new Date(); today.setHours(0, 0, 0, 0);
+
+      // Buscar siempre el primer partido RTVE sin resultado, hoy o futuro
       for (var i = 0; i < FX.length; i++) {
         var f = FX[i];
         var fJid = f[0];
-        if (scores[fJid] && String(scores[fJid][0]) !== '') continue; // already has result
+        // Saltar si ya tiene resultado
+        if (scores[fJid] && String(scores[fJid][0]) !== '') continue;
+        // Saltar si es fecha pasada
         var parts = f[1].split('/');
         var fDate = new Date(2026, +parts[1]-1, +parts[0]);
-        if (fDate < today) continue; // past date, skip
-        // Solo retransmisiones RTVE — saltar partidos que no estén en RTVE
+        if (fDate < today) continue;
+        // Solo partidos en RTVE
         var rtveM = typeof RTVE !== 'undefined' && RTVE.find(function(m) { return m.h === f[4] && m.a === f[5]; });
-        if (!rtveM) continue; // no es de RTVE, saltar
+        if (!rtveM) continue;
         return {d:rtveM.d, t:rtveM.t, h:rtveM.h, a:rtveM.a, ch:rtveM.ch, g:rtveM.g||f[3], rtve:true, venue:f[6], next:true};
       }
-      return match; // fallback
+      return match || null; // fallback
     };
   }
   _wait();
