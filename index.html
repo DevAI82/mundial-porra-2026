@@ -2228,7 +2228,7 @@ function closeWelcomePopup() {
       } catch(e) {}
       var nowMs = Date.now();
       // isLocked = ya pasó el plazo de cierre (1h antes) O ya hay resultado
-      var isLocked = hasResult || !matchStart || (nowMs >= matchStart.getTime() - 3600000);
+      var isLocked = hasResult || (!!matchStart && nowMs >= matchStart.getTime() - 3600000);
       var myName = window._MYROOM && window._MYROOM.playerName;
 
       var resultLabel = hasResult
@@ -2404,6 +2404,56 @@ function closeWelcomePopup() {
         return {d:rtveM.d, t:rtveM.t, h:rtveM.h, a:rtveM.a, ch:rtveM.ch, g:rtveM.g||f[3], rtve:true, venue:f[6], next:true};
       }
       return match || null; // fallback
+    };
+  }
+  _wait();
+})();
+
+// ── Privacidad: parche sobre renderPorraFull ──────────────────────────────
+(function _patchPrivacyMain() {
+  function _wait() {
+    if (typeof renderPorraFull !== 'function') { setTimeout(_wait, 300); return; }
+    var _orig = renderPorraFull;
+    renderPorraFull = function() {
+      var _PS_save = window._PS;
+      try {
+        var now = Date.now();
+        var myName = window._MYROOM && window._MYROOM.playerName;
+        if (_PS_save && myName) {
+          var masked = {};
+          Object.keys(_PS_save).forEach(function(key) {
+            var parts = key.split('|');
+            var h = parts[0], a = parts[1];
+            // Find match in RTVE to get date/time
+            var rtveM = typeof RTVE !== 'undefined' && RTVE.find(function(m) { return m.h === h && m.a === a; });
+            var locked = false;
+            if (rtveM && typeof parseMatchDT === 'function') {
+              try { locked = now >= parseMatchDT(rtveM.d, rtveM.t).getTime() - 3600000; } catch(e) {}
+            }
+            // Also locked if there is a result
+            if (!locked && typeof FX !== 'undefined' && typeof R !== 'undefined') {
+              var fx = FX.find(function(f) { return f[4] === h && f[5] === a; });
+              if (fx) {
+                var res = R.scores && R.scores[fx[0]];
+                if (res && String(res[0]) !== '') locked = true;
+              }
+            }
+            if (locked) {
+              masked[key] = _PS_save[key];
+            } else {
+              // Only show current user's prediction
+              masked[key] = {};
+              if (_PS_save[key] && _PS_save[key][myName]) {
+                masked[key][myName] = _PS_save[key][myName];
+              }
+            }
+          });
+          window._PS = masked;
+        }
+      } catch(e) {}
+      var html = _orig.apply(this, arguments);
+      window._PS = _PS_save;
+      return html;
     };
   }
   _wait();
