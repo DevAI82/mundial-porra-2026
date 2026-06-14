@@ -2287,8 +2287,7 @@ function closeWelcomePopup() {
       // Filtrar: solo partidos de RTVE
       if (rtveSet.size > 0 && !rtveSet.has(h + '|' + a)) return;
       var key = h + '|' + a + '|' + d;
-      // _ALL_PREDS tiene todas las predicciones cargadas de Supabase (el ofuscado no la toca)
-      // Primero intento exacto, luego búsqueda por equipos (ignorando fecha) por si la fecha difiere
+      // Buscar predicciones: exacto, luego por equipos (fecha puede diferir), luego prox_jid
       var preds = (window._ALL_PREDS && window._ALL_PREDS[key]);
       if (!preds && window._ALL_PREDS) {
         var _pfx = h + '|' + a + '|';
@@ -2297,6 +2296,10 @@ function closeWelcomePopup() {
         }
       }
       preds = preds || (window._PS && window._PS[key]) || {};
+      // Fusionar predicciones prox_jid (las reales tienen prioridad sobre las prox)
+      if (window._ALL_PREDS && window._ALL_PREDS['prox_' + jid]) {
+        preds = Object.assign({}, window._ALL_PREDS['prox_' + jid], preds);
+      }
       var hasPreds = Object.keys(preds).length > 0;
       var real = window.R && window.R.scores && window.R.scores[jid];
       var hasResult = real && real[0] !== '' && real[1] !== '';
