@@ -2188,8 +2188,17 @@ function closeWelcomePopup() {
   }
 
   function _refreshBtn() {
+    var onclk = "(function(){"
+      + "window._ALL_PREDS=null;" // forzar recarga
+      + "typeof fetchRealResults==='function'&&fetchRealResults(true);"
+      + "if(typeof window._reloadAllPreds==='function'){"
+      +   "window._reloadAllPreds().then(function(){"
+      +     "if(typeof setPorraTab==='function')setPorraTab(window._MYPORRA_TAB||'jornada');"
+      +   "});"
+      + "}"
+      + "})()";
     return '<div style="padding:4px 14px 4px;display:flex;align-items:center;gap:8px">'
-      + '<button onclick="typeof fetchRealResults===\'function\'&&fetchRealResults(true)"'
+      + '<button onclick="' + onclk + '"'
       + ' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;'
       + 'color:rgba(255,255,255,.7);font-size:.72rem;padding:5px 10px;cursor:pointer">🔄 Actualizar resultados</button>'
       + '</div>';
@@ -2250,6 +2259,14 @@ function closeWelcomePopup() {
     if (!window._MYROOM) return '';
     var players = typeof getPlayers === 'function' ? getPlayers() : [];
     if (!players.length) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay jugadores.</div>';
+
+    // Si _ALL_PREDS no está cargado aún, disparar carga asíncrona y mostrar spinner
+    if (!window._ALL_PREDS && typeof window._reloadAllPreds === 'function') {
+      window._reloadAllPreds().then(function() {
+        if (typeof setPorraTab === 'function') setPorraTab(window._MYPORRA_TAB || 'jornada');
+      });
+      return '<div style="padding:30px;text-align:center;color:rgba(255,255,255,.5)">⌛ Cargando pronósticos...</div>';
+    }
 
     var fmt = function(v) { return v > 0 ? '+'+v : v === 0 ? '—' : String(v); };
     var tdS = 'text-align:center;padding:7px 4px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:.88rem;';
@@ -2481,50 +2498,66 @@ function closeWelcomePopup() {
   _wait();
 })();
 
-// ── Cargar TODAS las predicciones de la sala en _PS (no solo el partido actual) ──
+// ── Cargar TODAS las predicciones de la sala en _ALL_PREDS (caché independiente) ──
 (function _patchLoadAllPredictions() {
-  var _loading = false;
+  var _pendingPromise = null;
+  var _SUPA_URL = 'https://syyqoobojzuntauevytx.supabase.co';
+  var _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eXFvb2Jvanp1bnRhdWV2eXR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDU1MTU0MiwiZXhwIjoyMDk2MTI3NTQyfQ.InprSiPRrbSQ80BiQ6C8ymkLbNntSbDkPK0RUjvVd3o';
 
-  async function _loadAll() {
-    if (_loading) return;
-    _loading = true;
-    try {
-      var room = window._MYROOM && window._MYROOM.code;
-      if (!room || typeof _supa === 'undefined') { _loading = false; return; }
-      var res = await _supa.from('predictions')
-        .select('player_name,match_key,loc,vis,goleador')
-        .eq('room_code', room);
-      if (res.data && res.data.length) {
-        // _ALL_PREDS: caché propio que el JS ofuscado no sobrescribe
-        window._ALL_PREDS = {};
-        window._PS = window._PS || {};
-        res.data.forEach(function(p) {
-          if (!p.match_key) return;
-          // Guardar en _ALL_PREDS (fuente primaria para _buildJornadaHTML)
-          if (!window._ALL_PREDS[p.match_key]) window._ALL_PREDS[p.match_key] = {};
-          window._ALL_PREDS[p.match_key][p.player_name] = {
-            loc: p.loc, vis: p.vis, goleador: p.goleador
-          };
-          // También en _PS por compatibilidad
-          if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
-          window._PS[p.match_key][p.player_name] = {
-            loc: p.loc, vis: p.vis, goleador: p.goleador
-          };
-        });
-        // Re-render Jornada tab si está activa
-        if (typeof ACTIVE !== 'undefined' && ACTIVE === 'porra'
-            && window._MYPORRA_TAB === 'jornada'
-            && typeof setPorraTab === 'function') {
-          setPorraTab('jornada');
-        }
+  async function _fetchAllPreds(room) {
+    // Usar fetch directo con service key para evitar restricciones de RLS
+    var url = _SUPA_URL + '/rest/v1/predictions'
+      + '?select=player_name,match_key,loc,vis,goleador'
+      + '&room_code=eq.' + encodeURIComponent(room)
+      + '&limit=2000';
+    var resp = await fetch(url, {
+      headers: {
+        'apikey': _SUPA_KEY,
+        'Authorization': 'Bearer ' + _SUPA_KEY,
+        'Accept': 'application/json'
       }
-    } catch(e) { console.warn('_loadAllPredictions error:', e); }
-    _loading = false;
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
   }
 
+  window._reloadAllPreds = async function() {
+    // Si ya hay una carga en curso, devolver la misma promesa
+    if (_pendingPromise) return _pendingPromise;
+
+    _pendingPromise = (async function() {
+      try {
+        var room = window._MYROOM && window._MYROOM.code;
+        if (!room) return;
+        var rows = await _fetchAllPreds(room);
+        if (rows && rows.length) {
+          window._ALL_PREDS = {};
+          window._PS = window._PS || {};
+          rows.forEach(function(p) {
+            if (!p.match_key) return;
+            if (!window._ALL_PREDS[p.match_key]) window._ALL_PREDS[p.match_key] = {};
+            window._ALL_PREDS[p.match_key][p.player_name] = { loc: p.loc, vis: p.vis, goleador: p.goleador };
+            if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
+            window._PS[p.match_key][p.player_name] = { loc: p.loc, vis: p.vis, goleador: p.goleador };
+          });
+        } else {
+          // Sin datos: inicializar vacío para no bloquear el spinner
+          if (!window._ALL_PREDS) window._ALL_PREDS = {};
+        }
+      } catch(e) {
+        console.warn('_reloadAllPreds error:', e);
+        if (!window._ALL_PREDS) window._ALL_PREDS = {};
+      }
+      _pendingPromise = null; // limpiar para permitir recarga futura
+    })();
+
+    return _pendingPromise;
+  };
+
+  // Carga inicial al entrar en sala
   function _wait() {
-    if (!window._MYROOM || typeof _supa === 'undefined') { setTimeout(_wait, 600); return; }
-    _loadAll();
+    if (!window._MYROOM) { setTimeout(_wait, 600); return; }
+    window._reloadAllPreds();
   }
   _wait();
 })();
