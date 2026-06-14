@@ -2518,7 +2518,7 @@ function closeWelcomePopup() {
   async function _fetchAllPreds(room) {
     // Usar fetch directo con service key para evitar restricciones de RLS
     var url = _SUPA_URL + '/rest/v1/predictions'
-      + '?select=player_name,match_key,loc,vis,goleador'
+      + '?select=player_name,match_key,loc,vis,goleador,pos,score,home_score,away_score,scorer_name,scorer_position'
       + '&room_code=eq.' + encodeURIComponent(room)
       + '&limit=2000';
     var resp = await fetch(url, {
@@ -2547,9 +2547,15 @@ function closeWelcomePopup() {
           rows.forEach(function(p) {
             if (!p.match_key) return;
             if (!window._ALL_PREDS[p.match_key]) window._ALL_PREDS[p.match_key] = {};
-            window._ALL_PREDS[p.match_key][p.player_name] = { loc: p.loc, vis: p.vis, goleador: p.goleador };
+            var _loc = p.loc != null ? p.loc : p.home_score;
+            var _vis = p.vis != null ? p.vis : p.away_score;
+            var _gol = p.goleador || p.scorer_name;
+            var _pos = p.pos || p.scorer_position;
+            var _score = p.score || (_loc != null && _vis != null ? _loc + '-' + _vis : undefined);
+            window._ALL_PREDS[p.match_key][p.player_name] = { loc: _loc, vis: _vis, goleador: _gol, pos: _pos, score: _score };
             if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
-            window._PS[p.match_key][p.player_name] = { loc: p.loc, vis: p.vis, goleador: p.goleador };
+            window._PS[p.match_key][p.player_name] = { loc: _loc, vis: _vis, goleador: _gol, pos: _pos, score: _score,
+              home_score: _loc, away_score: _vis, scorer_name: _gol, scorer_position: _pos };
           });
         } else {
           // Sin datos: inicializar vacío para no bloquear el spinner
