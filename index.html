@@ -2269,7 +2269,9 @@ function closeWelcomePopup() {
       // Filtrar: solo partidos de RTVE
       if (rtveSet.size > 0 && !rtveSet.has(h + '|' + a)) return;
       var key = h + '|' + a + '|' + d;
-      var preds = (window._PS && window._PS[key]) || {};
+      // _ALL_PREDS tiene todas las predicciones cargadas de Supabase (el ofuscado no la toca)
+      var preds = (window._ALL_PREDS && window._ALL_PREDS[key])
+               || (window._PS && window._PS[key]) || {};
       var hasPreds = Object.keys(preds).length > 0;
       var real = window.R && window.R.scores && window.R.scores[jid];
       var hasResult = real && real[0] !== '' && real[1] !== '';
@@ -2493,9 +2495,17 @@ function closeWelcomePopup() {
         .select('player_name,match_key,loc,vis,goleador')
         .eq('room_code', room);
       if (res.data && res.data.length) {
+        // _ALL_PREDS: caché propio que el JS ofuscado no sobrescribe
+        window._ALL_PREDS = {};
         window._PS = window._PS || {};
         res.data.forEach(function(p) {
           if (!p.match_key) return;
+          // Guardar en _ALL_PREDS (fuente primaria para _buildJornadaHTML)
+          if (!window._ALL_PREDS[p.match_key]) window._ALL_PREDS[p.match_key] = {};
+          window._ALL_PREDS[p.match_key][p.player_name] = {
+            loc: p.loc, vis: p.vis, goleador: p.goleador
+          };
+          // También en _PS por compatibilidad
           if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
           window._PS[p.match_key][p.player_name] = {
             loc: p.loc, vis: p.vis, goleador: p.goleador
