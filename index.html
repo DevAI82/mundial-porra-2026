@@ -2260,8 +2260,9 @@ function closeWelcomePopup() {
     var players = typeof getPlayers === 'function' ? getPlayers() : [];
     if (!players.length) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay jugadores.</div>';
 
-    // Si _ALL_PREDS no está cargado aún, disparar carga asíncrona y mostrar spinner
-    if (!window._ALL_PREDS && typeof window._reloadAllPreds === 'function') {
+    // Si _ALL_PREDS no está cargado aún (o está vacío), disparar carga asíncrona y mostrar spinner
+    var _predsEmpty = !window._ALL_PREDS || Object.keys(window._ALL_PREDS).length === 0;
+    if (_predsEmpty && typeof window._reloadAllPreds === 'function') {
       window._reloadAllPreds().then(function() {
         if (typeof setPorraTab === 'function') setPorraTab(window._MYPORRA_TAB || 'jornada');
       });
@@ -2287,8 +2288,15 @@ function closeWelcomePopup() {
       if (rtveSet.size > 0 && !rtveSet.has(h + '|' + a)) return;
       var key = h + '|' + a + '|' + d;
       // _ALL_PREDS tiene todas las predicciones cargadas de Supabase (el ofuscado no la toca)
-      var preds = (window._ALL_PREDS && window._ALL_PREDS[key])
-               || (window._PS && window._PS[key]) || {};
+      // Primero intento exacto, luego búsqueda por equipos (ignorando fecha) por si la fecha difiere
+      var preds = (window._ALL_PREDS && window._ALL_PREDS[key]);
+      if (!preds && window._ALL_PREDS) {
+        var _pfx = h + '|' + a + '|';
+        for (var _ak in window._ALL_PREDS) {
+          if (_ak.indexOf(_pfx) === 0) { preds = window._ALL_PREDS[_ak]; break; }
+        }
+      }
+      preds = preds || (window._PS && window._PS[key]) || {};
       var hasPreds = Object.keys(preds).length > 0;
       var real = window.R && window.R.scores && window.R.scores[jid];
       var hasResult = real && real[0] !== '' && real[1] !== '';
