@@ -2434,6 +2434,51 @@ function closeWelcomePopup() {
   _waitRoom();
 })();
 
+// ── Guardado de respaldo: garantiza que savePred() persiste en Supabase ──
+(function _patchSavePredBackup() {
+  function _wait() {
+    if (typeof savePred !== 'function' || typeof _supa === 'undefined') {
+      setTimeout(_wait, 500); return;
+    }
+    var _orig = savePred;
+    savePred = async function() {
+      // Captura estado de _PS antes de llamar al original
+      var psBefore = JSON.parse(JSON.stringify(window._PS || {}));
+      var result;
+      try { result = await _orig.apply(this, arguments); } catch(e) {}
+
+      // Espera un tick para que _PS se actualice
+      await new Promise(function(res){ setTimeout(res, 300); });
+
+      var room = window._MYROOM && window._MYROOM.code;
+      var myName = window._MYROOM && window._MYROOM.playerName;
+      if (!room || !myName) return result;
+
+      var psAfter = window._PS || {};
+      for (var key in psAfter) {
+        var entry = psAfter[key][myName];
+        if (!entry) continue;
+        var prev = psBefore[key] && psBefore[key][myName];
+        // Si cambió (o es nuevo), guardamos en Supabase directamente
+        if (JSON.stringify(prev) !== JSON.stringify(entry)) {
+          try {
+            await _supa.from('predictions').upsert({
+              player_name: myName,
+              room_code:   room,
+              match_key:   key,
+              loc:         entry.loc != null ? entry.loc : entry.h,
+              vis:         entry.vis != null ? entry.vis : entry.a,
+              goleador:    entry.goleador || entry.player || null
+            }, { onConflict: 'player_name,room_code,match_key' });
+          } catch(e) { console.warn('[backup save] error:', e); }
+        }
+      }
+      return result;
+    };
+  }
+  _wait();
+})();
+
 // ── Cargar TODAS las predicciones de la sala en _PS (no solo el partido actual) ──
 (function _patchLoadAllPredictions() {
   var _loading = false;
