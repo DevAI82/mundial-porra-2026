@@ -2744,4 +2744,61 @@ function closeWelcomePopup() {
   function _renderPanel(html) {
     // renderFutStats sets innerHTML of an element; try both known IDs
     var el = document.getElementById('fut-stats-panel')
-          || document.getElementById
+          || document.getElementById('stats-content')
+          || document.getElementById('fut-stats-body');
+    if (el) el.innerHTML = html;
+  }
+
+  function _fetchScorers() {
+    var panel = document.getElementById('fut-stats-panel');
+    if (panel) panel.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">⌛ Cargando goleadores...</div>';
+    fetch('https://api.football-data.org/v4/competitions/WC/scorers?limit=15', {
+      headers: { 'X-Auth-Token': FD_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.scorers || !data.scorers.length) {
+        _renderPanel('<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">Sin datos de goleadores disponibles</div>');
+        return;
+      }
+      var rows = data.scorers.slice(0, 15).map(function(s, i) {
+        var teamEn = s.team ? (s.team.name || s.team.shortName || '') : '';
+        var teamEs = NOMBRES[teamEn] || teamEn;
+        var flag = _flag(teamEn);
+        var playerName = s.player ? (s.player.name || ((s.player.firstName||'') + ' ' + (s.player.lastName||'')).trim()) : '?';
+        var goals = s.goals !== undefined ? s.goals : (s.numberOfGoals !== undefined ? s.numberOfGoals : 0);
+        var medal = i === 0 ? '\u{1F947}' : i === 1 ? '\u{1F948}' : i === 2 ? '\u{1F949}' : (i+1) + 'o';
+        return '<div style="display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05)">'
+          + '<span style="font-family:\'Barlow Condensed\';font-weight:800;font-size:.85rem;text-align:center">' + medal + '</span>'
+          + '<div style="display:flex;align-items:center;gap:6px">' + flag
+          + '<div><div style="font-size:.82rem;font-weight:600;color:#fff">' + playerName + '</div>'
+          + '<div style="font-size:.68rem;color:rgba(255,255,255,.4)">' + teamEs + '</div></div></div>'
+          + '<span style="font-family:\'Barlow Condensed\';font-weight:900;font-size:1.15rem;color:var(--gold)">' + goals + ' &#9917;</span>'
+          + '</div>';
+      }).join('');
+      _renderPanel('<div class="gc"><div class="gc-head">&#9917; Goleadores del Mundial 2026</div>' + rows + '</div>');
+    })
+    .catch(function() {
+      _renderPanel('<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No se pudieron cargar los goleadores</div>');
+    });
+  }
+
+  function _initFutStats() {
+    if (typeof renderFutStats === 'function') {
+      var _orig = renderFutStats;
+      renderFutStats = function() { _orig(); setTimeout(_fetchScorers, 300); };
+    } else {
+      window.renderFutStats = function() { _fetchScorers(); };
+    }
+    setTimeout(function() {
+      if (document.getElementById('fut-stats-panel')) _fetchScorers();
+    }, 2000);
+  }
+
+  (document.readyState === 'complete' || document.readyState === 'interactive')
+    ? _initFutStats()
+    : document.addEventListener('DOMContentLoaded', _initFutStats);
+})();
+</script>
+</body>
+</html>
