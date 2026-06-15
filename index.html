@@ -1302,30 +1302,55 @@ renderHome = async function() {
 };
 
 // ── Desglose de puntos ──
+// NOTA: calcPlayerPts está dentro del IIFE obfuscado y NO es accesible globalmente.
+// Esta implementación calcula todo directamente desde _PS, R.scores y _MATCH_ADJ.
 function calcScoreBreakdown(playerName) {
-  let pronPts = 0, signoPts = 0;
-  RTVE.forEach(match => {
-    const fx = FX.find(f => f[4] === match.h && f[5] === match.a);
+  var pronPts = 0, signoPts = 0, goleadorPts = 0;
+  var rtveList = (typeof RTVE !== 'undefined') ? RTVE : [];
+  var fxList   = (typeof FX   !== 'undefined') ? FX   : [];
+
+  rtveList.forEach(function(match) {
+    var fx = fxList.find(function(f) { return f[4] === match.h && f[5] === match.a; });
     if (!fx) return;
-    const matchId = fx[0];
-    const actual = R.scores[matchId];
+    var matchId = fx[0];
+
+    // Resultado real
+    var scores = window.R && window.R.scores;
+    var actual = scores && scores[matchId];
     if (!actual || actual[0] === '' || actual[1] === '') return;
-    const actualH = +actual[0], actualA = +actual[1];
-    const actualSign = actualH > actualA ? 1 : actualH < actualA ? -1 : 0;
-    const key = _porraKey({h: match.h, a: match.a, d: match.d});
-    const pred = (window._PS?.[key] || {})[playerName];
+    var rh = +actual[0], ra = +actual[1];
+    var actualSign = rh > ra ? 1 : rh < ra ? -1 : 0;
+
+    // Pronóstico del jugador
+    var key = (typeof _porraKey === 'function')
+      ? _porraKey({h: match.h, a: match.a, d: match.d})
+      : (match.h + '|' + match.a + '|' + match.d);
+    var pred = window._PS && window._PS[key] && window._PS[key][playerName];
     if (!pred) return;
-    const predH = +pred.loc, predA = +pred.vis;
-    const predSign = predH > predA ? 1 : predH < predA ? -1 : 0;
+    var ph = +pred.loc, pa = +pred.vis;
+    var predSign = ph > pa ? 1 : ph < pa ? -1 : 0;
+
+    // Puntos por signo (1X2)
     if (predSign === actualSign) signoPts += 1;
-    if (predH === actualH && predA === actualA) pronPts += 3;
+    // Puntos por pronóstico exacto
+    if (ph === rh && pa === ra) pronPts += 3;
+
+    // Bonus goleador — _MATCH_ADJ[matchId][playerName] es un número plano
+    var bonus = window._MATCH_ADJ
+      && window._MATCH_ADJ[matchId]
+      && window._MATCH_ADJ[matchId][playerName];
+    if (bonus) goleadorPts += +bonus;
   });
-  const adjPts = (window._ADJUSTMENTS?.[playerName] || 0);
-  const totalFromCalc = calcPlayerPts(playerName);
-  const goleadorPts = Math.max(0, totalFromCalc - adjPts - signoPts - pronPts);
-  const favPts = calcFavTeamPoints(playerName);
-  const total = pronPts + signoPts + goleadorPts + favPts + adjPts;
-  return { pronPts, signoPts, goleadorPts, favPts, adjPts, total };
+
+  // Ajuste manual de admin — _ADJUSTMENTS[player] es {adj: N}
+  var adjRaw = window._ADJUSTMENTS && window._ADJUSTMENTS[playerName];
+  var adjPts = adjRaw ? (adjRaw.adj || 0) : 0;
+
+  // Bonus selección favorita
+  var favPts = (typeof calcFavTeamPoints === 'function') ? calcFavTeamPoints(playerName) : 0;
+
+  var total = pronPts + signoPts + goleadorPts + favPts + adjPts;
+  return { pronPts: pronPts, signoPts: signoPts, goleadorPts: goleadorPts, favPts: favPts, adjPts: adjPts, total: total };
 }
 
 function renderDesglosePorraSection() {
