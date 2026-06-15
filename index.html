@@ -1688,7 +1688,9 @@ function _renderPremiosPanel() {
   }
 
   var ranked = players.map(function(p) {
-    var pts = typeof calcPlayerPts === 'function' ? calcPlayerPts(p.name) : 0;
+    var pts = (typeof calcScoreBreakdown === 'function')
+      ? calcScoreBreakdown(p.name).total
+      : (typeof calcPlayerPts === 'function' ? calcPlayerPts(p.name) : 0);
     return { name: p.name, color: p.color, initials: p.initials, pts: pts };
   }).sort(function(a, b) { return b.pts - a.pts; });
 
