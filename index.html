@@ -1129,6 +1129,63 @@ if('serviceWorker' in navigator){
 </div>
 
 <script>
+// ── PATCH: Normalizar claves de predicción por equipos (ignora desajustes de fecha) ──
+// Cuando usuarios envían pronósticos desde la vista calendario la fecha puede diferir
+// de la fecha almacenada en el array RTVE. Este interceptor asegura que _PS y _ALL_PREDS
+// siempre devuelven TODOS los pronósticos del partido independientemente de la fecha usada.
+(function() {
+  function _mergeByTeams(ps) {
+    if (!ps || typeof ps !== 'object') return ps;
+    // Agrupar predicciones por prefijo 'Local|Visitante' (sin fecha)
+    var byTeams = {};
+    Object.keys(ps).forEach(function(key) {
+      var parts = key.split('|');
+      if (parts.length >= 2) {
+        var prefix = parts[0] + '|' + parts[1];
+        if (!byTeams[prefix]) byTeams[prefix] = {};
+        // Fusionar predicciones (la más reciente por nombre de jugador gana)
+        var existing = byTeams[prefix];
+        var incoming = ps[key];
+        if (incoming && typeof incoming === 'object') {
+          Object.keys(incoming).forEach(function(player) {
+            if (!existing[player]) existing[player] = incoming[player];
+          });
+        }
+      }
+    });
+    // Reconstruir _PS: cada variante de fecha para el mismo partido tiene todas las predicciones
+    var patched = {};
+    Object.keys(ps).forEach(function(key) {
+      var parts = key.split('|');
+      if (parts.length >= 2) {
+        var prefix = parts[0] + '|' + parts[1];
+        patched[key] = byTeams[prefix] ? Object.assign({}, byTeams[prefix]) : ps[key];
+      } else {
+        patched[key] = ps[key];
+      }
+    });
+    return patched;
+  }
+  // Interceptar window._PS
+  var _psVal = undefined;
+  try {
+    Object.defineProperty(window, '_PS', {
+      configurable: true, enumerable: true,
+      get: function() { return _psVal; },
+      set: function(v) { _psVal = _mergeByTeams(v); }
+    });
+  } catch(e) {}
+  // Interceptar window._ALL_PREDS
+  var _apVal = undefined;
+  try {
+    Object.defineProperty(window, '_ALL_PREDS', {
+      configurable: true, enumerable: true,
+      get: function() { return _apVal; },
+      set: function(v) { _apVal = _mergeByTeams(v); }
+    });
+  } catch(e) {}
+})();
+
 // ── SELECCIÓN FAVORITA ──
 window._FAV_TEAMS = window._FAV_TEAMS || null;
 
