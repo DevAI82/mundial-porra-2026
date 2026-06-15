@@ -2800,54 +2800,5 @@ function closeWelcomePopup() {
     : document.addEventListener('DOMContentLoaded', _initFutStats);
 })();
 </script>
-
-<!-- POPUP AVISO PAGO - eliminación medianoche 16 junio -->
-<div id="popup-pago-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;">
-  <div style="background:#1e1e2e;border-radius:16px;width:90%;max-width:440px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
-    <!-- Header -->
-    <div style="background:#111122;padding:18px 20px 14px;display:flex;align-items:center;gap:12px;">
-      <span style="font-size:26px;">⚽</span>
-      <div style="flex:1;">
-        <p style="margin:0;font-size:11px;color:#6b7280;font-family:sans-serif;">Mundial 2026 · Sala MGPX</p>
-        <p style="margin:0;font-size:16px;font-weight:600;color:#fff;font-family:sans-serif;">Aviso importante</p>
-      </div>
-      <button onclick="document.getElementById('popup-pago-overlay').style.display='none';localStorage.setItem('pagoPopupVisto','1');" style="background:rgba(255,255,255,.08);border:none;color:#9ca3af;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;">✕</button>
-    </div>
-    <!-- Body -->
-    <div style="padding:18px 20px;">
-      <div style="background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.35);border-radius:10px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;">
-        <span style="font-size:20px;line-height:1.2;">⚠️</span>
-        <div>
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Plazo: esta medianoche (00:01h del 16/06)</p>
-          <p style="margin:0;font-size:12px;color:#f87171;line-height:1.6;font-family:sans-serif;">Los siguientes participantes <strong>no han abonado los 10€</strong> del bote y serán <strong>eliminados de la sala</strong> si no regularizan el pago.</p>
-        </div>
-      </div>
-      <p style="margin:0 0 8px;font-size:11px;font-weight:600;color:#6b7280;letter-spacing:.06em;font-family:sans-serif;">PENDIENTES DE PAGO</p>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:8px;border:1px solid rgba(220,38,38,.25);"><span style="color:#ef4444;font-size:13px;">✗</span><span style="font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Alberto</span></div>
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:8px;border:1px solid rgba(220,38,38,.25);"><span style="color:#ef4444;font-size:13px;">✗</span><span style="font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Antonio Marco</span></div>
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:8px;border:1px solid rgba(220,38,38,.25);"><span style="color:#ef4444;font-size:13px;">✗</span><span style="font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Jona jr</span></div>
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:8px;border:1px solid rgba(220,38,38,.25);"><span style="color:#ef4444;font-size:13px;">✗</span><span style="font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Shevchen</span></div>
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(220,38,38,.1);border-radius:8px;border:1px solid rgba(220,38,38,.25);"><span style="color:#ef4444;font-size:13px;">✗</span><span style="font-size:13px;font-weight:600;color:#fca5a5;font-family:sans-serif;">Sosi</span></div>
-      </div>
-      <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:16px;">💳</span>
-        <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.5;font-family:sans-serif;">Contacta con el administrador para pagar por <strong style="color:#d1d5db;">Bizum o Efectivo</strong> antes de las 00:01h.</p>
-      </div>
-      <button onclick="document.getElementById('popup-pago-overlay').style.display='none';localStorage.setItem('pagoPopupVisto','1');" style="width:100%;padding:11px;border-radius:9px;background:#dc2626;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:sans-serif;">Entendido</button>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  var DEADLINE = new Date('2026-06-16T00:01:00');
-  if (new Date() < DEADLINE) {
-    var el = document.getElementById('popup-pago-overlay');
-    if (el) {
-      el.style.display = 'flex';
-    }
-  }
-})();
-</script>
 </body>
 </html>
