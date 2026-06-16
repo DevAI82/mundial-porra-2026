@@ -2860,23 +2860,26 @@ function closeWelcomePopup() {
 })();
 
 // ── Privacidad Inicio: ocultar pronósticos ajenos hasta 1h antes del partido ──
+// Se instala SIN timeout: renderPorraSection ya está definida cuando este script corre.
 (function _patchRenderPorraSectionPrivacy() {
   function _install() {
     if (typeof renderPorraSection !== 'function' ||
         typeof isMatchClosed !== 'function' ||
         typeof _porraKey !== 'function') {
-      setTimeout(_install, 300); return;
+      // Rarísimo que falten, pero reintentamos por si acaso
+      setTimeout(_install, 50); return;
     }
+    if (renderPorraSection._privacyPatched) return; // evitar doble-patch
     var _orig = renderPorraSection;
     renderPorraSection = function(match) {
       var myName = window._MYROOM && window._MYROOM.playerName;
 
-      // Si el partido ya está cerrado o no hay usuario, mostrar todo
+      // Si el partido ya está cerrado (≤1h) o no hay usuario logado: mostrar todo
       if (!myName || !match || isMatchClosed(match)) {
         return _orig.apply(this, arguments);
       }
 
-      // Filtrar _ALL_PREDS: solo mi pronóstico visible
+      // Filtrar _ALL_PREDS para mostrar sólo mi pronóstico
       var pkey = _porraKey(match);
       var savedPreds = null, hiddenCount = 0;
 
@@ -2894,7 +2897,7 @@ function closeWelcomePopup() {
 
       var result = _orig.apply(this, arguments);
 
-      // Restaurar datos completos en caché
+      // Restaurar datos completos en caché inmediatamente
       if (savedPreds !== null) window._ALL_PREDS[pkey] = savedPreds;
 
       // Añadir aviso de privacidad al contenedor home-preds
@@ -2914,14 +2917,14 @@ function closeWelcomePopup() {
 
       return result;
     };
+    renderPorraSection._privacyPatched = true;
     console.log('[Privacy] renderPorraSection patched ✓');
   }
 
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(_install, 200);
-  } else {
-    document.addEventListener('DOMContentLoaded', function() { setTimeout(_install, 200); });
-  }
+  // Instalar inmediatamente (las funciones obfuscadas ya están definidas)
+  _install();
+  // Garantía extra: si algo fue diferido, reintentar en el siguiente tick
+  setTimeout(_install, 0);
 })();
 </script>
 </body>
