@@ -2860,22 +2860,30 @@ function closeWelcomePopup() {
 })();
 
 // ── Privacidad Inicio: ocultar pronósticos ajenos hasta 1h antes del partido ──
-(function _patchRenderHomePrivacy() {
+(function _patchRenderPorraSectionPrivacy() {
   function _install() {
-    if (typeof renderHome !== 'function' || typeof isMatchClosed !== 'function' || typeof _porraKey !== 'function') {
-      setTimeout(_install, 400); return;
+    if (typeof renderPorraSection !== 'function' ||
+        typeof isMatchClosed !== 'function' ||
+        typeof _porraKey !== 'function') {
+      setTimeout(_install, 300); return;
     }
-    var _prevRH = renderHome;
-    renderHome = async function() {
+    var _orig = renderPorraSection;
+    renderPorraSection = function(match) {
       var myName = window._MYROOM && window._MYROOM.playerName;
-      var match  = typeof getMatchOfDay === 'function' ? getMatchOfDay() : null;
-      var savedPreds = null, pkey = null, hiddenCount = 0;
 
-      if (match && myName && !isMatchClosed(match) && window._ALL_PREDS) {
-        pkey = _porraKey(match);
-        var full = window._ALL_PREDS[pkey] || {};
-        var otherKeys = Object.keys(full).filter(function(n) { return n !== myName; });
-        hiddenCount = otherKeys.length;
+      // Si el partido ya está cerrado o no hay usuario, mostrar todo
+      if (!myName || !match || isMatchClosed(match)) {
+        return _orig.apply(this, arguments);
+      }
+
+      // Filtrar _ALL_PREDS: solo mi pronóstico visible
+      var pkey = _porraKey(match);
+      var savedPreds = null, hiddenCount = 0;
+
+      if (window._ALL_PREDS && window._ALL_PREDS[pkey]) {
+        var full = window._ALL_PREDS[pkey];
+        var others = Object.keys(full).filter(function(n) { return n !== myName; });
+        hiddenCount = others.length;
         if (hiddenCount > 0) {
           savedPreds = full;
           var mine = {};
@@ -2884,31 +2892,35 @@ function closeWelcomePopup() {
         }
       }
 
-      var result = await _prevRH.apply(this, arguments);
+      var result = _orig.apply(this, arguments);
 
-      // Restaurar datos originales en caché
-      if (savedPreds !== null && pkey) window._ALL_PREDS[pkey] = savedPreds;
+      // Restaurar datos completos en caché
+      if (savedPreds !== null) window._ALL_PREDS[pkey] = savedPreds;
 
-      // Añadir aviso de privacidad en home-preds
+      // Añadir aviso de privacidad al contenedor home-preds
       if (hiddenCount > 0) {
-        var hp = document.getElementById('home-preds');
-        if (hp && !hp.querySelector('.priv-notice-home')) {
-          var n = document.createElement('div');
-          n.className = 'priv-notice-home';
-          n.style.cssText = 'text-align:center;padding:5px 12px 8px;font-size:.62rem;color:rgba(255,255,255,.3);margin-top:4px';
-          n.innerHTML = '🔒 ' + hiddenCount + ' apuesta' + (hiddenCount !== 1 ? 's' : '') +
-                        ' más · visibles 1h antes del pitido';
-          hp.appendChild(n);
-        }
+        setTimeout(function() {
+          var hp = document.getElementById('home-preds');
+          if (hp && !hp.querySelector('.priv-notice-home')) {
+            var n = document.createElement('div');
+            n.className = 'priv-notice-home';
+            n.style.cssText = 'text-align:center;padding:5px 12px 8px;font-size:.62rem;color:rgba(255,255,255,.3);margin-top:4px';
+            n.innerHTML = '🔒 ' + hiddenCount + ' apuesta' + (hiddenCount !== 1 ? 's' : '') +
+                          ' más · visibles 1h antes del pitido';
+            hp.appendChild(n);
+          }
+        }, 0);
       }
 
       return result;
     };
+    console.log('[Privacy] renderPorraSection patched ✓');
   }
+
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(_install, 900);
+    setTimeout(_install, 200);
   } else {
-    document.addEventListener('DOMContentLoaded', function() { setTimeout(_install, 900); });
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(_install, 200); });
   }
 })();
 </script>
