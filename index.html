@@ -2860,29 +2860,22 @@ function closeWelcomePopup() {
 })();
 
 // ── Privacidad Inicio: ocultar pronósticos ajenos hasta 1h antes del partido ──
-// Se instala SIN timeout: renderPorraSection ya está definida cuando este script corre.
 (function _patchRenderPorraSectionPrivacy() {
   function _install() {
     if (typeof renderPorraSection !== 'function' ||
         typeof isMatchClosed !== 'function' ||
         typeof _porraKey !== 'function') {
-      // Rarísimo que falten, pero reintentamos por si acaso
       setTimeout(_install, 50); return;
     }
-    if (renderPorraSection._privacyPatched) return; // evitar doble-patch
+    if (renderPorraSection._privacyPatched) return;
     var _orig = renderPorraSection;
     renderPorraSection = function(match) {
       var myName = window._MYROOM && window._MYROOM.playerName;
-
-      // Si el partido ya está cerrado (≤1h) o no hay usuario logado: mostrar todo
       if (!myName || !match || isMatchClosed(match)) {
         return _orig.apply(this, arguments);
       }
-
-      // Filtrar _ALL_PREDS para mostrar sólo mi pronóstico
       var pkey = _porraKey(match);
       var savedPreds = null, hiddenCount = 0;
-
       if (window._ALL_PREDS && window._ALL_PREDS[pkey]) {
         var full = window._ALL_PREDS[pkey];
         var others = Object.keys(full).filter(function(n) { return n !== myName; });
@@ -2894,13 +2887,8 @@ function closeWelcomePopup() {
           window._ALL_PREDS[pkey] = mine;
         }
       }
-
       var result = _orig.apply(this, arguments);
-
-      // Restaurar datos completos en caché inmediatamente
       if (savedPreds !== null) window._ALL_PREDS[pkey] = savedPreds;
-
-      // Añadir aviso de privacidad al contenedor home-preds
       if (hiddenCount > 0) {
         setTimeout(function() {
           var hp = document.getElementById('home-preds');
@@ -2908,22 +2896,30 @@ function closeWelcomePopup() {
             var n = document.createElement('div');
             n.className = 'priv-notice-home';
             n.style.cssText = 'text-align:center;padding:5px 12px 8px;font-size:.62rem;color:rgba(255,255,255,.3);margin-top:4px';
-            n.innerHTML = '🔒 ' + hiddenCount + ' apuesta' + (hiddenCount !== 1 ? 's' : '') +
-                          ' más · visibles 1h antes del pitido';
+            n.innerHTML = '🔒 ' + hiddenCount + ' apuesta' + (hiddenCount !== 1 ? 's' : '') + ' más · visibles 1h antes del pitido';
             hp.appendChild(n);
           }
         }, 0);
       }
-
       return result;
     };
     renderPorraSection._privacyPatched = true;
     console.log('[Privacy] renderPorraSection patched ✓');
+
+    // ── Re-render forzado: el primer render ocurre antes de que este patch corra ──
+    // (Service Worker sirve predicciones desde caché síncronamente)
+    setTimeout(function() {
+      var match = typeof getMatchOfDay === 'function' ? getMatchOfDay() : null;
+      if (!match) return;
+      var hp = document.getElementById('home-preds');
+      if (!hp || !hp.innerHTML.trim()) return;
+      var notice = hp.querySelector('.priv-notice-home');
+      if (notice) notice.remove();
+      hp.innerHTML = renderPorraSection(match);
+    }, 200);
   }
 
-  // Instalar inmediatamente (las funciones obfuscadas ya están definidas)
   _install();
-  // Garantía extra: si algo fue diferido, reintentar en el siguiente tick
   setTimeout(_install, 0);
 })();
 </script>
