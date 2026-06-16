@@ -2858,6 +2858,59 @@ function closeWelcomePopup() {
     ? _initFutStats()
     : document.addEventListener('DOMContentLoaded', _initFutStats);
 })();
+
+// ── Privacidad Inicio: ocultar pronósticos ajenos hasta 1h antes del partido ──
+(function _patchRenderHomePrivacy() {
+  function _install() {
+    if (typeof renderHome !== 'function' || typeof isMatchClosed !== 'function' || typeof _porraKey !== 'function') {
+      setTimeout(_install, 400); return;
+    }
+    var _prevRH = renderHome;
+    renderHome = async function() {
+      var myName = window._MYROOM && window._MYROOM.playerName;
+      var match  = typeof getMatchOfDay === 'function' ? getMatchOfDay() : null;
+      var savedPreds = null, pkey = null, hiddenCount = 0;
+
+      if (match && myName && !isMatchClosed(match) && window._ALL_PREDS) {
+        pkey = _porraKey(match);
+        var full = window._ALL_PREDS[pkey] || {};
+        var otherKeys = Object.keys(full).filter(function(n) { return n !== myName; });
+        hiddenCount = otherKeys.length;
+        if (hiddenCount > 0) {
+          savedPreds = full;
+          var mine = {};
+          if (full[myName]) mine[myName] = full[myName];
+          window._ALL_PREDS[pkey] = mine;
+        }
+      }
+
+      var result = await _prevRH.apply(this, arguments);
+
+      // Restaurar datos originales en caché
+      if (savedPreds !== null && pkey) window._ALL_PREDS[pkey] = savedPreds;
+
+      // Añadir aviso de privacidad en home-preds
+      if (hiddenCount > 0) {
+        var hp = document.getElementById('home-preds');
+        if (hp && !hp.querySelector('.priv-notice-home')) {
+          var n = document.createElement('div');
+          n.className = 'priv-notice-home';
+          n.style.cssText = 'text-align:center;padding:5px 12px 8px;font-size:.62rem;color:rgba(255,255,255,.3);margin-top:4px';
+          n.innerHTML = '🔒 ' + hiddenCount + ' apuesta' + (hiddenCount !== 1 ? 's' : '') +
+                        ' más · visibles 1h antes del pitido';
+          hp.appendChild(n);
+        }
+      }
+
+      return result;
+    };
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(_install, 900);
+  } else {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(_install, 900); });
+  }
+})();
 </script>
 </body>
 </html>
