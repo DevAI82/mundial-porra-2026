@@ -2890,6 +2890,11 @@ function closeWelcomePopup() {
           window._PS[pkey] = mine;
         }
       }
+      // Si _PS no tiene los ajenos (solo mi predicción), contar desde _ALL_PREDS
+      if (hiddenCount === 0 && window._ALL_PREDS && window._ALL_PREDS[pkey]) {
+        var allFull = window._ALL_PREDS[pkey];
+        hiddenCount = Object.keys(allFull).filter(function(n) { return n !== myName; }).length;
+      }
       var result = _orig.apply(this, arguments);
       if (savedPreds !== null) window._PS[pkey] = savedPreds;
       if (hiddenCount > 0) {
