@@ -1,4 +1,4 @@
-const CACHE = 'porra2026-v3';
+const CACHE = 'porra2026-v5';
 const FILES = ['./', './index.html', './manifest.json', './imagenapp.jpg', './trofeo.png'];
 
 self.addEventListener('install', e => {
@@ -16,7 +16,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-store' })
       .then(resp => { caches.open(CACHE).then(c => c.put(e.request, resp.clone())); return resp; })
       .catch(() => caches.match(e.request))
   );
