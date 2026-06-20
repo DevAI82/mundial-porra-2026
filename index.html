@@ -1005,6 +1005,10 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
     <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="g-por" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path fill="url(#g-por)" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93C9.33 17.79 7 14.5 7 11V7.18L12 5zm-1 3v4h2V8h-2zm0 6v2h2v-2h-2z"/></svg>
     <span>Porra</span>
   </div>
+  <div class="ni" onclick="nav('noticias',this)">
+    <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="g-det" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path fill="url(#g-det)" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-3.31 0-6 1.79-6 4v2h12v-2c0-2.21-2.69-4-6-4zm8-9h-2V3h-2v2h-2v2h2v2h2V7h2V5z"/></svg>
+    <span>Detalle</span>
+  </div>
   <div class="ni" onclick="nav('grupos',this)">
     <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="g-res" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><path fill="url(#g-res)" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><circle fill="url(#g-res)" cx="12" cy="12" r="0"/><path fill="url(#g-res)" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 1.5c1.8 0 3.5.6 4.9 1.6l-1 1c-1.1-.8-2.5-1.2-3.9-1.2-3.9 0-7 3.1-7 7 0 1.4.4 2.8 1.2 3.9l-1 1C4.1 15.5 3.5 13.8 3.5 12c0-4.7 3.8-8.5 8.5-8.5zm0 17c-1.8 0-3.5-.6-4.9-1.6l1-1c1.1.8 2.5 1.2 3.9 1.2 3.9 0 7-3.1 7-7 0-1.4-.4-2.8-1.2-3.9l1-1c1.1 1.4 1.7 3.1 1.7 4.9 0 4.7-3.8 8.5-8.5 8.5z"/><path fill="none" stroke="url(#g-res)" stroke-width="1.5" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/></svg>
     <span>Resultados</span>
@@ -1024,10 +1028,6 @@ tr.q3 td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
   <div class="ni" onclick="nav('futbolistas',this)">
     <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="g-fut" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><path fill="url(#g-fut)" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
     <span>Futbolistas</span>
-  </div>
-  <div class="ni" onclick="nav('noticias',this)">
-    <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="g-not" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><path fill="url(#g-not)" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 2.5c1.84 0 3.35 1.28 3.76 3H4.24C4.65 8.78 6.16 7.5 8 7.5h4zM4 18v-5.5h7V18H4zm9 0v-5.5h7V18h-7zm7-7H4V9h16v2z"/></svg>
-    <span>Noticias</span>
   </div>
 </nav>
 
@@ -2039,17 +2039,19 @@ function closeWelcomePopup() {
     try {
       var res = await _supa
         .from('results')
-        .select('match_id,home_goals,away_goals');
+        .select('match_id,home_goals,away_goals,scorers');
       if (res.error) { console.warn('Score sync:', res.error.message); return; }
       if (!res.data || !res.data.length) return;
       if (!window.R) window.R = {};
       if (!window.R.scores) window.R.scores = {};
+      if (!window.R.scorers) window.R.scorers = {};
       var updated = 0;
       res.data.forEach(function(row) {
         if (row.home_goals != null && row.away_goals != null) {
           window.R.scores[row.match_id] = [String(row.home_goals), String(row.away_goals)];
           updated++;
         }
+        if (row.scorers) window.R.scorers[row.match_id] = row.scorers;
       });
       try { localStorage.setItem('wc26_results', JSON.stringify(window.R.scores)); } catch(e) {}
       if (updated > 0) {
@@ -2961,6 +2963,386 @@ function closeWelcomePopup() {
   _hookReloadAllPreds();
 
 })();
+
+function calcPlayerMatchDetail(playerName) {
+  var rows = [];
+  var rtveList = (typeof RTVE !== 'undefined') ? RTVE : [];
+  var fxList = (typeof FX !== 'undefined') ? FX : [];
+  rtveList.forEach(function(match) {
+    var fx = fxList.find(function(f) { return f[4] === match.h && f[5] === match.a; });
+    if (!fx) return;
+    var matchId = fx[0];
+    var key = (typeof _porraKey === 'function')
+      ? _porraKey({h: match.h, a: match.a, d: match.d})
+      : (match.h + '|' + match.a + '|' + match.d);
+    var pred = window._PS && window._PS[key] && window._PS[key][playerName];
+
+    var scores = window.R && window.R.scores;
+    var actual = scores && scores[matchId];
+    var played = !!(actual && actual[0] !== '' && actual[1] !== '');
+
+    var entry = {
+      jid: matchId, h: match.h, a: match.a, d: match.d,
+      ph: pred ? +pred.loc : null, pa: pred ? +pred.vis : null,
+      golPred: pred && pred.goleador ? pred.goleador : null,
+      rh: played ? +actual[0] : null, ra: played ? +actual[1] : null,
+      realScorers: (played && window.R && window.R.scorers && window.R.scorers[matchId]) || [],
+      played: played, hasPred: !!pred,
+      pronPts: 0, signoPts: 0, golPts: 0, favPts: 0
+    };
+
+    if (played && pred) {
+      var actualSign = entry.rh > entry.ra ? 1 : entry.rh < entry.ra ? -1 : 0;
+      var predSign = entry.ph > entry.pa ? 1 : entry.ph < entry.pa ? -1 : 0;
+      if (predSign === actualSign) entry.signoPts = 1;
+      if (entry.ph === entry.rh && entry.pa === entry.ra) entry.pronPts = 3;
+      var golBonus = window._MATCH_ADJ && window._MATCH_ADJ[matchId] && window._MATCH_ADJ[matchId][playerName];
+      if (golBonus) entry.golPts = +golBonus;
+      var favBonus = window._MATCH_ADJ && window._MATCH_ADJ[matchId + '_FAV'] && window._MATCH_ADJ[matchId + '_FAV'][playerName];
+      if (favBonus) entry.favPts = +favBonus;
+    }
+    rows.push(entry);
+  });
+  rows.sort(function(a, b) {
+    if (a.played !== b.played) return a.played ? -1 : 1;
+    return 0;
+  });
+  return rows;
+}
+
+function calcFavTeamMatches(playerName, favTeam) {
+  var rows = [];
+  if (!favTeam) return rows;
+  var fxList = (typeof FX !== 'undefined') ? FX : [];
+  fxList.forEach(function(fx) {
+    var jid = fx[0], home = fx[4], away = fx[5];
+    if (home !== favTeam && away !== favTeam) return;
+    var scores = window.R && window.R.scores;
+    var actual = scores && scores[jid];
+    var played = !!(actual && actual[0] !== '' && actual[1] !== '');
+    var favAdj = window._MATCH_ADJ && window._MATCH_ADJ[jid + '_FAV'];
+    var pts = (favAdj && favAdj[playerName]) ? +favAdj[playerName] : 0;
+    rows.push({
+      jid: jid, h: home, a: away,
+      rh: played ? +actual[0] : null, ra: played ? +actual[1] : null,
+      played: played, pts: pts
+    });
+  });
+  rows.sort(function(a, b) { return a.jid < b.jid ? -1 : a.jid > b.jid ? 1 : 0; });
+  return rows;
+}
+
+function getPlayerRanking(playerName) {
+  var players = typeof getPlayers === 'function' ? getPlayers() : [];
+  var withTotals = players.map(function(p) {
+    var b = typeof calcScoreBreakdown === 'function' ? calcScoreBreakdown(p.name) : {total: 0};
+    return {name: p.name, total: b.total || 0};
+  }).sort(function(a, b) { return b.total - a.total; });
+  var idx = withTotals.findIndex(function(p) { return p.name === playerName; });
+  return {rank: idx >= 0 ? idx + 1 : null, total: idx >= 0 ? withTotals[idx].total : 0, count: withTotals.length};
+}
+
+function calcPointsTimeline(playerName) {
+  var rtveList = (typeof RTVE !== 'undefined') ? RTVE : [];
+  var fxList = (typeof FX !== 'undefined') ? FX : [];
+  var scores = window.R && window.R.scores;
+
+  var checkpoints = [];
+  rtveList.forEach(function(match) {
+    var fx = fxList.find(function(f) { return f[4] === match.h && f[5] === match.a; });
+    if (!fx) return;
+    checkpoints.push({jid: fx[0], h: match.h, a: match.a, d: match.d});
+  });
+  checkpoints.sort(function(a, b) { return a.jid < b.jid ? -1 : a.jid > b.jid ? 1 : 0; });
+
+  function favPtsUpTo(jidLimit) {
+    var total = 0;
+    var adj = window._MATCH_ADJ;
+    if (!adj) return 0;
+    Object.keys(adj).forEach(function(matchId) {
+      var pos = matchId.indexOf('_FAV');
+      if (pos < 0) return;
+      var baseJid = matchId.slice(0, pos);
+      if (baseJid > jidLimit) return;
+      var bonus = adj[matchId] && adj[matchId][playerName];
+      if (bonus) total += +bonus;
+    });
+    return total;
+  }
+
+  var rtveCum = 0;
+  var timeline = [];
+  checkpoints.forEach(function(cp) {
+    var actual = scores && scores[cp.jid];
+    var played = !!(actual && actual[0] !== '' && actual[1] !== '');
+    if (!played) return;
+    var key = (typeof _porraKey === 'function') ? _porraKey({h: cp.h, a: cp.a, d: cp.d}) : null;
+    var pred = key && window._PS && window._PS[key] && window._PS[key][playerName];
+    var matchPts = 0;
+    if (pred) {
+      var rh = +actual[0], ra = +actual[1];
+      var ph = +pred.loc, pa = +pred.vis;
+      var actualSign = rh > ra ? 1 : rh < ra ? -1 : 0;
+      var predSign = ph > pa ? 1 : ph < pa ? -1 : 0;
+      if (predSign === actualSign) matchPts += 1;
+      if (ph === rh && pa === ra) matchPts += 3;
+    }
+    var golBonus = window._MATCH_ADJ && window._MATCH_ADJ[cp.jid] && window._MATCH_ADJ[cp.jid][playerName];
+    if (golBonus) matchPts += +golBonus;
+    rtveCum += matchPts;
+    timeline.push({jid: cp.jid, total: rtveCum + favPtsUpTo(cp.jid)});
+  });
+  return timeline;
+}
+
+function buildEvolutionChartSVG(seriesA, nameA, colorA, seriesB, nameB, colorB) {
+  var allJids = [];
+  seriesA.forEach(function(p) { if (allJids.indexOf(p.jid) < 0) allJids.push(p.jid); });
+  if (seriesB) seriesB.forEach(function(p) { if (allJids.indexOf(p.jid) < 0) allJids.push(p.jid); });
+  allJids.sort(function(a, b) { return a < b ? -1 : a > b ? 1 : 0; });
+  if (!allJids.length) return '<div style="padding:16px;text-align:center;font-size:.75rem;color:rgba(255,255,255,.35)">Aún no hay datos suficientes para la evolución.</div>';
+
+  function lookup(series, jid) {
+    var last = 0;
+    for (var i = 0; i < series.length; i++) {
+      if (series[i].jid > jid) break;
+      last = series[i].total;
+    }
+    return last;
+  }
+
+  var W = 300, H = 130, padL = 6, padR = 6, padT = 10, padB = 10;
+  var n = allJids.length;
+  var maxVal = 1;
+  allJids.forEach(function(jid) {
+    maxVal = Math.max(maxVal, lookup(seriesA, jid));
+    if (seriesB) maxVal = Math.max(maxVal, lookup(seriesB, jid));
+  });
+  maxVal = Math.ceil(maxVal * 1.15) || 1;
+
+  function xAt(i) { return n <= 1 ? (padL + (W - padL - padR) / 2) : (padL + (i / (n - 1)) * (W - padL - padR)); }
+  function yAt(v) { return padT + (1 - v / maxVal) * (H - padT - padB); }
+
+  function buildPoints(series) {
+    return allJids.map(function(jid, i) { return xAt(i).toFixed(1) + ',' + yAt(lookup(series, jid)).toFixed(1); }).join(' ');
+  }
+  function buildDots(series, color) {
+    return allJids.map(function(jid, i) {
+      return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(lookup(series, jid)).toFixed(1) + '" r="2.4" fill="' + color + '"/>';
+    }).join('');
+  }
+
+  var gridLines = '';
+  for (var g = 0; g <= 2; g++) {
+    var gy = padT + (g / 2) * (H - padT - padB);
+    gridLines += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.08)" stroke-width="1"/>';
+  }
+
+  var lineA = '<polyline points="' + buildPoints(seriesA) + '" fill="none" stroke="' + colorA + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+  var lineB = seriesB ? '<polyline points="' + buildPoints(seriesB) + '" fill="none" stroke="' + colorB + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' : '';
+  var dotsA = buildDots(seriesA, colorA);
+  var dotsB = seriesB ? buildDots(seriesB, colorB) : '';
+
+  var legend = '<div style="display:flex;gap:14px;justify-content:center;margin-top:6px;font-size:.68rem">'
+    + '<span style="color:' + colorA + '"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colorA + ';margin-right:4px"></span>' + nameA + '</span>'
+    + (seriesB ? ('<span style="color:' + colorB + '"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colorB + ';margin-right:4px"></span>' + nameB + '</span>') : '')
+    + '</div>';
+
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:120px;display:block">' + gridLines + lineA + dotsA + lineB + dotsB + '</svg>' + legend;
+}
+
+function renderMatchComparisonRows(names, colors) {
+  var perPlayerMatches = names.map(function(n) { return calcPlayerMatchDetail(n); });
+  if (!perPlayerMatches[0].length) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:.8rem">Sin partidos RTVE registrados.</div>';
+
+  return perPlayerMatches[0].map(function(base, idx) {
+    var playerRowsHtml = names.map(function(n, ni) {
+      var m = perPlayerMatches[ni][idx];
+      var totalPts = m.pronPts + m.signoPts + m.golPts + m.favPts;
+      var predTxt = !m.played ? '🔒' : (m.hasPred ? (m.ph + ' – ' + m.pa) : 'sin pronóstico');
+      var golTxt = !m.played ? 'oculto hasta el resultado' : (m.golPred || 'sin elegir');
+      var topBorder = ni > 0 ? 'border-top:1px solid rgba(255,255,255,.06);' : '';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:6px 0;' + topBorder + '">'
+        + '<span style="width:8px;height:8px;border-radius:50%;background:' + colors[ni] + ';flex-shrink:0"></span>'
+        + '<span style="font-size:.74rem;color:#fff;font-weight:700;width:64px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + n + '</span>'
+        + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:.82rem;color:#fff;width:54px;flex-shrink:0">' + predTxt + '</span>'
+        + '<span style="font-size:.68rem;color:rgba(255,255,255,.5);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">⚽ ' + golTxt + '</span>'
+        + (m.played
+            ? ('<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:.78rem;color:var(--gold);flex-shrink:0">+' + totalPts + '</span>')
+            : '<span style="font-size:.62rem;color:rgba(255,255,255,.3);flex-shrink:0">⏳</span>')
+        + '</div>';
+    }).join('');
+
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;' + (base.played ? '' : 'opacity:.55;') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">'
+      + '<span style="font-size:11px;color:rgba(255,255,255,.4)">' + base.jid + ' · ' + base.d + '</span>'
+      + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:.85rem;color:#fff">' + base.h + ' ' + (base.played ? (base.rh + '–' + base.ra) : 'vs') + ' ' + base.a + '</span>'
+      + '</div>'
+      + (base.realScorers.length ? ('<div style="font-size:.65rem;color:rgba(255,255,255,.4);text-align:right;margin-bottom:6px">🥅 ' + base.realScorers.map(function(s) { return s.name + ' ' + s.minute + "'"; }).join(' · ') + '</div>') : '<div style="margin-bottom:6px"></div>')
+      + playerRowsHtml
+      + '</div>';
+  }).join('');
+}
+
+function renderUserDetailSection() {
+  if (!window._MYROOM) return '<div style="padding:30px;text-align:center;color:rgba(255,255,255,.4);font-size:.85rem">Cargando jugadores...</div>';
+  var players = typeof getPlayers === 'function' ? getPlayers() : [];
+  if (!players.length) return '';
+
+  var selected = window._DETAIL_PLAYER || (window._MYROOM && window._MYROOM.playerName) || players[0].name;
+  if (!players.some(function(p) { return p.name === selected; })) selected = players[0].name;
+  window._DETAIL_PLAYER = selected;
+
+  var selected2 = window._DETAIL_PLAYER2 || '';
+  if (selected2 && (selected2 === selected || !players.some(function(p) { return p.name === selected2; }))) selected2 = '';
+  window._DETAIL_PLAYER2 = selected2;
+
+  var COLOR_A = '#facc15', COLOR_B = '#60a5fa';
+
+  function buildOptions(currentVal, excludeName, withNone) {
+    var html = withNone ? ('<option value=""' + (currentVal === '' ? ' selected' : '') + '>— Comparar con... —</option>') : '';
+    html += players.filter(function(p) { return p.name !== excludeName; }).map(function(p) {
+      return '<option value="' + p.name.replace(/"/g, '&quot;') + '"' + (p.name === currentVal ? ' selected' : '') + '>' + p.name + '</option>';
+    }).join('');
+    return html;
+  }
+
+  function playerBlock(name, accentColor) {
+    var pdata = players.find(function(p) { return p.name === name; }) || players[0];
+    var ranking = getPlayerRanking(name);
+    var favTeam = window._FAV_TEAMS && window._FAV_TEAMS[name];
+    var favCode = favTeam && typeof FLAGCODE !== 'undefined' ? FLAGCODE[favTeam] : null;
+    var favFlagHtml = favTeam
+      ? (favCode
+          ? '<img src="https://flagcdn.com/' + favCode + '.svg" style="width:22px;height:15px;border-radius:3px;object-fit:cover">'
+          : '<span style="font-size:16px">' + ((typeof TEAMS !== 'undefined' && TEAMS[favTeam] && TEAMS[favTeam].f) || '🏳️') + '</span>')
+      : '';
+
+    var favMatches = calcFavTeamMatches(name, favTeam);
+    var favMatchesSum = favMatches.reduce(function(s, m) { return s + m.pts; }, 0);
+    var favTotalReal = (typeof calcFavTeamPoints === 'function') ? calcFavTeamPoints(name) : favMatchesSum;
+    var favResidual = favTotalReal - favMatchesSum;
+
+    var favMatchesHtml = favMatches.length
+      ? favMatches.map(function(m) {
+          var resTxt = m.played ? (m.rh + ' – ' + m.ra) : 'pendiente';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid rgba(255,255,255,.1);font-size:.72rem">'
+            + '<span style="color:rgba(255,255,255,.7)">' + m.jid + ' · ' + m.h + ' ' + resTxt + ' ' + m.a + '</span>'
+            + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;color:' + (m.pts > 0 ? 'var(--gold)' : 'rgba(255,255,255,.25)') + '">' + (m.pts > 0 ? '+' + m.pts : '—') + '</span>'
+            + '</div>';
+        }).join('')
+      : '<div style="padding:5px 0;font-size:.7rem;color:rgba(255,255,255,.4)">Aún no ha disputado ningún partido.</div>';
+
+    if (favResidual !== 0) {
+      favMatchesHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid rgba(255,255,255,.1);font-size:.72rem"><span style="color:rgba(255,255,255,.45)">Fase eliminatoria / otros</span><span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;color:var(--gold)">' + (favResidual > 0 ? '+' + favResidual : favResidual) + '</span></div>';
+    }
+
+    var matches = calcPlayerMatchDetail(name);
+    var chip = function(label, val, color) {
+      return '<div style="text-align:center;flex:1"><div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">' + label + '</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:.85rem;color:' + (val > 0 ? color : 'rgba(255,255,255,.25)') + '">' + (val > 0 ? '+' + val : '—') + '</div></div>';
+    };
+
+    var matchCards = matches.map(function(m) {
+      var opacity = m.played ? '' : 'opacity:.45;';
+      var totalPts = m.pronPts + m.signoPts + m.golPts + m.favPts;
+      var predTxt = !m.played
+        ? '<span style="color:rgba(255,255,255,.3)">🔒 oculto</span>'
+        : (m.hasPred ? (m.ph + ' – ' + m.pa) : '<span style="color:rgba(255,255,255,.3)">sin pronóstico</span>');
+      var resTxt = m.played ? (m.rh + ' – ' + m.ra) : '<span style="color:rgba(255,255,255,.3)">pendiente</span>';
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;' + opacity + '">'
+        + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">'
+        + '<span style="font-size:11px;color:rgba(255,255,255,.4)">' + m.jid + ' · ' + m.d + '</span>'
+        + (m.played ? '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:11px;color:var(--gold)">+' + totalPts + ' pts</span>' : '<span style="font-size:10px;color:rgba(255,255,255,.3)">⏳ pendiente</span>')
+        + '</div>'
+        + '<div style="font-size:.85rem;color:#fff;font-weight:600;margin-bottom:4px">' + m.h + ' <span style="color:rgba(255,255,255,.3)">vs</span> ' + m.a + '</div>'
+        + (m.realScorers.length ? ('<div style="font-size:.68rem;color:rgba(255,255,255,.45);margin-bottom:8px">🥅 ' + m.realScorers.map(function(s) { return s.name + ' ' + s.minute + "'"; }).join(' · ') + '</div>') : '<div style="margin-bottom:8px"></div>')
+        + '<div style="display:flex;gap:10px;margin-bottom:8px">'
+        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:5px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.35)">PRONÓSTICO</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:.9rem;color:#fff">' + predTxt + '</div></div>'
+        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:5px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.35)">RESULTADO</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:.9rem;color:#fff">' + resTxt + '</div></div>'
+        + '</div>'
+        + (m.played
+            ? ('<div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:8px">⚽ Goleador elegido: <span style="color:#fff;font-weight:600">' + (m.golPred || 'sin elegir') + '</span></div>')
+            : '<div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-bottom:8px">⚽ Goleador elegido: 🔒 oculto</div>')
+        + (m.played ? ('<div style="display:flex;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">'
+            + chip('Prono', m.pronPts, '#fff')
+            + chip('1X2', m.signoPts, 'rgba(52,211,153,.9)')
+            + chip('Gol', m.golPts, 'rgba(96,165,250,.9)')
+            + chip('Fav', m.favPts, 'rgba(250,204,21,.9)')
+            + '</div>') : '')
+        + '</div>';
+    }).join('') || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:.8rem">Sin partidos RTVE registrados.</div>';
+
+    var cardHtml = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px">'
+      + '<div style="width:40px;height:40px;border-radius:50%;background:' + pdata.color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:13px;flex-shrink:0;border:2px solid ' + accentColor + '">' + pdata.initials + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + name + '</div>'
+      + '<div style="font-size:.7rem;color:rgba(255,255,255,.45);margin-top:2px">' + (ranking.rank ? ranking.rank + 'º de ' + ranking.count : '—') + '</div></div>'
+      + '<div style="text-align:right;flex-shrink:0"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.3rem;color:' + accentColor + '">' + ranking.total + '</div><div style="font-size:.62rem;color:rgba(255,255,255,.4)">puntos</div></div>'
+      + '</div>';
+
+    var favBoxHtml = favTeam
+      ? ('<div style="background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.18);border-radius:12px;padding:9px 12px;margin-bottom:14px">'
+          + '<div style="display:flex;align-items:center;gap:8px">⭐<span style="font-size:.76rem;color:rgba(255,255,255,.55)">Favorita de ' + name + '</span>' + favFlagHtml + '<span style="font-size:.82rem;color:#fff;font-weight:600;margin-left:auto">' + favTeam + '</span></div>'
+          + favMatchesHtml
+          + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid rgba(250,204,21,.18);margin-top:2px">'
+          + '<span style="font-size:.66rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.05em">Total selección favorita</span>'
+          + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:.95rem;color:var(--gold)">' + (favTotalReal > 0 ? '+' + favTotalReal : favTotalReal) + ' pts</span>'
+          + '</div></div>')
+      : ('<div style="border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:9px 12px;margin-bottom:14px;font-size:.74rem;color:rgba(255,255,255,.35);text-align:center">' + name + ' no tiene selección favorita</div>');
+
+    return {cardHtml: cardHtml, favBoxHtml: favBoxHtml, matchCardsHtml: matchCards};
+  }
+
+  var blockA = playerBlock(selected, COLOR_A);
+  var blockB = selected2 ? playerBlock(selected2, COLOR_B) : null;
+
+  var selectorsHtml = '<div style="display:flex;gap:8px;margin-bottom:12px">'
+    + '<select onchange="window._DETAIL_PLAYER=this.value;var c=document.getElementById(\'noticias-content\');if(c)c.innerHTML=renderUserDetailSection();" style="flex:1;min-width:0;background:var(--card);border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px;font-size:.8rem">'
+    + buildOptions(selected, selected2, false)
+    + '</select>'
+    + '<select onchange="window._DETAIL_PLAYER2=this.value;var c=document.getElementById(\'noticias-content\');if(c)c.innerHTML=renderUserDetailSection();" style="flex:1;min-width:0;background:var(--card);border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px;font-size:.8rem">'
+    + buildOptions(selected2, selected, true)
+    + '</select>'
+    + '</div>';
+
+  var cardsHtml = blockB
+    ? ('<div style="display:flex;gap:8px">'
+        + '<div style="flex:1;min-width:0">' + blockA.cardHtml + '</div>'
+        + '<div style="flex:1;min-width:0">' + blockB.cardHtml + '</div>'
+        + '</div>')
+    : blockA.cardHtml;
+
+  var favHtml = blockA.favBoxHtml + (blockB ? blockB.favBoxHtml : '');
+
+  var chartHtml = '';
+  if (blockB) {
+    var timelineA = calcPointsTimeline(selected);
+    var timelineB = calcPointsTimeline(selected2);
+    chartHtml = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px">'
+      + '<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:6px">Evolución de puntos por jornada</div>'
+      + buildEvolutionChartSVG(timelineA, selected, COLOR_A, timelineB, selected2, COLOR_B)
+      + '</div>';
+  }
+
+  var listsHtml = blockB
+    ? ('<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:8px">Comparativa partido a partido (RTVE)</div>'
+        + renderMatchComparisonRows([selected, selected2], [COLOR_A, COLOR_B]))
+    : ('<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:8px">Pronósticos de ' + selected + ' por partido (RTVE)</div>'
+        + blockA.matchCardsHtml);
+
+  return '<div style="padding:14px 16px 24px">'
+    + selectorsHtml
+    + cardsHtml
+    + '<div style="height:10px"></div>'
+    + favHtml
+    + chartHtml
+    + listsHtml
+    + '</div>';
+}
+
+renderNoticias = function() {
+  var el = document.getElementById('noticias-content');
+  if (el) el.innerHTML = renderUserDetailSection();
+};
 </script>
 </body>
 </htm
