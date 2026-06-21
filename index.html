@@ -2964,6 +2964,48 @@ function closeWelcomePopup() {
 
 })();
 
+// ── Mostrar goleador pronosticado en "Pronósticos amigos" (Inicio) ──
+(function _patchShowGoleadorHome() {
+  function _wait() {
+    if (typeof renderPorraSection !== 'function' || typeof _porraKey !== 'function') {
+      setTimeout(_wait, 50); return;
+    }
+    if (renderPorraSection._golPatched) return;
+    var _orig = renderPorraSection;
+    renderPorraSection = function(match) {
+      var html = _orig.apply(this, arguments);
+      try {
+        var pkey = _porraKey(match);
+        var preds = (window._PS && window._PS[pkey]) || (window._ALL_PREDS && window._ALL_PREDS[pkey]) || {};
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var rows = tmp.querySelectorAll('.friend');
+        rows.forEach(function(friendEl) {
+          var nameEl = friendEl.querySelector('.fname');
+          if (!nameEl) return;
+          // Nombre limpio: primer nodo de texto, sin el badge "tú"
+          var firstNode = nameEl.childNodes[0];
+          var rawName = ((firstNode && firstNode.textContent) || nameEl.textContent || '').trim();
+          var entry = preds[rawName];
+          var existingGol = friendEl.querySelector('.fgol');
+          if (existingGol) existingGol.remove();
+          if (entry && entry.goleador) {
+            var gol = document.createElement('div');
+            gol.className = 'fgol';
+            gol.textContent = '⚽ ' + entry.goleador;
+            nameEl.insertAdjacentElement('afterend', gol);
+          }
+        });
+        html = tmp.innerHTML;
+      } catch (e) { console.warn('[Goleador Home] error:', e); }
+      return html;
+    };
+    renderPorraSection._golPatched = true;
+    console.log('[Goleador Home] renderPorraSection patched ✓');
+  }
+  _wait();
+})();
+
 function calcPlayerMatchDetail(playerName) {
   var rows = [];
   var rtveList = (typeof RTVE !== 'undefined') ? RTVE : [];
