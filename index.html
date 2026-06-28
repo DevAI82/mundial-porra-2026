@@ -1213,57 +1213,67 @@ window._syncRko();
   _wait();
 })();
 
-// ── Parchear renderHome: 3 tarjetas hoy usando mutación de RTVE (const = no reasignable pero sí mutable) ──
-(function _patchRenderHome(){
-  function _wait(){
-    if (typeof renderHome !== 'function'){ setTimeout(_wait, 100); return; }
-    if (renderHome._multiPatch) return;
-    var _orig = renderHome;
-    renderHome = function(){
-      var today = (typeof getTodayStr === 'function') ? getTodayStr() :
-        (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      var todayMatches = RTVE.filter(function(m){ return m.d === today; });
+// ── Patch getMatchOfDay: permite override global para guardar pronóstico del partido correcto ──
+var _getMatchOfDayBase = getMatchOfDay;
+window._gmOverride = null;
+getMatchOfDay = function(){
+  return window._gmOverride || _getMatchOfDayBase.apply(this, arguments);
+};
 
-      if (todayMatches.length <= 1) return _orig.apply(this, arguments);
+// ── Multi-tarjeta home: captura renderHome directamente (mismo scope) ──
+var _renderHomeBase = renderHome;
+renderHome = function(){
+  var today = typeof getTodayStr === 'function' ? getTodayStr() :
+    (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
+  var todayMatches = RTVE.filter(function(m){ return m.d === today; });
 
-      // Orden cronológico (03:00+ = madrugada → +1440 min)
-      todayMatches.sort(function(a, b){
-        function toMins(t){
-          var raw = t.replace('+',''); var p = raw.split(':');
-          var m = parseInt(p[0])*60 + parseInt(p[1]);
-          if (t.indexOf('+') >= 0) m += 1440;
-          return m;
-        }
-        return toMins(a.t) - toMins(b.t);
-      });
+  if (todayMatches.length <= 1) return _renderHomeBase.apply(this, arguments);
 
-      var homeMatchDiv = document.getElementById('home-match');
-      var homePredsDiv = document.getElementById('home-preds');
-      var homeProxDiv  = document.getElementById('home-proximos');
+  // Orden cronológico (03:00+ = madrugada siguiente → +1440 min)
+  todayMatches.sort(function(a, b){
+    function toMins(t){
+      var raw = t.replace('+',''); var p = raw.split(':');
+      var v = parseInt(p[0])*60 + parseInt(p[1]);
+      if (t.indexOf('+') >= 0) v += 1440; return v;
+    }
+    return toMins(a.t) - toMins(b.t);
+  });
 
-      // Guardar RTVE y vaciarlo en su lugar (splice muta el array const)
-      var savedRTVE = RTVE.splice(0);
-      var allCards = '', allPreds = '';
+  var homeMatchDiv = document.getElementById('home-match');
+  var homePredsDiv = document.getElementById('home-preds');
+  var homeProxDiv  = document.getElementById('home-proximos');
 
-      todayMatches.forEach(function(m){
-        RTVE.splice(0); RTVE.push(m);       // solo este partido
-        _orig.apply(this, arguments);
-        if (homeMatchDiv) allCards += homeMatchDiv.innerHTML;
-        if (homePredsDiv) allPreds += homePredsDiv.innerHTML;
-      }.bind(this));
+  // Mutar RTVE (const, no reasignable pero sí mutable) para forzar getMatchOfDay a devolver cada partido
+  var savedRTVE = RTVE.splice(0);
+  var cardParts = [], predParts = [];
 
-      // Restaurar RTVE
-      RTVE.splice(0);
-      savedRTVE.forEach(function(x){ RTVE.push(x); });
+  todayMatches.forEach(function(m){
+    RTVE.splice(0); RTVE.push(m);
+    _renderHomeBase.apply(this, arguments);
+    cardParts.push(homeMatchDiv ? homeMatchDiv.innerHTML : '');
+    predParts.push(homePredsDiv ? homePredsDiv.innerHTML : '');
+  }.bind(this));
 
-      if (homeMatchDiv) homeMatchDiv.innerHTML = allCards;
-      if (homePredsDiv) homePredsDiv.innerHTML = allPreds;
-      if (homeProxDiv)  homeProxDiv.innerHTML  = '';
-    };
-    renderHome._multiPatch = true;
+  RTVE.splice(0);
+  savedRTVE.forEach(function(x){ RTVE.push(x); });
+
+  // Combinar con wrapper data-h/data-a para identificar partido al guardar pronóstico
+  if (homeMatchDiv) homeMatchDiv.innerHTML = cardParts.map(function(h){ return '<div class="_mday-card">' + h + '</div>'; }).join('');
+  if (homePredsDiv) {
+    homePredsDiv.innerHTML = predParts.map(function(h, i){
+      return '<div class="_mday-pred" data-h="' + todayMatches[i].h + '" data-a="' + todayMatches[i].a + '">' + h + '</div>';
+    }).join('');
+    // Mousedown handler: setea _gmOverride ANTES de que savePred() ejecute
+    homePredsDiv.querySelectorAll('._mday-pred').forEach(function(sec){
+      var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
+      var mObj = RTVE.find(function(r){ return r.h===mh && r.a===ma; });
+      if (!mObj) return;
+      var fullM = Object.assign({}, mObj, {rtve:!!mObj.ch, venue: typeof getVenue==='function' ? getVenue(mh,ma) : ''});
+      sec.addEventListener('mousedown', function(){ window._gmOverride = fullM; setTimeout(function(){ window._gmOverride=null; }, 3000); }, true);
+    });
   }
-  _wait();
-})();
+  if (homeProxDiv) homeProxDiv.innerHTML = '';
+};
 
 renderGrupos(),renderKOSection(),renderTabla(),renderCuadro(),renderVenues(),renderEstrellas(),startIntro();
 </script>
