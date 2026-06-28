@@ -1061,8 +1061,8 @@ function renderKOSection() {
       var venue = m[6];
       var time  = m[2].replace('+','') + ' CEST';
 
-      // Score from R.ko (numeric key)
-      var sc = R.ko[num];
+      // Score from R.scores (JID key) or R.ko (numeric key)
+      var sc = R.scores[jid] || R.ko[num];
       var scoreHTML;
       if (sc && sc[0] !== '' && sc[1] !== '') {
         scoreHTML = '<span class="fixed">' + sc[0] + '<span style="color:var(--mut);margin:0 2px">–</span>' + sc[1] + '</span>';
