@@ -2467,9 +2467,9 @@ function closeWelcomePopup() {
     var _fxSorted = FX.slice().sort(function(a, b) {
       function _dt(f) {
         var parts = f[1].split('/'); // DD/MM
-        var tRaw = f[2].replace('+',''); // HH:MM (+ = siguiente día, ignoramos para sort)
+        var tRaw = f[2].replace('+',''); // HH:MM (+ = siguiente día)
         var plus = f[2].indexOf('+') >= 0 ? 1 : 0;
-        return new Date('2026/' + parts[1] + '/' + parts[0] + 'T' + tRaw).getTime() + plus * 86400000;
+        return new Date('2026-' + parts[1] + '-' + parts[0] + 'T' + tRaw + ':00').getTime() + plus * 86400000;
       }
       return _dt(a) - _dt(b);
     });
