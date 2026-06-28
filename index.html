@@ -1213,28 +1213,29 @@ window._syncRko();
   _wait();
 })();
 
-// ── Multi-tarjeta home: captura renderHome y savePred directamente (mismo scope) ──
-var _renderHomeBase = renderHome;
-var _savePredBase   = savePred;
-
-// Patch savePred: usa _gmPredSection (seteado por capture-click) para mutar RTVE al partido correcto
+// ── Multi-tarjeta home: savePred por partido ──
 window._gmPredSection = null;
-savePred = function(){
-  var sec = window._gmPredSection;
-  window._gmPredSection = null;
-  if (sec) {
-    var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
-    var savedRTVE = RTVE.splice(0);
-    var mObj = savedRTVE.find(function(r){ return r.h===mh && r.a===ma; });
-    if (mObj) RTVE.push(mObj);
-    var result = _savePredBase.apply(this, arguments);
-    RTVE.splice(0);
-    savedRTVE.forEach(function(x){ RTVE.push(x); });
-    return result;
-  }
-  return _savePredBase.apply(this, arguments);
-};
 
+// Parchear window.savePred explícitamente (onclick="savePred()" llama window.savePred)
+(function(){
+  var _base = window.savePred || savePred;
+  window.savePred = savePred = function(){
+    var sec = window._gmPredSection;
+    window._gmPredSection = null;
+    if (sec) {
+      var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
+      var savedRTVE = RTVE.splice(0);
+      var mObj = savedRTVE.find(function(r){ return r.h===mh && r.a===ma; });
+      if (mObj) RTVE.push(mObj); else savedRTVE.forEach(function(x){ RTVE.push(x); });
+      var result = _base.apply(this, arguments);
+      if (mObj){ RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); }); }
+      return result;
+    }
+    return _base.apply(this, arguments);
+  };
+})();
+
+var _renderHomeBase = renderHome;
 renderHome = function(){
   var today = typeof getTodayStr === 'function' ? getTodayStr() :
     (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
@@ -1242,7 +1243,6 @@ renderHome = function(){
 
   if (todayMatches.length <= 1) return _renderHomeBase.apply(this, arguments);
 
-  // Orden cronológico (03:00+ = madrugada siguiente → +1440 min)
   todayMatches.sort(function(a, b){
     function toMins(t){
       var raw = t.replace('+',''); var p = raw.split(':');
@@ -1272,16 +1272,18 @@ renderHome = function(){
   if (homeMatchDiv) homeMatchDiv.innerHTML = cardParts.map(function(h){
     return '<div class="_mday-card">' + h + '</div>';
   }).join('');
-
   if (homePredsDiv) {
     homePredsDiv.innerHTML = predParts.map(function(h, i){
       return '<div class="_mday-pred" data-h="' + todayMatches[i].h + '" data-a="' + todayMatches[i].a + '">' + h + '</div>';
     }).join('');
-    // Capture-phase click: dispara ANTES del onclick del botón → savePred lee _gmPredSection
-    homePredsDiv.addEventListener('click', function(e){
-      var sec = e.target && e.target.closest ? e.target.closest('._mday-pred') : null;
-      if (sec) window._gmPredSection = sec;
-    }, true);
+    // Listener de captura: cualquier click dentro de un ._mday-pred fija el partido activo
+    if (!homePredsDiv._gmListenerAdded) {
+      homePredsDiv.addEventListener('click', function(e){
+        var sec = e.target && e.target.closest ? e.target.closest('._mday-pred') : null;
+        if (sec) window._gmPredSection = sec;
+      }, true);
+      homePredsDiv._gmListenerAdded = true;
+    }
   }
   if (homeProxDiv) homeProxDiv.innerHTML = '';
 };
@@ -3574,99 +3576,4 @@ function renderUserDetailSection() {
         : (m.hasPred ? (m.ph + ' – ' + m.pa) : '<span style="color:rgba(255,255,255,.3)">sin pronóstico</span>');
       var resTxt = m.played ? (m.rh + ' – ' + m.ra) : '<span style="color:rgba(255,255,255,.3)">pendiente</span>';
       return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;' + opacity + '">'
-        + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">'
-        + '<span style="font-size:11px;color:rgba(255,255,255,.4)">' + m.jid + ' · ' + m.d + '</span>'
-        + (m.played ? '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:11px;color:var(--gold)">+' + totalPts + ' pts</span>' : '<span style="font-size:10px;color:rgba(255,255,255,.3)">⏳ pendiente</span>')
-        + '</div>'
-        + '<div style="font-size:.85rem;color:#fff;font-weight:600;margin-bottom:4px">' + m.h + ' <span style="color:rgba(255,255,255,.3)">vs</span> ' + m.a + '</div>'
-        + (m.realScorers.length ? ('<div style="font-size:.68rem;color:rgba(255,255,255,.45);margin-bottom:8px">🥅 ' + m.realScorers.map(function(s) { return s.name + ' ' + s.minute + "'"; }).join(' · ') + '</div>') : '<div style="margin-bottom:8px"></div>')
-        + '<div style="display:flex;gap:10px;margin-bottom:8px">'
-        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:5px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.35)">PRONÓSTICO</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:.9rem;color:#fff">' + predTxt + '</div></div>'
-        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:5px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.35)">RESULTADO</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:.9rem;color:#fff">' + resTxt + '</div></div>'
-        + '</div>'
-        + (m.played
-            ? ('<div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:8px">⚽ Goleador elegido: <span style="color:#fff;font-weight:600">' + (m.golPred || 'sin elegir') + '</span></div>')
-            : '<div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-bottom:8px">⚽ Goleador elegido: 🔒 oculto</div>')
-        + (m.played ? ('<div style="display:flex;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">'
-            + chip('Prono', m.pronPts, '#fff')
-            + chip('1X2', m.signoPts, 'rgba(52,211,153,.9)')
-            + chip('Gol', m.golPts, 'rgba(96,165,250,.9)')
-            + chip('Fav', m.favPts, 'rgba(250,204,21,.9)')
-            + '</div>') : '')
-        + '</div>';
-    }).join('') || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:.8rem">Sin partidos RTVE registrados.</div>';
-
-    var cardHtml = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px">'
-      + '<div style="width:40px;height:40px;border-radius:50%;background:' + pdata.color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:13px;flex-shrink:0;border:2px solid ' + accentColor + '">' + pdata.initials + '</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + name + '</div>'
-      + '<div style="font-size:.7rem;color:rgba(255,255,255,.45);margin-top:2px">' + (ranking.rank ? ranking.rank + 'º de ' + ranking.count : '—') + '</div></div>'
-      + '<div style="text-align:right;flex-shrink:0"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:1.3rem;color:' + accentColor + '">' + ranking.total + '</div><div style="font-size:.62rem;color:rgba(255,255,255,.4)">puntos</div></div>'
-      + '</div>';
-
-    var favBoxHtml = favTeam
-      ? ('<div style="background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.18);border-radius:12px;padding:9px 12px;margin-bottom:14px">'
-          + '<div style="display:flex;align-items:center;gap:8px">⭐<span style="font-size:.76rem;color:rgba(255,255,255,.55)">Favorita de ' + name + '</span>' + favFlagHtml + '<span style="font-size:.82rem;color:#fff;font-weight:600;margin-left:auto">' + favTeam + '</span></div>'
-          + favMatchesHtml
-          + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid rgba(250,204,21,.18);margin-top:2px">'
-          + '<span style="font-size:.66rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.05em">Total selección favorita</span>'
-          + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:.95rem;color:var(--gold)">' + (favTotalReal > 0 ? '+' + favTotalReal : favTotalReal) + ' pts</span>'
-          + '</div></div>')
-      : ('<div style="border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:9px 12px;margin-bottom:14px;font-size:.74rem;color:rgba(255,255,255,.35);text-align:center">' + name + ' no tiene selección favorita</div>');
-
-    return {cardHtml: cardHtml, favBoxHtml: favBoxHtml, matchCardsHtml: matchCards};
-  }
-
-  var blockA = playerBlock(selected, COLOR_A);
-  var blockB = selected2 ? playerBlock(selected2, COLOR_B) : null;
-
-  var selectorsHtml = '<div style="display:flex;gap:8px;margin-bottom:12px">'
-    + '<select onchange="window._DETAIL_PLAYER=this.value;var c=document.getElementById(\'noticias-content\');if(c)c.innerHTML=renderUserDetailSection();" style="flex:1;min-width:0;background:var(--card);border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px;font-size:.8rem">'
-    + buildOptions(selected, selected2, false)
-    + '</select>'
-    + '<select onchange="window._DETAIL_PLAYER2=this.value;var c=document.getElementById(\'noticias-content\');if(c)c.innerHTML=renderUserDetailSection();" style="flex:1;min-width:0;background:var(--card);border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px;font-size:.8rem">'
-    + buildOptions(selected2, selected, true)
-    + '</select>'
-    + '</div>';
-
-  var cardsHtml = blockB
-    ? ('<div style="display:flex;gap:8px">'
-        + '<div style="flex:1;min-width:0">' + blockA.cardHtml + '</div>'
-        + '<div style="flex:1;min-width:0">' + blockB.cardHtml + '</div>'
-        + '</div>')
-    : blockA.cardHtml;
-
-  var favHtml = blockA.favBoxHtml + (blockB ? blockB.favBoxHtml : '');
-
-  var chartHtml = '';
-  if (blockB) {
-    var timelineA = calcPointsTimeline(selected);
-    var timelineB = calcPointsTimeline(selected2);
-    chartHtml = '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px">'
-      + '<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:6px">Evolución de puntos por jornada</div>'
-      + buildEvolutionChartSVG(timelineA, selected, COLOR_A, timelineB, selected2, COLOR_B)
-      + '</div>';
-  }
-
-  var listsHtml = blockB
-    ? ('<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:8px">Comparativa partido a partido (RTVE)</div>'
-        + renderMatchComparisonRows([selected, selected2], [COLOR_A, COLOR_B]))
-    : ('<div style="font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:8px">Pronósticos de ' + selected + ' por partido (RTVE)</div>'
-        + blockA.matchCardsHtml);
-
-  return '<div style="padding:14px 16px 24px">'
-    + selectorsHtml
-    + cardsHtml
-    + '<div style="height:10px"></div>'
-    + favHtml
-    + chartHtml
-    + listsHtml
-    + '</div>';
-}
-
-renderNoticias = function() {
-  var el = document.getElementById('noticias-content');
-  if (el) el.innerHTML = renderUserDetailSection();
-};
-</script>
-</body>
-</htm
+        + '<div style="display:flex;justify-content:space-between;align-items:b
