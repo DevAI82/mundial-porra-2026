@@ -1101,6 +1101,16 @@ function renderKOSection() {
     return result;
   };
 })();
+// ── Añadir todos los partidos KO a RTVE (filtro RTVE ya no aplica) ──
+(function(){
+  var koGroups = ['R32','R16','QF','SF','F'];
+  FX.forEach(function(f){
+    if (koGroups.indexOf(f[3]) < 0) return;
+    var already = RTVE.some(function(r){ return r.h === f[4] && r.a === f[5]; });
+    if (!already) RTVE.push({d:f[1], t:f[2], h:f[4], a:f[5], ch:null, g:f[3]});
+  });
+})();
+
 // ── Sync R.ko desde R.scores para partidos KO (fix Cuadro + renderKOSection) ──
 window._syncRko = function(){
   if (!window.R) return;
@@ -1164,17 +1174,15 @@ window._syncRko();
     var _orig = renderProximos;
     renderProximos = function(){
       var myName = window._MYROOM && window._MYROOM.playerName;
-
-      // Si hay varios partidos hoy → el home los muestra como tarjetas, los próximos van vacíos
+      // Si hay varios partidos hoy → home los muestra como tarjetas, proximos vacío
       var _today = (typeof getTodayStr === 'function') ? getTodayStr() :
         (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      if ((window.RTVE || []).filter(function(m){ return m.d === _today; }).length >= 2) {
+      if (RTVE.filter(function(m){ return m.d === _today; }).length >= 2) {
         var proxDiv = document.getElementById('home-proximos');
         if (proxDiv) proxDiv.innerHTML = '';
         return '';
       }
-
-      // Enmascarar _PS para partidos no cerrados (privacidad)
+      // Privacidad: enmascarar _PS para partidos no cerrados
       var masked = {};
       if (myName && window._PS) {
         var now = Date.now();
@@ -1205,7 +1213,7 @@ window._syncRko();
   _wait();
 })();
 
-// ── Parchear renderHome para mostrar los 3 partidos de hoy como tarjetas ──
+// ── Parchear renderHome: 3 tarjetas hoy usando mutación de RTVE (const = no reasignable pero sí mutable) ──
 (function _patchRenderHome(){
   function _wait(){
     if (typeof renderHome !== 'function'){ setTimeout(_wait, 100); return; }
@@ -1214,17 +1222,14 @@ window._syncRko();
     renderHome = function(){
       var today = (typeof getTodayStr === 'function') ? getTodayStr() :
         (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      var _origRTVE = window.RTVE ? window.RTVE.slice() : null;
-      var todayMatches = (_origRTVE || []).filter(function(m){ return m.d === today; });
+      var todayMatches = RTVE.filter(function(m){ return m.d === today; });
 
-      // Si solo hay 1 partido hoy → comportamiento normal
       if (todayMatches.length <= 1) return _orig.apply(this, arguments);
 
-      // Ordenar cronológicamente (03:00+ = madrugada siguiente → +1440 min)
+      // Orden cronológico (03:00+ = madrugada → +1440 min)
       todayMatches.sort(function(a, b){
         function toMins(t){
-          var raw = t.replace('+','');
-          var p = raw.split(':');
+          var raw = t.replace('+',''); var p = raw.split(':');
           var m = parseInt(p[0])*60 + parseInt(p[1]);
           if (t.indexOf('+') >= 0) m += 1440;
           return m;
@@ -1235,18 +1240,22 @@ window._syncRko();
       var homeMatchDiv = document.getElementById('home-match');
       var homePredsDiv = document.getElementById('home-preds');
       var homeProxDiv  = document.getElementById('home-proximos');
+
+      // Guardar RTVE y vaciarlo en su lugar (splice muta el array const)
+      var savedRTVE = RTVE.splice(0);
       var allCards = '', allPreds = '';
 
       todayMatches.forEach(function(m){
-        // Reemplaza RTVE con solo este partido → getMatchOfDay() lo recoge sin tocar su scope interno
-        if (window.RTVE) window.RTVE = [m];
+        RTVE.splice(0); RTVE.push(m);       // solo este partido
         _orig.apply(this, arguments);
         if (homeMatchDiv) allCards += homeMatchDiv.innerHTML;
         if (homePredsDiv) allPreds += homePredsDiv.innerHTML;
       }.bind(this));
 
-      // Restaurar RTVE original
-      if (_origRTVE) window.RTVE = _origRTVE;
+      // Restaurar RTVE
+      RTVE.splice(0);
+      savedRTVE.forEach(function(x){ RTVE.push(x); });
+
       if (homeMatchDiv) homeMatchDiv.innerHTML = allCards;
       if (homePredsDiv) homePredsDiv.innerHTML = allPreds;
       if (homeProxDiv)  homeProxDiv.innerHTML  = '';
