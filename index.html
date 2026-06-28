@@ -1101,6 +1101,75 @@ function renderKOSection() {
     return result;
   };
 })();
+// ── Sync R.ko desde R.scores para partidos KO (fix Cuadro + renderKOSection) ──
+window._syncRko = function(){
+  if (!window.R) return;
+  if (!R.ko) R.ko = {};
+  FX.forEach(function(f){
+    var jid = f[0], grp = f[3];
+    if (grp === 'R32' || grp === 'R16' || grp === 'QF' || grp === 'SF' || grp === 'F') {
+      var num = parseInt(jid.replace('J',''), 10);
+      var sc = R.scores && R.scores[jid];
+      if (sc && sc[0] !== '' && sc[1] !== '') R.ko[num] = sc;
+    }
+  });
+};
+window._syncRko();
+
+// Parchear renderCuadro para que sincronice R.ko antes de renderizar
+(function _patchRenderCuadro(){
+  function _wait(){
+    if (typeof renderCuadro !== 'function'){ setTimeout(_wait, 100); return; }
+    if (renderCuadro._rkoPatch) return;
+    var _orig = renderCuadro;
+    renderCuadro = function(){
+      window._syncRko();
+      return _orig.apply(this, arguments);
+    };
+    renderCuadro._rkoPatch = true;
+  }
+  _wait();
+})();
+
+// ── Parche privacidad renderProximos: ocultar pronósticos ajenos antes del cierre ──
+(function _patchRenderProximos(){
+  function _wait(){
+    if (typeof renderProximos !== 'function'){ setTimeout(_wait,100); return; }
+    if (renderProximos._privPatched) return;
+    var _orig = renderProximos;
+    renderProximos = function(){
+      var myName = window._MYROOM && window._MYROOM.playerName;
+      if (!myName || !window._PS) return _orig.apply(this, arguments);
+      var now = Date.now();
+      var masked = {};
+      // Enmascarar _PS para partidos no cerrados
+      Object.keys(window._PS).forEach(function(key){
+        var parts = key.split('|');
+        if (parts.length < 3) return;
+        var h = parts[0], a = parts[1], d = parts[2];
+        var fx = FX.find(function(f){ return f[4]===h && f[5]===a; });
+        if (!fx) return;
+        var hasResult = R && R.scores && R.scores[fx[0]] && R.scores[fx[0]][0] !== '';
+        var matchStart = null;
+        try { matchStart = typeof parseMatchDT==='function' ? parseMatchDT(d, fx[2]) : null; } catch(e){}
+        var isLocked = hasResult || (!!matchStart && now >= matchStart.getTime() - 3600000);
+        if (!isLocked) {
+          masked[key] = window._PS[key];
+          var own = {};
+          if (window._PS[key][myName]) own[myName] = window._PS[key][myName];
+          window._PS[key] = own;
+        }
+      });
+      var result = _orig.apply(this, arguments);
+      // Restaurar _PS
+      Object.keys(masked).forEach(function(key){ window._PS[key] = masked[key]; });
+      return result;
+    };
+    renderProximos._privPatched = true;
+  }
+  _wait();
+})();
+
 renderGrupos(),renderKOSection(),renderTabla(),renderCuadro(),renderVenues(),renderEstrellas(),startIntro();
 </script>
 <script>
@@ -2509,8 +2578,6 @@ function closeWelcomePopup() {
       var nowMs = Date.now();
       // isLocked = ya pasó el plazo de cierre (1h antes) O ya hay resultado
       var isLocked = hasResult || (!!matchStart && nowMs >= matchStart.getTime() - 3600000);
-      // Si el partido aún no está cerrado y no tiene resultado → no mostrar nada
-      if (!hasResult && !isLocked) return;
       var myName = window._MYROOM && window._MYROOM.playerName;
 
       var resultLabel = hasResult
