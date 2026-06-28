@@ -1214,7 +1214,8 @@ window._syncRko();
     renderHome = function(){
       var today = (typeof getTodayStr === 'function') ? getTodayStr() :
         (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      var todayMatches = (window.RTVE || []).filter(function(m){ return m.d === today; });
+      var _origRTVE = window.RTVE ? window.RTVE.slice() : null;
+      var todayMatches = (_origRTVE || []).filter(function(m){ return m.d === today; });
 
       // Si solo hay 1 partido hoy → comportamiento normal
       if (todayMatches.length <= 1) return _orig.apply(this, arguments);
@@ -1234,23 +1235,18 @@ window._syncRko();
       var homeMatchDiv = document.getElementById('home-match');
       var homePredsDiv = document.getElementById('home-preds');
       var homeProxDiv  = document.getElementById('home-proximos');
-      var _origGMOD = window.getMatchOfDay;
       var allCards = '', allPreds = '';
 
       todayMatches.forEach(function(m){
-        window.getMatchOfDay = function(){
-          return {
-            d: m.d, t: m.t, h: m.h, a: m.a, ch: m.ch, g: m.g,
-            rtve: true, next: false,
-            venue: (typeof getVenue === 'function' ? getVenue(m.h, m.a) : (m.venue || ''))
-          };
-        };
+        // Reemplaza RTVE con solo este partido → getMatchOfDay() lo recoge sin tocar su scope interno
+        if (window.RTVE) window.RTVE = [m];
         _orig.apply(this, arguments);
         if (homeMatchDiv) allCards += homeMatchDiv.innerHTML;
         if (homePredsDiv) allPreds += homePredsDiv.innerHTML;
       }.bind(this));
 
-      window.getMatchOfDay = _origGMOD;
+      // Restaurar RTVE original
+      if (_origRTVE) window.RTVE = _origRTVE;
       if (homeMatchDiv) homeMatchDiv.innerHTML = allCards;
       if (homePredsDiv) homePredsDiv.innerHTML = allPreds;
       if (homeProxDiv)  homeProxDiv.innerHTML  = '';
