@@ -1156,7 +1156,7 @@ window._syncRko();
   _wait();
 })();
 
-// ── Parche renderProximos: privacidad + mostrar partidos de HOY ──
+// ── Parche renderProximos: privacidad ──
 (function _patchRenderProximos(){
   function _wait(){
     if (typeof renderProximos !== 'function'){ setTimeout(_wait,100); return; }
@@ -1165,7 +1165,16 @@ window._syncRko();
     renderProximos = function(){
       var myName = window._MYROOM && window._MYROOM.playerName;
 
-      // 1. Enmascarar _PS para partidos no cerrados (privacidad)
+      // Si hay varios partidos hoy → el home los muestra como tarjetas, los próximos van vacíos
+      var _today = (typeof getTodayStr === 'function') ? getTodayStr() :
+        (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
+      if ((window.RTVE || []).filter(function(m){ return m.d === _today; }).length >= 2) {
+        var proxDiv = document.getElementById('home-proximos');
+        if (proxDiv) proxDiv.innerHTML = '';
+        return '';
+      }
+
+      // Enmascarar _PS para partidos no cerrados (privacidad)
       var masked = {};
       if (myName && window._PS) {
         var now = Date.now();
@@ -1187,37 +1196,66 @@ window._syncRko();
           }
         });
       }
-
-      // 2. Filtrar RTVE a solo HOY para que aparezcan los 3 partidos del día
-      var _origRTVE = window.RTVE ? window.RTVE.slice() : null;
-      var _now = new Date();
-      var _dd = String(_now.getDate()).padStart(2,'0');
-      var _mm = String(_now.getMonth()+1).padStart(2,'0');
-      var _todayStr = _dd + '/' + _mm;
-      if (window.RTVE) {
-        window.RTVE = window.RTVE.filter(function(m){ return m.d === _todayStr; });
-      }
-
-      // 3. Mock Date para que new Date() sin args devuelva ayer → el filtro >hoyMedianoche incluye HOY
-      var _RealDate = window.Date;
-      window.Date = function(){
-        if (arguments.length) return new _RealDate(...arguments);
-        var d = new _RealDate(); d.setDate(d.getDate()-1); return d;
-      };
-      window.Date.prototype = _RealDate.prototype;
-      window.Date.now = _RealDate.now;
-      window.Date.parse = _RealDate.parse;
-      window.Date.UTC = _RealDate.UTC;
-
       var result = _orig.apply(this, arguments);
-
-      // Restaurar todo
-      window.Date = _RealDate;
-      if (_origRTVE) window.RTVE = _origRTVE;
       Object.keys(masked).forEach(function(key){ window._PS[key] = masked[key]; });
       return result;
     };
     renderProximos._privPatched = true;
+  }
+  _wait();
+})();
+
+// ── Parchear renderHome para mostrar los 3 partidos de hoy como tarjetas ──
+(function _patchRenderHome(){
+  function _wait(){
+    if (typeof renderHome !== 'function'){ setTimeout(_wait, 100); return; }
+    if (renderHome._multiPatch) return;
+    var _orig = renderHome;
+    renderHome = function(){
+      var today = (typeof getTodayStr === 'function') ? getTodayStr() :
+        (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
+      var todayMatches = (window.RTVE || []).filter(function(m){ return m.d === today; });
+
+      // Si solo hay 1 partido hoy → comportamiento normal
+      if (todayMatches.length <= 1) return _orig.apply(this, arguments);
+
+      // Ordenar cronológicamente (03:00+ = madrugada siguiente → +1440 min)
+      todayMatches.sort(function(a, b){
+        function toMins(t){
+          var raw = t.replace('+','');
+          var p = raw.split(':');
+          var m = parseInt(p[0])*60 + parseInt(p[1]);
+          if (t.indexOf('+') >= 0) m += 1440;
+          return m;
+        }
+        return toMins(a.t) - toMins(b.t);
+      });
+
+      var homeMatchDiv = document.getElementById('home-match');
+      var homePredsDiv = document.getElementById('home-preds');
+      var homeProxDiv  = document.getElementById('home-proximos');
+      var _origGMOD = window.getMatchOfDay;
+      var allCards = '', allPreds = '';
+
+      todayMatches.forEach(function(m){
+        window.getMatchOfDay = function(){
+          return {
+            d: m.d, t: m.t, h: m.h, a: m.a, ch: m.ch, g: m.g,
+            rtve: true, next: false,
+            venue: (typeof getVenue === 'function' ? getVenue(m.h, m.a) : (m.venue || ''))
+          };
+        };
+        _orig.apply(this, arguments);
+        if (homeMatchDiv) allCards += homeMatchDiv.innerHTML;
+        if (homePredsDiv) allPreds += homePredsDiv.innerHTML;
+      }.bind(this));
+
+      window.getMatchOfDay = _origGMOD;
+      if (homeMatchDiv) homeMatchDiv.innerHTML = allCards;
+      if (homePredsDiv) homePredsDiv.innerHTML = allPreds;
+      if (homeProxDiv)  homeProxDiv.innerHTML  = '';
+    };
+    renderHome._multiPatch = true;
   }
   _wait();
 })();
