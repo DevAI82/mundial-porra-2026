@@ -2509,6 +2509,8 @@ function closeWelcomePopup() {
       var nowMs = Date.now();
       // isLocked = ya pasó el plazo de cierre (1h antes) O ya hay resultado
       var isLocked = hasResult || (!!matchStart && nowMs >= matchStart.getTime() - 3600000);
+      // Si el partido aún no está cerrado y no tiene resultado → no mostrar nada
+      if (!hasResult && !isLocked) return;
       var myName = window._MYROOM && window._MYROOM.playerName;
 
       var resultLabel = hasResult
