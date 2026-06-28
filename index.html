@@ -1116,6 +1116,31 @@ window._syncRko = function(){
 };
 window._syncRko();
 
+// ── Parchear buildKO para que use equipos reales de FX (evita Bosnia en vez de Paraguay) ──
+(function _patchBuildKO(){
+  function _wait(){
+    if (typeof buildKO !== 'function'){ setTimeout(_wait, 100); return; }
+    if (buildKO._fxPatch) return;
+    var _orig = buildKO;
+    buildKO = function(){
+      var result = _orig.apply(this, arguments);
+      // Override home/away con datos reales de FX para partidos KO
+      FX.forEach(function(f){
+        var jid = f[0], grp = f[3];
+        if (grp !== 'R32' && grp !== 'R16' && grp !== 'QF' && grp !== 'SF' && grp !== 'F') return;
+        var num = parseInt(jid.replace('J',''), 10);
+        if (result.M && result.M[num]) {
+          result.M[num].home = f[4];
+          result.M[num].away = f[5];
+        }
+      });
+      return result;
+    };
+    buildKO._fxPatch = true;
+  }
+  _wait();
+})();
+
 // Parchear renderCuadro para que sincronice R.ko antes de renderizar
 (function _patchRenderCuadro(){
   function _wait(){
@@ -1131,7 +1156,7 @@ window._syncRko();
   _wait();
 })();
 
-// ── Parche privacidad renderProximos: ocultar pronósticos ajenos antes del cierre ──
+// ── Parche renderProximos: privacidad + mostrar partidos de HOY ──
 (function _patchRenderProximos(){
   function _wait(){
     if (typeof renderProximos !== 'function'){ setTimeout(_wait,100); return; }
@@ -1139,29 +1164,56 @@ window._syncRko();
     var _orig = renderProximos;
     renderProximos = function(){
       var myName = window._MYROOM && window._MYROOM.playerName;
-      if (!myName || !window._PS) return _orig.apply(this, arguments);
-      var now = Date.now();
+
+      // 1. Enmascarar _PS para partidos no cerrados (privacidad)
       var masked = {};
-      // Enmascarar _PS para partidos no cerrados
-      Object.keys(window._PS).forEach(function(key){
-        var parts = key.split('|');
-        if (parts.length < 3) return;
-        var h = parts[0], a = parts[1], d = parts[2];
-        var fx = FX.find(function(f){ return f[4]===h && f[5]===a; });
-        if (!fx) return;
-        var hasResult = R && R.scores && R.scores[fx[0]] && R.scores[fx[0]][0] !== '';
-        var matchStart = null;
-        try { matchStart = typeof parseMatchDT==='function' ? parseMatchDT(d, fx[2]) : null; } catch(e){}
-        var isLocked = hasResult || (!!matchStart && now >= matchStart.getTime() - 3600000);
-        if (!isLocked) {
-          masked[key] = window._PS[key];
-          var own = {};
-          if (window._PS[key][myName]) own[myName] = window._PS[key][myName];
-          window._PS[key] = own;
-        }
-      });
+      if (myName && window._PS) {
+        var now = Date.now();
+        Object.keys(window._PS).forEach(function(key){
+          var parts = key.split('|');
+          if (parts.length < 3) return;
+          var h = parts[0], a = parts[1], d = parts[2];
+          var fx = FX.find(function(f){ return f[4]===h && f[5]===a; });
+          if (!fx) return;
+          var hasResult = R && R.scores && R.scores[fx[0]] && R.scores[fx[0]][0] !== '';
+          var matchStart = null;
+          try { matchStart = typeof parseMatchDT==='function' ? parseMatchDT(d, fx[2]) : null; } catch(e){}
+          var isLocked = hasResult || (!!matchStart && now >= matchStart.getTime() - 3600000);
+          if (!isLocked) {
+            masked[key] = window._PS[key];
+            var own = {};
+            if (window._PS[key][myName]) own[myName] = window._PS[key][myName];
+            window._PS[key] = own;
+          }
+        });
+      }
+
+      // 2. Filtrar RTVE a solo HOY para que aparezcan los 3 partidos del día
+      var _origRTVE = window.RTVE ? window.RTVE.slice() : null;
+      var _now = new Date();
+      var _dd = String(_now.getDate()).padStart(2,'0');
+      var _mm = String(_now.getMonth()+1).padStart(2,'0');
+      var _todayStr = _dd + '/' + _mm;
+      if (window.RTVE) {
+        window.RTVE = window.RTVE.filter(function(m){ return m.d === _todayStr; });
+      }
+
+      // 3. Mock Date para que new Date() sin args devuelva ayer → el filtro >hoyMedianoche incluye HOY
+      var _RealDate = window.Date;
+      window.Date = function(){
+        if (arguments.length) return new _RealDate(...arguments);
+        var d = new _RealDate(); d.setDate(d.getDate()-1); return d;
+      };
+      window.Date.prototype = _RealDate.prototype;
+      window.Date.now = _RealDate.now;
+      window.Date.parse = _RealDate.parse;
+      window.Date.UTC = _RealDate.UTC;
+
       var result = _orig.apply(this, arguments);
-      // Restaurar _PS
+
+      // Restaurar todo
+      window.Date = _RealDate;
+      if (_origRTVE) window.RTVE = _origRTVE;
       Object.keys(masked).forEach(function(key){ window._PS[key] = masked[key]; });
       return result;
     };
