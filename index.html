@@ -1244,6 +1244,25 @@ window._gmPredSection = null;
   };
 })();
 
+// Sobreescribir togglePredForm para abrir el formulario del partido correcto
+(function _patchTogglePredForm(){
+  function _wait(){
+    if (typeof togglePredForm !== 'function'){ setTimeout(_wait, 100); return; }
+    if (togglePredForm._mcPatch) return;
+    var _orig = togglePredForm;
+    window.togglePredForm = togglePredForm = function(){
+      var sec = window._gmPredSection;
+      if (sec) {
+        var pfEl = sec.querySelector('[id^="pf-me-mc"]');
+        if (pfEl){ pfEl.classList.toggle('open'); return; }
+      }
+      _orig.apply(this, arguments);
+    };
+    togglePredForm._mcPatch = true;
+  }
+  _wait();
+})();
+
 var _renderHomeBase = renderHome;
 renderHome = function(){
   var today = typeof getTodayStr === 'function' ? getTodayStr() :
@@ -1273,8 +1292,8 @@ renderHome = function(){
     _renderHomeBase.apply(this, arguments);
     cardParts.push(homeMatchDiv ? homeMatchDiv.innerHTML : '');
     var ph = homePredsDiv ? homePredsDiv.innerHTML : '';
-    // Renombrar IDs de inputs para que sean únicos por card
-    ['pi-l-me','pi-v-me','pi-p-me','pi-s-me'].forEach(function(id){
+    // Renombrar IDs para que sean únicos por card (inputs + form + label)
+    ['pf-me','pi-l-me','pi-v-me','pi-p-me','pi-s-me','pi-p-label'].forEach(function(id){
       ph = ph.replace(new RegExp(id, 'g'), id + '-mc' + i);
     });
     predParts.push(ph);
