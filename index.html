@@ -1224,10 +1224,19 @@ window._gmPredSection = null;
     window._gmPredSection = null;
     if (sec) {
       var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
+      // Mutar RTVE al partido de esta sección
       var savedRTVE = RTVE.splice(0);
       var mObj = savedRTVE.find(function(r){ return r.h===mh && r.a===ma; });
       if (mObj) RTVE.push(mObj); else savedRTVE.forEach(function(x){ RTVE.push(x); });
+      // Redirigir getElementById a los inputs renombrados de esta sección
+      var _origGEBI = document.getElementById.bind(document);
+      document.getElementById = function(id){
+        var el = sec.querySelector('[id^="' + id + '-mc"]');
+        if (el) return el;
+        return _origGEBI(id);
+      };
       var result = _base.apply(this, arguments);
+      document.getElementById = _origGEBI;
       if (mObj){ RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); }); }
       return result;
     }
@@ -1259,11 +1268,16 @@ renderHome = function(){
   var savedRTVE = RTVE.splice(0);
   var cardParts = [], predParts = [];
 
-  todayMatches.forEach(function(m){
+  todayMatches.forEach(function(m, i){
     RTVE.splice(0); RTVE.push(m);
     _renderHomeBase.apply(this, arguments);
     cardParts.push(homeMatchDiv ? homeMatchDiv.innerHTML : '');
-    predParts.push(homePredsDiv ? homePredsDiv.innerHTML : '');
+    var ph = homePredsDiv ? homePredsDiv.innerHTML : '';
+    // Renombrar IDs de inputs para que sean únicos por card
+    ['pi-l-me','pi-v-me','pi-p-me','pi-s-me'].forEach(function(id){
+      ph = ph.replace(new RegExp(id, 'g'), id + '-mc' + i);
+    });
+    predParts.push(ph);
   }.bind(this));
 
   RTVE.splice(0);
@@ -1274,7 +1288,7 @@ renderHome = function(){
   }).join('');
   if (homePredsDiv) {
     homePredsDiv.innerHTML = predParts.map(function(h, i){
-      return '<div class="_mday-pred" data-h="' + todayMatches[i].h + '" data-a="' + todayMatches[i].a + '">' + h + '</div>';
+      return '<div class="_mday-pred" data-h="' + todayMatches[i].h + '" data-a="' + todayMatches[i].a + '" data-idx="' + i + '">' + h + '</div>';
     }).join('');
     // Listener de captura: cualquier click dentro de un ._mday-pred fija el partido activo
     if (!homePredsDiv._gmListenerAdded) {
