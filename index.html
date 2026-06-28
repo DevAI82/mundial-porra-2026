@@ -1213,15 +1213,28 @@ window._syncRko();
   _wait();
 })();
 
-// ── Patch getMatchOfDay: permite override global para guardar pronóstico del partido correcto ──
-var _getMatchOfDayBase = getMatchOfDay;
-window._gmOverride = null;
-getMatchOfDay = function(){
-  return window._gmOverride || _getMatchOfDayBase.apply(this, arguments);
+// ── Multi-tarjeta home: captura renderHome y savePred directamente (mismo scope) ──
+var _renderHomeBase = renderHome;
+var _savePredBase   = savePred;
+
+// Patch savePred: usa _gmPredSection (seteado por capture-click) para mutar RTVE al partido correcto
+window._gmPredSection = null;
+savePred = function(){
+  var sec = window._gmPredSection;
+  window._gmPredSection = null;
+  if (sec) {
+    var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
+    var savedRTVE = RTVE.splice(0);
+    var mObj = savedRTVE.find(function(r){ return r.h===mh && r.a===ma; });
+    if (mObj) RTVE.push(mObj);
+    var result = _savePredBase.apply(this, arguments);
+    RTVE.splice(0);
+    savedRTVE.forEach(function(x){ RTVE.push(x); });
+    return result;
+  }
+  return _savePredBase.apply(this, arguments);
 };
 
-// ── Multi-tarjeta home: captura renderHome directamente (mismo scope) ──
-var _renderHomeBase = renderHome;
 renderHome = function(){
   var today = typeof getTodayStr === 'function' ? getTodayStr() :
     (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
@@ -1243,7 +1256,6 @@ renderHome = function(){
   var homePredsDiv = document.getElementById('home-preds');
   var homeProxDiv  = document.getElementById('home-proximos');
 
-  // Mutar RTVE (const, no reasignable pero sí mutable) para forzar getMatchOfDay a devolver cada partido
   var savedRTVE = RTVE.splice(0);
   var cardParts = [], predParts = [];
 
@@ -1257,20 +1269,19 @@ renderHome = function(){
   RTVE.splice(0);
   savedRTVE.forEach(function(x){ RTVE.push(x); });
 
-  // Combinar con wrapper data-h/data-a para identificar partido al guardar pronóstico
-  if (homeMatchDiv) homeMatchDiv.innerHTML = cardParts.map(function(h){ return '<div class="_mday-card">' + h + '</div>'; }).join('');
+  if (homeMatchDiv) homeMatchDiv.innerHTML = cardParts.map(function(h){
+    return '<div class="_mday-card">' + h + '</div>';
+  }).join('');
+
   if (homePredsDiv) {
     homePredsDiv.innerHTML = predParts.map(function(h, i){
       return '<div class="_mday-pred" data-h="' + todayMatches[i].h + '" data-a="' + todayMatches[i].a + '">' + h + '</div>';
     }).join('');
-    // Mousedown handler: setea _gmOverride ANTES de que savePred() ejecute
-    homePredsDiv.querySelectorAll('._mday-pred').forEach(function(sec){
-      var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
-      var mObj = RTVE.find(function(r){ return r.h===mh && r.a===ma; });
-      if (!mObj) return;
-      var fullM = Object.assign({}, mObj, {rtve:!!mObj.ch, venue: typeof getVenue==='function' ? getVenue(mh,ma) : ''});
-      sec.addEventListener('mousedown', function(){ window._gmOverride = fullM; setTimeout(function(){ window._gmOverride=null; }, 3000); }, true);
-    });
+    // Capture-phase click: dispara ANTES del onclick del botón → savePred lee _gmPredSection
+    homePredsDiv.addEventListener('click', function(e){
+      var sec = e.target && e.target.closest ? e.target.closest('._mday-pred') : null;
+      if (sec) window._gmPredSection = sec;
+    }, true);
   }
   if (homeProxDiv) homeProxDiv.innerHTML = '';
 };
