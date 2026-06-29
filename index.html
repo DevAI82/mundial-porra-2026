@@ -1222,7 +1222,7 @@ window._gmPredSection = null;
     window._gmPredSection = null;
     if (sec) {
       var mh = sec.getAttribute('data-h'), ma = sec.getAttribute('data-a');
-      // Mutar RTVE al partido de esta sección
+      // Guardar RTVE completo y multi-card renderHome
       var savedRTVE = RTVE.splice(0);
       var mObj = savedRTVE.find(function(r){ return r.h===mh && r.a===ma; });
       if (mObj) RTVE.push(mObj); else savedRTVE.forEach(function(x){ RTVE.push(x); });
@@ -1233,17 +1233,21 @@ window._gmPredSection = null;
         if (el) return el;
         return _origGEBI(id);
       };
-      // Parchear renderHome para que restaure RTVE completo antes de re-renderizar
-      var _rhOrig = renderHome;
-      window.renderHome = renderHome = function(){
-        RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); });
-        window.renderHome = renderHome = _rhOrig;
-        return _rhOrig.apply(this, arguments);
-      };
+      // Capturar el multi-card renderHome y hacer que durante el save sea no-op
+      // (evita que _base llame al renderHome original y borre las otras tarjetas)
+      var _mcRender = renderHome;
+      window.renderHome = renderHome = function(){ /* no-op durante save */ };
       var result = _base.apply(this, arguments);
+      // Restaurar todo inmediatamente
       document.getElementById = _origGEBI;
-      window.renderHome = renderHome = _rhOrig;
-      if (mObj){ RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); }); }
+      RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); });
+      window.renderHome = renderHome = _mcRender;
+      // Volver a renderizar las 3 tarjetas inmediatamente
+      _mcRender();
+      // También re-renderizar tras completarse el save asíncrono (actualiza estado)
+      if (result && typeof result.then === 'function') {
+        result.then(function() { _mcRender(); }).catch(function() {});
+      }
       return result;
     }
     return _base.apply(this, arguments);
@@ -3298,48 +3302,6 @@ function closeWelcomePopup() {
   setTimeout(_installWrapper, 0);
   _hookReloadAllPreds();
 
-})();
-
-// ── Mostrar goleador pronosticado en "Pronósticos amigos" (Inicio) ──
-(function _patchShowGoleadorHome() {
-  function _wait() {
-    if (typeof renderPorraSection !== 'function' || typeof _porraKey !== 'function') {
-      setTimeout(_wait, 50); return;
-    }
-    if (renderPorraSection._golPatched) return;
-    var _orig = renderPorraSection;
-    renderPorraSection = function(match) {
-      var html = _orig.apply(this, arguments);
-      try {
-        var pkey = _porraKey(match);
-        var preds = (window._PS && window._PS[pkey]) || (window._ALL_PREDS && window._ALL_PREDS[pkey]) || {};
-        var tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        var rows = tmp.querySelectorAll('.friend');
-        rows.forEach(function(friendEl) {
-          var nameEl = friendEl.querySelector('.fname');
-          if (!nameEl) return;
-          // Nombre limpio: primer nodo de texto, sin el badge "tú"
-          var firstNode = nameEl.childNodes[0];
-          var rawName = ((firstNode && firstNode.textContent) || nameEl.textContent || '').trim();
-          var entry = preds[rawName];
-          var existingGol = friendEl.querySelector('.fgol');
-          if (existingGol) existingGol.remove();
-          if (entry && entry.goleador) {
-            var gol = document.createElement('div');
-            gol.className = 'fgol';
-            gol.textContent = '⚽ ' + entry.goleador;
-            nameEl.insertAdjacentElement('afterend', gol);
-          }
-        });
-        html = tmp.innerHTML;
-      } catch (e) { console.warn('[Goleador Home] error:', e); }
-      return html;
-    };
-    renderPorraSection._golPatched = true;
-    console.log('[Goleador Home] renderPorraSection patched ✓');
-  }
-  _wait();
 })();
 </script>
 </body>
