@@ -1300,6 +1300,10 @@ renderHome = function(){
   var savedRTVE = RTVE.splice(0);
   var cardParts = [], predParts = [];
 
+  // Fix: neutralizar startMatchTimer durante el bucle para que el último partido no sobreescriba el timer
+  var _savedSMT = typeof startMatchTimer === 'function' ? startMatchTimer : null;
+  if (_savedSMT) startMatchTimer = function(){};
+
   todayMatches.forEach(function(m, i){
     RTVE.splice(0); RTVE.push(m);
     // Ocultar pronósticos de otros jugadores antes de renderizar
@@ -1324,6 +1328,13 @@ renderHome = function(){
 
   RTVE.splice(0);
   savedRTVE.forEach(function(x){ RTVE.push(x); });
+
+  // Fix: restaurar startMatchTimer y lanzarlo para el primer partido (Brasil, el más temprano)
+  if (_savedSMT) {
+    startMatchTimer = _savedSMT;
+    var _fr = savedRTVE.find(function(r){ return r.h === todayMatches[0].h && r.a === todayMatches[0].a; });
+    startMatchTimer(_fr || todayMatches[0]);
+  }
 
   if (homeMatchDiv) homeMatchDiv.innerHTML = cardParts.map(function(h){
     return '<div class="_mday-card">' + h + '</div>';
