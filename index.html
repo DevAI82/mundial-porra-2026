@@ -1101,11 +1101,9 @@ function renderKOSection() {
     return result;
   };
 })();
-// ── Añadir todos los partidos KO a RTVE (filtro RTVE ya no aplica) ──
+// ── Añadir TODOS los partidos de FX a RTVE (RTVE ya no filtra por canal) ──
 (function(){
-  var koGroups = ['R32','R16','QF','SF','F'];
   FX.forEach(function(f){
-    if (koGroups.indexOf(f[3]) < 0) return;
     var already = RTVE.some(function(r){ return r.h === f[4] && r.a === f[5]; });
     if (!already) RTVE.push({d:f[1], t:f[2], h:f[4], a:f[5], ch:null, g:f[3]});
   });
@@ -1113,7 +1111,7 @@ function renderKOSection() {
 
 // ── Sync R.ko desde R.scores para partidos KO (fix Cuadro + renderKOSection) ──
 window._syncRko = function(){
-  if (!window.R) return;
+  if (typeof R === 'undefined' || !R) return;
   if (!R.ko) R.ko = {};
   FX.forEach(function(f){
     var jid = f[0], grp = f[3];
@@ -1177,7 +1175,7 @@ window._syncRko();
       // Si hay varios partidos hoy → home los muestra como tarjetas, proximos vacío
       var _today = (typeof getTodayStr === 'function') ? getTodayStr() :
         (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      if (RTVE.filter(function(m){ return m.d === _today; }).length >= 2) {
+      if (FX.filter(function(f){ return f[1] === _today; }).length >= 2) {
         var proxDiv = document.getElementById('home-proximos');
         if (proxDiv) proxDiv.innerHTML = '';
         return '';
@@ -1235,8 +1233,16 @@ window._gmPredSection = null;
         if (el) return el;
         return _origGEBI(id);
       };
+      // Parchear renderHome para que restaure RTVE completo antes de re-renderizar
+      var _rhOrig = renderHome;
+      window.renderHome = renderHome = function(){
+        RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); });
+        window.renderHome = renderHome = _rhOrig;
+        return _rhOrig.apply(this, arguments);
+      };
       var result = _base.apply(this, arguments);
       document.getElementById = _origGEBI;
+      window.renderHome = renderHome = _rhOrig;
       if (mObj){ RTVE.splice(0); savedRTVE.forEach(function(x){ RTVE.push(x); }); }
       return result;
     }
@@ -1267,7 +1273,10 @@ var _renderHomeBase = renderHome;
 renderHome = function(){
   var today = typeof getTodayStr === 'function' ? getTodayStr() :
     (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-  var todayMatches = RTVE.filter(function(m){ return m.d === today; });
+  // Usar FX directamente como fuente de partidos del día (independiente de RTVE/canales de TV)
+  var todayMatches = FX.filter(function(f){ return f[1] === today; }).map(function(f){
+    return {d:f[1], t:f[2], h:f[4], a:f[5], ch:null, g:f[3]};
+  });
 
   if (todayMatches.length <= 1) return _renderHomeBase.apply(this, arguments);
 
@@ -1289,7 +1298,17 @@ renderHome = function(){
 
   todayMatches.forEach(function(m, i){
     RTVE.splice(0); RTVE.push(m);
+    // Ocultar pronósticos de otros jugadores antes de renderizar
+    var myName = window._MYROOM && window._MYROOM.playerName;
+    var matchKey = m.h + '|' + m.a + '|' + m.d;
+    var maskedPs = null;
+    if (myName && window._PS && window._PS[matchKey]) {
+      maskedPs = window._PS[matchKey];
+      var own = {}; if (maskedPs[myName]) own[myName] = maskedPs[myName];
+      window._PS[matchKey] = own;
+    }
     _renderHomeBase.apply(this, arguments);
+    if (maskedPs) window._PS[matchKey] = maskedPs;
     cardParts.push(homeMatchDiv ? homeMatchDiv.innerHTML : '');
     var ph = homePredsDiv ? homePredsDiv.innerHTML : '';
     // Renombrar IDs para que sean únicos por card (inputs + form + label)
