@@ -2417,6 +2417,17 @@ setTimeout(function() {
   if (typeof window._renderCrono === 'function') window._renderCrono();
 }, 50);
 
+window._jumpToPorraMatch = function(sel) {
+  var v = sel.value;
+  if (!v) return;
+  sel.value = '';
+  var el = document.getElementById(v);
+  if (!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+  el.style.outline = '2px solid rgba(250,204,21,.6)';
+  setTimeout(function() { el.style.outline = ''; }, 1800);
+};
+
 window._jumpToMatch = function(sel) {
   var v = sel.value;
   if (!v) return;
@@ -2911,7 +2922,7 @@ window._jumpToMatch = function(sel) {
           + '</tr>';
       }).join('');
 
-      matchBlocks += '<div class="gc" style="margin-top:10px;overflow-x:auto">'
+      matchBlocks += '<div id="pm-'+jid+'" class="gc" style="margin-top:10px;overflow-x:auto">'
         + '<div class="gc-head" style="display:flex;justify-content:space-between;align-items:center">'
         +   '<span>' + h + ' vs ' + a + '</span>' + resultLabel
         + '</div>'
@@ -2928,7 +2939,22 @@ window._jumpToMatch = function(sel) {
         + '</table></div>';
     });
 
-    return matchBlocks || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay pronósticos todavía.</div>';
+    if (!matchBlocks) return '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No hay pronósticos todavía.</div>';
+
+    // ── Dropdown de navegación rápida ──
+    var _jumpSel = '<div style="position:sticky;top:0;z-index:20;background:rgba(6,18,6,.97);backdrop-filter:blur(16px);padding:7px 8px 7px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.09)">';
+    _jumpSel += '<select id="porra-jump-sel" onchange="window._jumpToPorraMatch(this)" style="width:100%;background:rgba(20,35,20,.98);border:1px solid rgba(255,255,255,.18);color:#e2e8f0;border-radius:10px;padding:9px 36px 9px 12px;font-size:.82rem;font-weight:600;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\'%3E%3Cpath fill=\'rgba(255,255,255,.5)\' d=\'M5 8l5 5 5-5z\'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:20px">';
+    _jumpSel += '<option value="">🔍 Ir a partido…</option>';
+    _fxSorted.forEach(function(f) {
+      var jid2 = f[0], h2 = f[4], a2 = f[5];
+      if (rtveSet.size > 0 && !rtveSet.has(h2 + '|' + a2)) return;
+      var sc = window.R && window.R.scores && window.R.scores[jid2];
+      var scStr = (sc && sc[0] !== '' && sc[0] != null) ? ' (' + sc[0] + '-' + sc[1] + ')' : '';
+      _jumpSel += '<option value="pm-' + jid2 + '">' + f[0] + ': ' + h2 + ' vs ' + a2 + scStr + '</option>';
+    });
+    _jumpSel += '</select></div>';
+
+    return _jumpSel + '<div style="padding-bottom:80px">' + matchBlocks + '</div>';
   }
 
   function _renderPorra(tab) {
