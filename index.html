@@ -1321,11 +1321,17 @@ renderHome = function(){
   window._mcLoopActive = true;
   todayMatches.forEach(function(m, i){
     RTVE.splice(0); RTVE.push(m);
-    // Ocultar pronósticos de otros jugadores antes de renderizar
+    // Ocultar pronósticos de otros jugadores antes de renderizar (solo si no está cerrado)
     var myName = window._MYROOM && window._MYROOM.playerName;
     var matchKey = m.h + '|' + m.a + '|' + m.d;
     var maskedPs = null;
-    if (myName && window._PS && window._PS[matchKey]) {
+    // Calcular si el partido está cerrado (tiene resultado o empezó hace > 1h)
+    var _mcNow = Date.now();
+    var _mcHasResult = window.R && window.R.scores && window.R.scores[m.id] && window.R.scores[m.id][0] !== '' && window.R.scores[m.id][0] != null;
+    var _mcMatchStart = null;
+    try { _mcMatchStart = typeof parseMatchDT === 'function' ? parseMatchDT(m.d, m.t) : null; } catch(e) {}
+    var _mcIsLocked = _mcHasResult || (!!_mcMatchStart && _mcNow >= _mcMatchStart.getTime() - 3600000);
+    if (!_mcIsLocked && myName && window._PS && window._PS[matchKey]) {
       maskedPs = window._PS[matchKey];
       var own = {}; if (maskedPs[myName]) own[myName] = maskedPs[myName];
       window._PS[matchKey] = own;
@@ -3126,7 +3132,7 @@ window._jumpToMatch = function(sel) {
             var _score = p.score || (_loc != null && _vis != null ? _loc + '-' + _vis : undefined);
             window._ALL_PREDS[p.match_key][p.player_name] = { loc: _loc, vis: _vis, goleador: _gol, pos: _pos, score: _score };
             if (!window._PS[p.match_key]) window._PS[p.match_key] = {};
-            window._PS[p.match_key][p.player_name] = { loc: _loc, vis: _vis, goleador: _gol, pos: _pos, score: _score,
+            window._PS[p.match_key][p.player_name] = { loc: _loc, vis: _vis, goleador: _gol, player: _gol, pos: _pos, score: _score,
               home_score: _loc, away_score: _vis, scorer_name: _gol, scorer_position: _pos };
           });
         } else {
