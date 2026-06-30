@@ -1189,7 +1189,7 @@ window._syncRko();
       // Si hay varios partidos hoy → home los muestra como tarjetas, proximos vacío
       var _today = (typeof getTodayStr === 'function') ? getTodayStr() :
         (function(){ var d = new Date(); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'); })();
-      if (FX.filter(function(f){ return f[1] === _today; }).length >= 2) {
+      if (!window._mcLoopActive && FX.filter(function(f){ return f[1] === _today; }).length >= 2) {
         var proxDiv = document.getElementById('home-proximos');
         if (proxDiv) proxDiv.innerHTML = '';
         return '';
@@ -1318,6 +1318,7 @@ renderHome = function(){
   var _savedSMT = typeof startMatchTimer === 'function' ? startMatchTimer : null;
   if (_savedSMT) startMatchTimer = function(){};
 
+  window._mcLoopActive = true;
   todayMatches.forEach(function(m, i){
     RTVE.splice(0); RTVE.push(m);
     // Ocultar pronósticos de otros jugadores antes de renderizar
@@ -1332,7 +1333,8 @@ renderHome = function(){
     _renderHomeBase.apply(this, arguments);
     if (maskedPs) window._PS[matchKey] = maskedPs;
     cardParts.push(homeMatchDiv ? homeMatchDiv.innerHTML : '');
-    var ph = homePredsDiv ? homePredsDiv.innerHTML : '';
+    // Capturar pronóstico de #home-preds (fase grupos) Y #home-proximos (fase KO)
+    var ph = (homePredsDiv ? homePredsDiv.innerHTML : '') + (homeProxDiv ? homeProxDiv.innerHTML : '');
     // Renombrar IDs para que sean únicos por card (inputs + form + label)
     ['pf-me','pi-l-me','pi-v-me','pi-p-me','pi-s-me','pi-p-label'].forEach(function(id){
       ph = ph.replace(new RegExp(id, 'g'), id + '-mc' + i);
@@ -1340,6 +1342,7 @@ renderHome = function(){
     predParts.push(ph);
   }.bind(this));
 
+  window._mcLoopActive = false;
   RTVE.splice(0);
   savedRTVE.forEach(function(x){ RTVE.push(x); });
 
@@ -2290,6 +2293,20 @@ function closeWelcomePopup() {
 
 // ── Vista cronológica de partidos ──
 (function _patchResultadosCronologico() {
+  // MutationObserver: re-inject dropdown whenever #grupos-content changes without it
+  function _observeGrupos() {
+    var cont = document.getElementById('grupos-content');
+    if (!cont) { setTimeout(_observeGrupos, 300); return; }
+    var obs = new MutationObserver(function() {
+      // If dropdown is missing, re-inject
+      if (!document.getElementById('match-jump-sel')) {
+        window._renderCrono();
+      }
+    });
+    obs.observe(cont, { childList: true });
+  }
+  _observeGrupos();
+  // Also monkey-patch renderGrupos for direct tab switches
   function _waitAndPatch() {
     if (typeof renderGrupos !== 'function' || typeof FX === 'undefined') {
       setTimeout(_waitAndPatch, 200); return;
@@ -2395,6 +2412,11 @@ function closeWelcomePopup() {
 })();
 
 // ── Jump-to-match helper ──
+// Trigger initial crono render after all patches are applied
+setTimeout(function() {
+  if (typeof window._renderCrono === 'function') window._renderCrono();
+}, 50);
+
 window._jumpToMatch = function(sel) {
   var v = sel.value;
   if (!v) return;
