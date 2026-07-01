@@ -1597,7 +1597,7 @@ function calcFavTeamPoints(playerName) {
   if (!adj) return 0;
   var total = 0;
   Object.keys(adj).forEach(function(matchId) {
-    if (matchId.indexOf('_FAV') < 0) return;
+    if (matchId.indexOf('_FAV') < 0 && matchId.indexOf('_ADV') < 0) return;
     var bonus = adj[matchId] && adj[matchId][playerName];
     if (bonus) total += +bonus;
   });
