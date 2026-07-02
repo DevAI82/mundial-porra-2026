@@ -3136,23 +3136,35 @@ window._jumpToMatch = function(sel) {
 (function _patchLoadAllPredictions() {
   var _pendingPromise = null;
   var _SUPA_URL = 'https://syyqoobojzuntauevytx.supabase.co';
-  var _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eXFvb2Jvanp1bnRhdWV2eXR4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDU1MTU0MiwiZXhwIjoyMDk2MTI3NTQyfQ.InprSiPRrbSQ80BiQ6C8ymkLbNntSbDkPK0RUjvVd3o';
+  // FIX 02/07/2026 (C3): clave publica (publishable) en lugar de la service key.
+  // La service key NUNCA debe aparecer en este archivo: se publica en GitHub Pages.
+  var _SUPA_KEY = 'sb_publishable_-i6QvMmNS_U_YcOWdM1P9w_F9aKKYLv';
 
   async function _fetchAllPreds(room) {
-    // Usar fetch directo con service key para evitar restricciones de RLS
-    var url = _SUPA_URL + '/rest/v1/predictions'
+    // FIX 02/07/2026: paginado — PostgREST corta en 1000 filas y ya hay 1063 pronosticos;
+    // sin esto se pierden filas y los puntos/goleadores salen incompletos.
+    var base = _SUPA_URL + '/rest/v1/predictions'
       + '?select=player_name,match_key,loc,vis,goleador,pos,score,home_score,away_score,scorer_name,scorer_position'
       + '&room_code=eq.' + encodeURIComponent(room)
-      + '&limit=2000';
-    var resp = await fetch(url, {
-      headers: {
-        'apikey': _SUPA_KEY,
-        'Authorization': 'Bearer ' + _SUPA_KEY,
-        'Accept': 'application/json'
-      }
-    });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    return resp.json();
+      + '&order=player_name.asc,match_key.asc';
+    var all = [], page = 1000, from = 0;
+    while (true) {
+      var resp = await fetch(base, {
+        headers: {
+          'apikey': _SUPA_KEY,
+          'Authorization': 'Bearer ' + _SUPA_KEY,
+          'Accept': 'application/json',
+          'Range-Unit': 'items',
+          'Range': from + '-' + (from + page - 1)
+        }
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      var rows = await resp.json();
+      all = all.concat(rows);
+      if (!rows.length || rows.length < page) break;
+      from += page;
+    }
+    return all;
   }
 
   window._reloadAllPreds = async function() {
