@@ -1378,6 +1378,16 @@ renderHome = function(){
   if (homeProxDiv) homeProxDiv.innerHTML = '';
 };
 
+// FIX 02/07/2026: la jornada de la app cambia a las 07:00, no a medianoche.
+// De 00:00 a 06:59 se sigue mostrando la jornada anterior (sus partidos de madrugada llevan hora con '+').
+(function(){
+  window.getTodayStr = getTodayStr = function(){
+    var d = new Date();
+    if (d.getHours() < 7) d.setDate(d.getDate() - 1);
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+  };
+})();
+
 renderGrupos(),renderKOSection(),renderTabla(),renderCuadro(),renderVenues(),renderEstrellas(),startIntro();
 </script>
 <script>
@@ -2494,13 +2504,21 @@ window._jumpToMatch = function(sel) {
       var updated = 0;
       res.data.forEach(function(row) {
         if (row.home_goals != null && row.away_goals != null) {
-          window.R.scores[row.match_id] = [String(row.home_goals), String(row.away_goals)];
-          updated++;
+          var _new = [String(row.home_goals), String(row.away_goals)];
+          var _prev = window.R.scores[row.match_id];
+          if (!_prev || _prev[0] !== _new[0] || _prev[1] !== _new[1]) updated++; // FIX 02/07: solo cambios reales
+          window.R.scores[row.match_id] = _new;
         }
         if (row.scorers) window.R.scorers[row.match_id] = row.scorers;
       });
       try { localStorage.setItem('wc26_results', JSON.stringify(window.R.scores)); } catch(e) {}
-      if (updated > 0) {
+      if (updated > 0 || window._pendingSyncRender) {
+        // FIX 02/07/2026: no machacar lo que el usuario esta escribiendo; posponer al siguiente ciclo
+        var _ae = document.activeElement;
+        var _formOpen = document.querySelector('[id^="pf-me"].open') ||
+          (_ae && _ae.tagName === 'INPUT' && /^pi-/.test(_ae.id || ''));
+        if (_formOpen) { window._pendingSyncRender = true; return; }
+        window._pendingSyncRender = false;
         _showSyncDot(true);
         if (typeof renderActive === 'function') renderActive();
         else if (typeof window._renderCrono === 'function') window._renderCrono();
@@ -2656,8 +2674,19 @@ window._jumpToMatch = function(sel) {
           var ss = Math.floor(toMatch % 60000 / 1000);
           el.textContent = '🔒 Pronósticos cerrados · ⚽ Partido en ' + mm + 'm ' + ss + 's';
           el.className = 'match-timer closed';
-          document.querySelectorAll('.pred-save-btn').forEach(function(b) { b.disabled = true; });
-          document.querySelectorAll('.pred-edit-btn').forEach(function(b) { b.style.display = 'none'; });
+          // FIX 02/07/2026: limitar el bloqueo a la tarjeta de ESTE partido; las demas siguen su propio cierre (1h antes de SU inicio)
+          var _mcSecs = document.querySelectorAll('._mday-pred');
+          if (_mcSecs.length) {
+            _mcSecs.forEach(function(sec) {
+              if (sec.getAttribute('data-h') === match.h && sec.getAttribute('data-a') === match.a) {
+                sec.querySelectorAll('.pred-save-btn').forEach(function(b) { b.disabled = true; });
+                sec.querySelectorAll('.pred-edit-btn').forEach(function(b) { b.style.display = 'none'; });
+              }
+            });
+          } else {
+            document.querySelectorAll('.pred-save-btn').forEach(function(b) { b.disabled = true; });
+            document.querySelectorAll('.pred-edit-btn').forEach(function(b) { b.style.display = 'none'; });
+          }
         } else {
           var h = Math.floor(toClose / 3600000);
           var m = Math.floor(toClose % 3600000 / 60000);
@@ -3187,6 +3216,7 @@ window._jumpToMatch = function(sel) {
       var scores = (window.R && window.R.scores) || {};
       var now = new Date();
       var today = new Date(); today.setHours(0, 0, 0, 0);
+      if (now.getHours() < 7) today.setDate(today.getDate() - 1); // FIX 02/07: jornada hasta las 07:00
 
       // Prioridad: si hay un partido RTVE HOY que comenzó hace menos de 2 horas,
       // seguir mostrándolo aunque ya tenga resultado provisional.
