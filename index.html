@@ -3398,6 +3398,17 @@ window._jumpToMatch = function(sel) {
   // ── 2. Función que fuerza re-render de home-preds a través del wrapper ──
   function _forcePrivacyRerender() {
     if (typeof renderPorraSection !== 'function' || !renderPorraSection._privacyPatched) return;
+    // FIX 02/07/2026: en dias con 2+ partidos, el home multi-tarjeta ya aplica la
+    // privacidad por tarjeta. Sobrescribir #home-preds con renderPorraSection(match)
+    // destruia las 3 secciones de pronostico y los usuarios no podian guardar.
+    try {
+      var _mcToday = (typeof getTodayStr === 'function') ? getTodayStr() : null;
+      if (_mcToday && typeof FX !== 'undefined' && FX.filter(function(f){ return f[1] === _mcToday; }).length >= 2) {
+        if (typeof renderHome === 'function') renderHome();
+        console.log('[Privacy] dia multi-partido: renderHome() multi-tarjeta ✓');
+        return;
+      }
+    } catch(e) {}
     var match = typeof getMatchOfDay === 'function' ? getMatchOfDay() : null;
     if (!match) return;
     if (typeof isMatchClosed === 'function' && isMatchClosed(match)) return;
