@@ -482,7 +482,14 @@ def tts_to_wav(text: str) -> bytes | None:
 # ENVIAR RESPUESTA
 # ─────────────────────────────────────────────────────────────────────────────
 async def send_response(update: Update, texto: str, prefijo: str = ""):
-    await update.message.reply_text(prefijo + texto, parse_mode='Markdown')
+    # FIX 03/07/2026: si el Markdown viene roto (p.ej. '_' sin pareja en IDs tipo J84_FAV),
+    # Telegram rechaza el mensaje con BadRequest y el usuario no recibe NADA.
+    # Reintentamos como texto plano antes de rendirnos.
+    try:
+        await update.message.reply_text(prefijo + texto, parse_mode='Markdown')
+    except Exception as _e:
+        log.warning(f"Markdown rechazado ({_e}); reenviando como texto plano")
+        await update.message.reply_text(prefijo + texto)
     await update.message.chat.send_action(ChatAction.RECORD_VOICE)
     loop = asyncio.get_event_loop()
     wav_data = await loop.run_in_executor(None, tts_to_wav, texto)
