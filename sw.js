@@ -1,4 +1,4 @@
-const CACHE = 'porra2026-v15';
+const CACHE = 'porra2026-v16';
 const FILES = ['./', './index.html', './manifest.json', './imagenapp.jpg', './trofeo.png'];
 
 self.addEventListener('install', e => {
