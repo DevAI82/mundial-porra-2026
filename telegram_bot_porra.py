@@ -176,6 +176,30 @@ def supa(path: str, payload=None, method='GET'):
         log.error(f"Supabase error {path}: {e}")
         return []
 
+def supa_paged(path: str, page: int = 1000) -> list:
+    """GET paginado con cabecera Range — PostgREST corta en 1000 filas por peticion
+    (FIX 03/07/2026: predictions ya supera las 1000 y el bot calculaba puntos incompletos)."""
+    sep = '&' if '?' in path else '?'
+    out, start = [], 0
+    while True:
+        url = f'{SUPABASE_URL}/rest/v1{path}'
+        req = urllib.request.Request(url, headers={
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Range-Unit': 'items',
+            'Range': f'{start}-{start + page - 1}',
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                rows = json.loads(resp.read() or b'[]')
+        except Exception as e:
+            log.error(f"Supabase paged error {path}: {e}")
+            return out
+        out.extend(rows)
+        if len(rows) < page:
+            return out
+        start += page
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CALCULAR PUNTUACIONES
 # ─────────────────────────────────────────────────────────────────────────────
@@ -184,10 +208,10 @@ def sign(x): return 1 if x > 0 else (-1 if x < 0 else 0)
 def calcular_scores() -> dict:
     results_raw = supa('/results?limit=200')
     results = {r['match_id']: r for r in results_raw}
-    preds_raw = supa(f'/predictions?room_code=eq.{ROOM_CODE}'
-                     f'&select=player_name,match_key,loc,vis&limit=5000')
-    adj_raw = supa(f'/match_adjustments?room_code=eq.{ROOM_CODE}'
-                   f'&select=player_name,match_id,adjustment&limit=2000')
+    preds_raw = supa_paged(f'/predictions?room_code=eq.{ROOM_CODE}'
+                     f'&select=player_name,match_key,loc,vis&order=player_name.asc,match_key.asc')
+    adj_raw = supa_paged(f'/match_adjustments?room_code=eq.{ROOM_CODE}'
+                   f'&select=player_name,match_id,adjustment&order=player_name.asc,match_id.asc')
     scores = {}
     for pred in preds_raw:
         player = pred['player_name']
@@ -219,6 +243,14 @@ def calcular_scores() -> dict:
         scores[player] = scores.get(player, 0) + pts
     for adj in adj_raw:
         player = adj['player_name']
+        mid = adj.get('match_id') or ''
+        # FIX 03/07/2026: mismo criterio que la web (calcFavTeamPoints/calcScoreBreakdown):
+        # goleador = 'J##' plano; favorita/avance = contiene '_FAV' o '_ADV'.
+        # Otros (p.ej. 'CLASIFICACION_GRUPOS' sin sufijo, duplicado historico) NO computan.
+        es_goleador = mid.startswith('J') and mid[1:].isdigit()
+        es_fav = ('_FAV' in mid) or ('_ADV' in mid)
+        if not (es_goleador or es_fav):
+            continue
         scores[player] = scores.get(player, 0) + (adj.get('adjustment') or 0)
     # Añadir jugadores con 0 pts
     for j in JUGADORES:
