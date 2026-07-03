@@ -69,42 +69,51 @@ JUGADORES = [
 # PARTIDOS
 # ─────────────────────────────────────────────────────────────────────────────
 PARTIDOS = {
-    "J01":["México","Sudáfrica"],        "J02":["Corea del Sur","Chequia"],
-    "J03":["Canadá","Bosnia-Herzegovina"],"J04":["Estados Unidos","Paraguay"],
-    "J05":["Catar","Suiza"],             "J06":["Brasil","Marruecos"],
-    "J07":["Haití","Escocia"],           "J08":["Australia","Turquía"],
-    "J09":["Alemania","Curazao"],        "J10":["Países Bajos","Japón"],
+    # Calendario REAL sincronizado con auto_post_match.py — regenerado 03/07/2026
+    "J01":["México","Sudáfrica"], "J02":["Corea del Sur","Chequia"],
+    "J03":["Canadá","Bosnia-Herzegovina"], "J04":["Estados Unidos","Paraguay"],
+    "J05":["Catar","Suiza"], "J06":["Brasil","Marruecos"],
+    "J07":["Haití","Escocia"], "J08":["Australia","Turquía"],
+    "J09":["Alemania","Curazao"], "J10":["Países Bajos","Japón"],
     "J11":["Costa de Marfil","Ecuador"], "J12":["Suecia","Túnez"],
-    "J13":["España","Cabo Verde"],       "J14":["Bélgica","Egipto"],
-    "J15":["Arabia Saudita","Uruguay"],  "J16":["Irán","Nueva Zelanda"],
-    "J17":["Francia","Senegal"],         "J18":["Irak","Noruega"],
-    "J19":["Argentina","Argelia"],       "J20":["Austria","Jordania"],
-    "J21":["Portugal","RD Congo"],       "J22":["Inglaterra","Croacia"],
-    "J23":["Ghana","Panamá"],            "J24":["Uzbekistán","Colombia"],
-    "J25":["Chequia","Sudáfrica"],       "J26":["Suiza","Bosnia-Herzegovina"],
-    "J27":["Canadá","Catar"],            "J28":["México","Corea del Sur"],
-    "J29":["Estados Unidos","Australia"],"J30":["Escocia","Marruecos"],
-    "J31":["Brasil","Haití"],            "J32":["Turquía","Paraguay"],
-    "J33":["Países Bajos","Suecia"],     "J34":["Alemania","Costa de Marfil"],
-    "J35":["Ecuador","Curazao"],         "J36":["Túnez","Japón"],
-    "J37":["España","Arabia Saudita"],   "J38":["Bélgica","Irán"],
-    "J39":["Uruguay","Cabo Verde"],      "J40":["Nueva Zelanda","Egipto"],
-    "J41":["Argentina","Austria"],       "J42":["Francia","Irak"],
-    "J43":["Noruega","Senegal"],         "J44":["Jordania","Argelia"],
-    "J45":["Portugal","Uzbekistán"],     "J46":["Inglaterra","Ghana"],
-    "J47":["Panamá","Croacia"],          "J48":["Colombia","RD Congo"],
-    "J49":["Suiza","Canadá"],            "J50":["Bosnia-Herzegovina","Catar"],
-    "J51":["Escocia","Brasil"],          "J52":["Marruecos","Haití"],
-    "J53":["Chequia","México"],          "J54":["Sudáfrica","Corea del Sur"],
-    "J55":["Ecuador","Alemania"],        "J56":["Curazao","Costa de Marfil"],
-    "J57":["Túnez","Países Bajos"],      "J58":["Japón","Suecia"],
-    "J59":["Turquía","Estados Unidos"],  "J60":["Paraguay","Australia"],
-    "J61":["Noruega","Francia"],         "J62":["Senegal","Irak"],
-    "J63":["Uruguay","España"],          "J64":["Cabo Verde","Arabia Saudita"],
-    "J65":["Nueva Zelanda","Bélgica"],   "J66":["Egipto","Irán"],
-    "J67":["Argelia","Argentina"],       "J68":["Jordania","Austria"],
-    "J69":["RD Congo","Portugal"],       "J70":["Croacia","Inglaterra"],
-    "J71":["Panamá","Ghana"],            "J72":["Colombia","Uzbekistán"],
+    "J13":["España","Cabo Verde"], "J14":["Bélgica","Egipto"],
+    "J15":["Arabia Saudita","Uruguay"], "J16":["Irán","Nueva Zelanda"],
+    "J17":["Francia","Senegal"], "J18":["Irak","Noruega"],
+    "J19":["Argentina","Argelia"], "J20":["Austria","Jordania"],
+    "J21":["Portugal","RD Congo"], "J22":["Inglaterra","Croacia"],
+    "J23":["Ghana","Panamá"], "J24":["Uzbekistán","Colombia"],
+    "J25":["Chequia","Sudáfrica"], "J26":["Suiza","Bosnia-Herzegovina"],
+    "J27":["Canadá","Catar"], "J28":["México","Corea del Sur"],
+    "J29":["Estados Unidos","Australia"], "J30":["Escocia","Marruecos"],
+    "J31":["Brasil","Haití"], "J32":["Turquía","Paraguay"],
+    "J33":["Países Bajos","Suecia"], "J34":["Alemania","Costa de Marfil"],
+    "J35":["Ecuador","Curazao"], "J36":["Túnez","Japón"],
+    "J37":["España","Arabia Saudita"], "J38":["Bélgica","Irán"],
+    "J39":["Uruguay","Cabo Verde"], "J40":["Nueva Zelanda","Egipto"],
+    "J41":["Argentina","Austria"], "J42":["Francia","Irak"],
+    "J43":["Noruega","Senegal"], "J44":["Jordania","Argelia"],
+    "J45":["Portugal","Uzbekistán"], "J46":["Inglaterra","Ghana"],
+    "J47":["Panamá","Croacia"], "J48":["Colombia","RD Congo"],
+    "J49":["Suiza","Canadá"], "J50":["Bosnia-Herzegovina","Catar"],
+    "J51":["Escocia","Brasil"], "J52":["Marruecos","Haití"],
+    "J53":["Chequia","México"], "J54":["Sudáfrica","Corea del Sur"],
+    "J55":["Ecuador","Alemania"], "J56":["Curazao","Costa de Marfil"],
+    "J57":["Túnez","Países Bajos"], "J58":["Japón","Suecia"],
+    "J59":["Turquía","Estados Unidos"], "J60":["Paraguay","Australia"],
+    "J61":["Noruega","Francia"], "J62":["Senegal","Irak"],
+    "J63":["Uruguay","España"], "J64":["Cabo Verde","Arabia Saudita"],
+    "J65":["Nueva Zelanda","Bélgica"], "J66":["Egipto","Irán"],
+    "J67":["Panamá","Inglaterra"], "J68":["Croacia","Ghana"],
+    "J69":["Colombia","Portugal"], "J70":["RD Congo","Uzbekistán"],
+    "J71":["Jordania","Argentina"], "J72":["Argelia","Austria"],
+    "J73":["Sudáfrica","Canadá"], "J74":["Alemania","Paraguay"],
+    "J75":["Países Bajos","Marruecos"], "J76":["Brasil","Japón"],
+    "J77":["Francia","Suecia"], "J78":["Costa de Marfil","Noruega"],
+    "J79":["México","Ecuador"], "J80":["Inglaterra","RD Congo"],
+    "J81":["Estados Unidos","Bosnia-Herzegovina"], "J82":["Bélgica","Senegal"],
+    "J83":["Portugal","Croacia"], "J84":["España","Austria"],
+    "J85":["Suiza","Argelia"], "J86":["Argentina","Cabo Verde"],
+    "J87":["Colombia","Ghana"], "J88":["Australia","Egipto"],
 }
 
 # Grupos del Mundial 2026
@@ -316,10 +325,22 @@ def build_full_context(question: str = "", is_admin: bool = False) -> str:
         h_q, a_q = PARTIDOS[jid_q]
         tiene_resultado = jid_q in results and results[jid_q].get('home_goals') is not None
         if tiene_resultado or is_admin:
+            # Buscar por formato equipo1|equipo2|... (fase de grupos)
             mk_enc = urllib.parse.quote(f"{h_q}|{a_q}")
-            match_preds = supa(f'/predictions?room_code=eq.{ROOM_CODE}'
-                               f'&match_key=ilike.*{mk_enc}*'
-                               f'&select=player_name,loc,vis,goleador,pos&limit=200')
+            preds_team = supa(f'/predictions?room_code=eq.{ROOM_CODE}'
+                              f'&match_key=ilike.*{mk_enc}*'
+                              f'&select=player_name,loc,vis,goleador,pos&limit=200')
+            # Buscar por formato prox_Jid (eliminatorias)
+            preds_prox = supa(f'/predictions?room_code=eq.{ROOM_CODE}'
+                              f'&match_key=eq.prox_{jid_q}'
+                              f'&select=player_name,loc,vis,goleador,pos&limit=200')
+            # Unir y deduplicar (prioridad al formato team si existe)
+            seen_players = set()
+            match_preds = []
+            for p in preds_team + preds_prox:
+                if p['player_name'] not in seen_players:
+                    seen_players.add(p['player_name'])
+                    match_preds.append(p)
             if match_preds:
                 registrados = sorted(match_preds, key=lambda x: x['player_name'])
                 pred_lines = [
@@ -370,6 +391,8 @@ REGLAS:
 - Si preguntan por puntos/clasificación de una SELECCIÓN (España, Brasil...) → usa la clasificación de grupos del Mundial real
 - Si preguntan por puntos de un JUGADOR (Kaiser, Eu, Aitor...) → usa la clasificación de la porra
 - Si preguntan quién ha registrado pronóstico para un partido → usa los datos de pronósticos del contexto
+- Para partidos de eliminatorias (cuartos, octavos...) los pronósticos también son visibles si hay datos en el contexto
+- El administrador puede ver pronósticos de partidos aún sin resultado
 - Si no tienes el dato exacto, dilo honestamente
 - Para preguntas de resultados de partidos concretos, da el marcador exacto y goleadores si los hay
 - El sistema de puntuación de la porra: exacto=3pts, signo correcto=1pt, bonus goleador por posición (DEL=1pt, MED=2pts, DEF=3pts), equipo favorito gana=+2pts
