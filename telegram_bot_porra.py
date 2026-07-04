@@ -114,6 +114,11 @@ PARTIDOS = {
     "J83":["Portugal","Croacia"], "J84":["España","Austria"],
     "J85":["Suiza","Argelia"], "J86":["Argentina","Cabo Verde"],
     "J87":["Colombia","Ghana"], "J88":["Australia","Egipto"],
+    # ── ELIMINATORIAS: OCTAVOS DE FINAL (4-7 Jul) ──
+    "J89":["Canadá","Marruecos"],     "J90":["Paraguay","Francia"],
+    "J91":["Brasil","Noruega"],        "J92":["México","Inglaterra"],
+    "J93":["Portugal","España"],       "J94":["Estados Unidos","Bélgica"],
+    "J95":["Argentina","Egipto"],      "J96":["Suiza","Colombia"],
 }
 
 # Grupos del Mundial 2026
