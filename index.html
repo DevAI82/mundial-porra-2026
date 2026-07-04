@@ -2551,6 +2551,31 @@ window._jumpToMatch = function(sel) {
   var _sel = [null, null];
   var C1 = '#facc15', C2 = '#60a5fa';
 
+  /* Abreviatura ISO-3 de equipos */
+  function _abbr(n) {
+    var M = {
+      'Alemania':'GER','Arabia Saudi':'KSA','Arabia Saudí':'KSA','Argentina':'ARG',
+      'Australia':'AUS','Austria':'AUT','Bélgica':'BEL','Bolivia':'BOL',
+      'Bosnia-Herzegovina':'BIH','Brasil':'BRA','Camerún':'CMR','Canadá':'CAN',
+      'Chile':'CHI','Colombia':'COL','Corea del Sur':'KOR','Costa Rica':'CRC',
+      'Croacia':'CRO','Cuba':'CUB','Dinamarca':'DEN','Ecuador':'ECU',
+      'Egipto':'EGY','El Salvador':'SLV','Escocia':'SCO','Eslovaquia':'SVK',
+      'España':'ESP','Estados Unidos':'USA','Filipinas':'PHI','Finlandia':'FIN',
+      'Francia':'FRA','Gales':'WAL','Ghana':'GHA','Grecia':'GRE',
+      'Guatemala':'GUA','Haití':'HAI','Honduras':'HON','Hungría':'HUN',
+      'Indonesia':'IDN','Irán':'IRN','Israel':'ISR','Italia':'ITA',
+      'Jamaica':'JAM','Japón':'JPN','Kosovo':'XKX','Cabo Verde':'CPV',
+      'Marruecos':'MAR','México':'MEX','Montenegro':'MNE','Nigeria':'NGA',
+      'Noruega':'NOR','Nueva Zelanda':'NZL','Países Bajos':'NED','Panamá':'PAN',
+      'Paraguay':'PAR','Perú':'PER','Polonia':'POL','Portugal':'POR','Qatar':'QAT',
+      'Rep. Checa':'CZE','Rumania':'ROU','Senegal':'SEN','Serbia':'SRB',
+      'Sudáfrica':'RSA','Suecia':'SWE','Suiza':'SUI','Trinidad y Tobago':'TTO',
+      'Túnez':'TUN','Turquía':'TUR','Ucrania':'UKR','Uruguay':'URU',
+      'Venezuela':'VEN','Curazao':'CUW'
+    };
+    return M[n] || n.substring(0,3).toUpperCase();
+  }
+
   /* Datos por partido: misma logica que calcScoreBreakdown + merge prox_ igual que Resultados */
   function _perMatch(playerName) {
     var rtve = (typeof RTVE !== 'undefined') ? RTVE : [];
@@ -2689,7 +2714,7 @@ window._jumpToMatch = function(sel) {
     var players = typeof getPlayers === 'function' ? getPlayers() : [];
 
     /* Dropdowns */
-    var dd = '<div style="padding:14px 14px 6px;border-bottom:0.5px solid rgba(255,255,255,.07)">' +
+    var dd = '<div style="padding:14px 14px 6px;border-bottom:0.5px solid rgba(255,255,255,.07);background:rgba(10,14,22,.85)">' +
       _ddHtml(0, _sel[0], 'Jugador', C1, players) +
       _ddHtml(1, _sel[1], 'Comparar', C2, players) +
     '</div>';
@@ -2707,7 +2732,7 @@ window._jumpToMatch = function(sel) {
     /* Tarjeta resumen — usa calcScoreBreakdown (misma fuente que Clasificacion) */
     function card(name, col) {
       var bd = typeof calcScoreBreakdown === 'function' ? calcScoreBreakdown(name) : {};
-      return '<div style="flex:1;min-width:150px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 14px;border-left:3px solid ' + col + '">' +
+      return '<div style="flex:1;min-width:150px;background:rgba(13,17,23,.85);border-radius:10px;padding:12px 14px;border-left:3px solid ' + col + '">' +
         '<div style="font-size:10px;font-weight:800;color:' + col + ';letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">' + name + '</div>' +
         '<div style="font-size:27px;font-weight:800;color:#fff;line-height:1;font-family:\'Barlow Condensed\',sans-serif">' + (bd.total || 0) + ' <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,.35)">pts</span></div>' +
         '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;line-height:1.9">' +
@@ -2720,12 +2745,12 @@ window._jumpToMatch = function(sel) {
       '</div>';
     }
 
-    var cards = '<div style="display:flex;gap:10px;padding:12px 14px;border-bottom:0.5px solid rgba(255,255,255,.07);flex-wrap:wrap">' +
+    var cards = '<div style="display:flex;gap:10px;padding:12px 14px;border-bottom:0.5px solid rgba(255,255,255,.07);flex-wrap:wrap;background:rgba(10,14,22,.75)">' +
       card(_sel[0], C1) + (d2 ? card(_sel[1], C2) : '') +
     '</div>';
 
     /* Grafica */
-    var chartHtml = d1.length ? '<div style="padding:8px 14px 4px;border-bottom:0.5px solid rgba(255,255,255,.07)">' +
+    var chartHtml = d1.length ? '<div style="padding:8px 14px 4px;border-bottom:0.5px solid rgba(255,255,255,.07);background:rgba(10,14,22,.75)">' +
       '<div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">Evoluci&#243;n acumulada</div>' +
       _chart(d1, d2) + '</div>' : '';
 
@@ -2734,7 +2759,7 @@ window._jumpToMatch = function(sel) {
     var isCompare = !!d2;
 
     var thead = '<tr>' +
-      '<th style="' + thS + ';text-align:left;min-width:120px">Partido</th>' +
+      '<th style="' + thS + ';text-align:left;min-width:72px">Partido</th>' +
       '<th style="' + thS + '">Res.</th>' +
       '<th style="' + thS + ';color:' + C1 + ';background:rgba(250,204,21,.05)">Pron.</th>' +
       '<th style="' + thS + ';color:#fbbf24;background:rgba(250,204,21,.05)" title="Exacto +3">&#127919;</th>' +
@@ -2751,7 +2776,7 @@ window._jumpToMatch = function(sel) {
     if (d2) d2.forEach(function(r) { d2map[r.jid] = r; });
 
     var trs = d1.map(function(row, i) {
-      var bg = i % 2 === 0 ? 'rgba(255,255,255,.02)' : '';
+      var bg = i % 2 === 0 ? 'rgba(10,14,22,.82)' : 'rgba(10,14,22,.62)';
       var r2 = d2 ? (d2map[row.jid] || null) : null;
       /* Celda de prediccion con goleador debajo */
       var gol1str = row.goleador ? '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px">&#9917; ' + row.goleador.split(' ').slice(-1)[0] + '</div>' : '';
@@ -2775,7 +2800,7 @@ window._jumpToMatch = function(sel) {
       return '<tr style="border-bottom:0.5px solid rgba(255,255,255,.04);' + (bg ? 'background:' + bg : '') + '">' +
         '<td style="padding:5px 8px;white-space:nowrap;font-size:12px;color:rgba(255,255,255,.7);text-align:left">' +
           '<span style="font-size:10px;color:rgba(255,255,255,.25);margin-right:3px">' + row.jid + '</span>' +
-          row.h.split(' ')[0] + ' - ' + row.a.split(' ')[0] +
+          _abbr(row.h) + ' - ' + _abbr(row.a) +
         '</td>' +
         '<td style="text-align:center;padding:5px 7px;font-size:13px;font-weight:700;color:#fff">' + row.rh + '-' + row.ra + '</td>' +
         '<td style="text-align:center;padding:5px 7px;background:rgba(250,204,21,.03)">' + pred1 + '</td>' +
@@ -2794,7 +2819,7 @@ window._jumpToMatch = function(sel) {
       return extras.map(function(e) {
         var lbl = e.label.replace(/_/g, ' ');
         var p2td = col2 ? '<td colspan="2" style="border-left:1px solid rgba(96,165,250,.1)"></td>' : '';
-        return '<tr style="background:rgba(255,255,255,.015);border-bottom:0.5px solid rgba(255,255,255,.04)">' +
+        return '<tr style="background:rgba(10,14,22,.55);border-bottom:0.5px solid rgba(255,255,255,.04)">' +
           '<td colspan="2" style="padding:5px 8px;font-size:11px;color:rgba(255,255,255,.4);text-align:left;font-style:italic">' + lbl + '</td>' +
           '<td style="background:rgba(250,204,21,.03)"></td>' +
           '<td style="background:rgba(250,204,21,.04)"></td>' +
@@ -2815,7 +2840,7 @@ window._jumpToMatch = function(sel) {
     var bd1 = typeof calcScoreBreakdown === 'function' ? calcScoreBreakdown(_sel[0]) : {};
     var bd2 = (isCompare && typeof calcScoreBreakdown === 'function') ? calcScoreBreakdown(_sel[1]) : {};
 
-    var totRow = '<tr style="border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">' +
+    var totRow = '<tr style="border-top:1px solid rgba(255,255,255,.2);background:rgba(10,14,22,.9)">' +
       '<td colspan="2" style="padding:8px 8px;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Total</td>' +
       '<td style="background:rgba(250,204,21,.04)"></td>' +
       '<td style="text-align:center;font-weight:800;color:#fbbf24;font-size:14px;padding:8px;background:rgba(250,204,21,.06)">' + (bd1.pronPts || 0) + '</td>' +
@@ -2828,7 +2853,7 @@ window._jumpToMatch = function(sel) {
 
     var table = d1.length ?
       '<div style="overflow-x:auto">' +
-        '<table style="width:100%;border-collapse:collapse;min-width:' + (isCompare ? '580' : '460') + 'px">' +
+        '<table style="width:100%;border-collapse:collapse;min-width:' + (isCompare ? '490' : '380') + 'px">' +
           '<thead>' + thead + '</thead>' +
           '<tbody>' + trs + exRow1 + totRow + '</tbody>' +
         '</table>' +
