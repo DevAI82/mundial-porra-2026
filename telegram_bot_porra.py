@@ -119,6 +119,8 @@ PARTIDOS = {
     "J91":["Brasil","Noruega"],        "J92":["México","Inglaterra"],
     "J93":["Portugal","España"],       "J94":["Estados Unidos","Bélgica"],
     "J95":["Argentina","Egipto"],      "J96":["Suiza","Colombia"],
+    # ── ELIMINATORIAS: CUARTOS DE FINAL (9-12 Jul) ──
+    "J97":["Marruecos","Francia"],     "J99":["Noruega","Inglaterra"],
 }
 
 # Grupos del Mundial 2026
