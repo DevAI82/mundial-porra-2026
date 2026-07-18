@@ -124,6 +124,8 @@ PARTIDOS = {
     "J99":["Noruega","Inglaterra"],    "J100":["Argentina","Suiza"],
     # ── ELIMINATORIAS: SEMIFINALES (14-15 Jul) ──
     "J101":["Francia","España"],       "J102":["Inglaterra","Argentina"],
+    # ── ELIMINATORIAS: 3ER PUESTO Y FINAL ──
+    "J103":["Francia","Inglaterra"],     "J104":["España","Argentina"],
 }
 
 # Grupos del Mundial 2026
